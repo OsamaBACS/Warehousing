@@ -1,0 +1,17 @@
+.card {
+  border-radius: 0.75rem;
+}
+
+.card img {
+  transition: transform 0.2s ease;
+}
+.card:hover img {
+  transform: scale(1.05);
+}
+
+.card-body {
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+  padding-top: 0.5rem;   /* keep padding */
+  padding-bottom: 0.5rem;
+}

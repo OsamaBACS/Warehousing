@@ -1,0 +1,142 @@
+<div class="dialog-container p-3 p-md-4">
+  <h5 class="mb-4 text-center">Add / Edit Company</h5>
+
+  <form [formGroup]="companyForm">
+
+    <div class="row g-3">
+
+      <!-- Name EN -->
+      <div class="col-12 col-md-6">
+        <label class="form-label">Name (EN) <span class="text-danger">*</span></label>
+        <input type="text" class="form-control" formControlName="nameEn" />
+        <div *ngIf="nameEn.invalid && (nameEn.dirty || nameEn.touched)" class="text-danger">
+          Name (EN) is required.
+        </div>
+      </div>
+
+      <!-- Name AR -->
+      <div class="col-12 col-md-6">
+        <label class="form-label">Name (AR) <span class="text-danger">*</span></label>
+        <input type="text" class="form-control" formControlName="nameAr" />
+        <div *ngIf="nameAr.invalid && (nameAr.dirty || nameAr.touched)" class="text-danger">
+          Name (AR) is required.
+        </div>
+      </div>
+
+      <!-- Address EN -->
+      <div class="col-12 col-md-6">
+        <label class="form-label">Address (EN) <span class="text-danger">*</span></label>
+        <input type="text" class="form-control" formControlName="addressEn" />
+        <div *ngIf="addressEn.invalid && (addressEn.dirty || addressEn.touched)" class="text-danger">
+          Address (EN) is required.
+        </div>
+      </div>
+
+      <!-- Address AR -->
+      <div class="col-12 col-md-6">
+        <label class="form-label">Address (AR) <span class="text-danger">*</span></label>
+        <input type="text" class="form-control" formControlName="addressAr" />
+        <div *ngIf="addressAr.invalid && (addressAr.dirty || addressAr.touched)" class="text-danger">
+          Address (AR) is required.
+        </div>
+      </div>
+
+      <!-- Phone -->
+      <div class="col-12 col-md-6">
+        <label class="form-label">Phone <span class="text-danger">*</span></label>
+        <input type="tel" class="form-control" formControlName="phone" />
+        <div *ngIf="phone.invalid && (phone.dirty || phone.touched)" class="text-danger">
+          <div *ngIf="phone.errors?.['required']">Phone is required.</div>
+          <div *ngIf="phone.errors?.['pattern']">Invalid phone format.</div>
+        </div>
+      </div>
+
+      <!-- Email -->
+      <div class="col-12 col-md-6">
+        <label class="form-label">Email <span class="text-danger">*</span></label>
+        <input type="email" class="form-control" formControlName="email" />
+        <div *ngIf="email.invalid && (email.dirty || email.touched)" class="text-danger">
+          <div *ngIf="email.errors?.['required']">Email is required.</div>
+          <div *ngIf="email.errors?.['email']">Invalid email format.</div>
+        </div>
+      </div>
+
+      <!-- Website -->
+      <div class="col-12 col-md-6">
+        <label class="form-label">Website</label>
+        <input type="url" class="form-control" formControlName="website" />
+      </div>
+
+      <!-- Tax Number -->
+      <div class="col-12 col-md-6">
+        <label class="form-label">Tax Number</label>
+        <input type="text" class="form-control" formControlName="taxNumber" />
+      </div>
+
+      <!-- Currency Code -->
+      <div class="col-12 col-md-6">
+        <label class="form-label">Currency Code <span class="text-danger">*</span></label>
+        <input type="text" class="form-control" formControlName="currencyCode" />
+        <div *ngIf="currencyCode.invalid && (currencyCode.dirty || currencyCode.touched)" class="text-danger">
+          Currency code is required.
+        </div>
+      </div>
+
+      <!-- Footer Note EN -->
+      <div class="col-12 col-md-6">
+        <label class="form-label">Footer Note (EN)</label>
+        <textarea rows="3" class="form-control" formControlName="footerNoteEn"></textarea>
+      </div>
+
+      <!-- Footer Note AR -->
+      <div class="col-12 col-md-6">
+        <label class="form-label">Footer Note (AR)</label>
+        <textarea rows="3" class="form-control" formControlName="footerNoteAr"></textarea>
+      </div>
+
+      <!-- Terms EN -->
+      <div class="col-12 col-md-6">
+        <label class="form-label">Terms (EN)</label>
+        <textarea rows="5" class="form-control" formControlName="termsEn"></textarea>
+      </div>
+
+      <!-- Terms AR -->
+      <div class="col-12 col-md-6">
+        <label class="form-label">Terms (AR)</label>
+        <textarea rows="5" class="form-control" formControlName="termsAr"></textarea>
+      </div>
+
+      <!-- Print Template Id -->
+      <div class="col-12 col-md-6">
+        <label class="form-label">Print Template Id</label>
+        <input type="number" class="form-control" formControlName="printTemplateId" />
+      </div>
+
+      <!-- Is Active -->
+      <div class="col-12 col-md-6 d-flex align-items-center">
+        <div class="form-check form-switch">
+          <input class="form-check-input" type="checkbox" formControlName="isActive" />
+          <label class="form-check-label">Is Active</label>
+        </div>
+      </div>
+
+      <!-- Image Upload -->
+      <div class="col-12">
+        <label class="form-label">Image Upload</label>
+        <app-image-uploader
+          formControlName="image"
+          [initialImageUrl]="initialImageUrl"
+          (imageSelected)="detectFiles($event)">
+        </app-image-uploader>
+      </div>
+
+    </div>
+
+    <!-- Actions -->
+    <div class="col-12 mt-4 d-flex justify-content-end gap-2 flex-wrap">
+      <button type="button" class="btn btn-secondary flex-fill" (click)="cancel()">Cancel</button>
+      <button type="submit" class="btn btn-primary flex-fill" [disabled]="!companyForm.valid" (click)="save()">Save</button>
+    </div>
+
+  </form>
+</div>

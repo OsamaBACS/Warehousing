@@ -1,0 +1,65 @@
+<!-- app.component.html -->
+<div class="container mt-5">
+    <form [formGroup]="storeForm" class="row g-3">
+
+        <!-- ID (hidden or optional) -->
+        <input type="hidden" formControlName="id" />
+
+        <!-- Name (English) -->
+        <div class="col-md-6">
+            <div class="form-floating">
+                <input type="text" class="form-control" formControlName="nameEn" id="nameEn" placeholder="English Name">
+                <label for="nameEn">English Name</label>
+                <div *ngIf="storeForm.get('nameEn')?.invalid && storeForm.get('nameEn')?.touched" class="text-danger">
+                    This field is required.
+                </div>
+            </div>
+        </div>
+
+        <!-- Name (Arabic) -->
+        <div class="col-md-6">
+            <div class="form-floating">
+                <input type="text" class="form-control" formControlName="nameAr" id="nameAr" placeholder="Arabic Name">
+                <label for="nameAr">Arabic Name</label>
+                <div *ngIf="storeForm.get('nameAr')?.invalid && storeForm.get('nameAr')?.touched" class="text-danger">
+                    This field is required.
+                </div>
+            </div>
+        </div>
+
+        <!-- Description -->
+        <div class="col-12">
+            <div class="form-floating">
+                <textarea class="form-control" formControlName="description" id="description" placeholder="Description"
+                    style="height: 100px"></textarea>
+                <label for="description">Description</label>
+            </div>
+        </div>
+
+        <!-- Active Toggle -->
+        <div class="col-12">
+            <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" formControlName="isActive" id="isActive">
+                <label class="form-check-label" for="isActive">
+                    {{ storeForm.get('isActive')?.value ? 'Active' : 'Inactive' }}
+                </label>
+            </div>
+        </div>
+
+        <!-- Submit Button -->
+        <div class="col-12">
+            <div class="d-flex flex-row justify-content-between">
+                <div class="p-2">
+                    <button type="submit" class="btn btn-primary" (click)="onSubmit()" [disabled]="storeForm.invalid">
+                        <i class="bi bi bi-floppy"></i>
+                    </button>
+                </div>
+                <div class="p-2">
+                    <button class="btn btn-sm btn-outline-primary" (click)="cancel()" title="Add Store">
+                        <i class="bi bi-x-square"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>

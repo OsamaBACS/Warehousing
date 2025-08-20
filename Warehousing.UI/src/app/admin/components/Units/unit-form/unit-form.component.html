@@ -1,0 +1,76 @@
+<!-- app.component.html -->
+<div class="container mt-5">
+    <form [formGroup]="unitForm" class="row g-3">
+
+        <!-- ID (hidden or optional) -->
+        <input type="hidden" formControlName="id" />
+
+        <!-- Name (English) -->
+        <div class="col-md-6">
+            <div class="form-floating">
+                <input type="text" class="form-control" formControlName="code" id="code" placeholder="Code">
+                <label for="code">Code</label>
+                <div *ngIf="unitForm.get('code')?.invalid && unitForm.get('code')?.touched" class="text-danger">
+                    This field is required.
+                </div>
+            </div>
+        </div>
+
+        <!-- Name (English) -->
+        <div class="col-md-6">
+            <div class="form-floating">
+                <input type="text" class="form-control" formControlName="nameEn" id="nameEn" placeholder="English Name">
+                <label for="nameEn">English Name</label>
+                <div *ngIf="unitForm.get('nameEn')?.invalid && unitForm.get('nameEn')?.touched" class="text-danger">
+                    This field is required.
+                </div>
+            </div>
+        </div>
+
+        <!-- Name (Arabic) -->
+        <div class="col-md-6">
+            <div class="form-floating">
+                <input type="text" class="form-control" formControlName="nameAr" id="nameAr" placeholder="Arabic Name">
+                <label for="nameAr">Arabic Name</label>
+                <div *ngIf="unitForm.get('nameAr')?.invalid && unitForm.get('nameAr')?.touched" class="text-danger">
+                    This field is required.
+                </div>
+            </div>
+        </div>
+
+        <!-- Description -->
+        <div class="col-12">
+            <div class="form-floating">
+                <textarea class="form-control" formControlName="description" id="description" placeholder="Description"
+                    style="height: 100px"></textarea>
+                <label for="description">Description</label>
+            </div>
+        </div>
+
+        <!-- Active Toggle -->
+        <div class="col-12">
+            <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" formControlName="isActive" id="isActive">
+                <label class="form-check-label" for="isActive">
+                    {{ unitForm.get('isActive')?.value ? 'Active' : 'Inactive' }}
+                </label>
+            </div>
+        </div>
+
+        <!-- Submit Button -->
+        <div class="col-12">
+            <div class="d-flex flex-row justify-content-between">
+                <div class="p-2">
+                    <button type="submit" class="btn btn-primary" (click)="onSubmit()" [disabled]="unitForm.invalid">
+                        <i class="bi bi bi-floppy"></i>
+                    </button>
+                </div>
+                <div class="p-2">
+                    <button class="btn btn-sm btn-outline-primary" (click)="cancel()" title="Add unit">
+                        <i class="bi bi-x-square"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>

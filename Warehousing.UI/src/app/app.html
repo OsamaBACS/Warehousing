@@ -1,0 +1,58 @@
+<div class="app-wrapper">
+  <nav class="navbar navbar-expand shadow-sm bg-body sticky-top">
+    <div class="container-fluid" *ngIf="authService.isAuthenticated()">
+
+      <!-- Brand / Title -->
+      <a class="navbar-brand d-flex align-items-center" routerLink="/home">
+        <i class="bi bi-house-check-fill me-2"></i>
+        <!-- <span class="fw-bold">MyApp</span> -->
+      </a>
+
+      <!-- Right-aligned Actions -->
+      <div class="d-flex align-items-center gap-2">
+        <div class="p-2">
+          <h3>{{ username }}</h3>
+        </div>
+
+        <!-- Language Toggle (Single Button Switch) -->
+        <!-- <button class="btn btn-outline-secondary btn-sm d-flex align-items-center" (click)="toggleLanguage()"
+          [title]="'Toggle Language'">
+          <span>{{ currentLang === 'en' ? 'AR' : 'EN' }}</span>
+        </button> -->
+
+        <!-- Order list Button -->
+        <button class="btn btn-outline-success btn-sm d-flex align-items-center"
+          routerLink="/pending-orders" [title]="'Logout'">
+          <i class="bi bi-list-ul"></i>
+          <!-- <span>Logout</span> -->
+        </button>
+
+        <!-- Cart Icon -->
+        <button class="btn btn-outline-primary btn-sm d-flex align-items-center position-relative" routerLink="/cart"
+          [title]="'View Cart'">
+          <i class="bi bi-cart-dash"></i>
+          <!-- Optional: Badge for item count -->
+          <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+            *ngIf="cartService.cartCount$ | async as count" [hidden]="count === 0">
+            {{ count }}
+            <span class="visually-hidden">items in cart</span>
+          </span>
+        </button>
+
+        <!-- Logout Button -->
+        <button *ngIf="authService.isAuthenticated()" class="btn btn-outline-danger btn-sm d-flex align-items-center"
+          (click)="logout()" [title]="'Logout'">
+          <i class="bi bi-box-arrow-right me-1"></i>
+          <!-- <span>Logout</span> -->
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main content area -->
+  <main class="main-container">
+    <router-outlet></router-outlet>
+  </main>
+</div>
+
+<app-spinner></app-spinner>

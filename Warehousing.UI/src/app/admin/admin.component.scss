@@ -1,0 +1,25 @@
+.sidebar {
+  min-width: 250px;
+
+  .nav-link {
+    color: #333;
+    &.active {
+      font-weight: bold;
+      color: #0d6efd;
+    }
+
+    &:hover {
+      background-color: rgba(13, 110, 253, 0.1);
+      border-radius: 5px;
+    }
+  }
+}
+
+.dark-mode-text {
+  color: #f1f1f1 !important;
+}
+
+#reportsSubMenu.collapse.show .bi-chevron-down {
+  transform: rotate(180deg);
+  transition: transform 0.3s ease;
+}

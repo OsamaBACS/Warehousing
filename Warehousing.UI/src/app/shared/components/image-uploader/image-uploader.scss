@@ -1,0 +1,7 @@
+.upload-box {
+  transition: border-color 0.3s ease;
+}
+.upload-box.dragover {
+  border-color: #007bff;
+  background-color: #f0f8ff;
+}

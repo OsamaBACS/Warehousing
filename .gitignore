@@ -1,0 +1,102 @@
+# =========================
+# .NET Core / Visual Studio
+# =========================
+
+**/bin/
+**/obj/
+**/Release/
+**/Debug/
+
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+*.dbmdl
+*.pdb
+*.cache
+*.log
+*.bak
+
+# VS-specific
+.vscode/
+.vs/
+
+# Test results
+TestResults/
+*.trx
+
+# Rider / JetBrains
+.idea/
+*.sln.iml
+
+# ASP.NET
+wwwroot/dist/
+wwwroot/node_modules/
+
+# Entity Framework Migrations snapshots
+**/Migrations/*Designer.cs
+**/Migrations/*Snapshot.cs
+
+# =========================
+# Angular
+# =========================
+Warehousing.UI/node_modules/
+Warehousing.UI/.angular/
+Warehousing.UI/.output/
+Warehousing.UI/.dist/
+Warehousing.UI/dist/
+Warehousing.UI/tmp/
+Warehousing.UI/.env
+Warehousing.UI/.env.*.local
+Warehousing.UI/.npm/
+Warehousing.UI/package-lock.json
+
+# Angular test coverage
+Warehousing.UI/coverage/
+
+# IDE specific
+*.iml
+.idea/
+.DS_Store
+Thumbs.db
+
+# =========================
+# OS Specific
+# =========================
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+ehthumbs.db
+Icon?
+Thumbs.db
+desktop.ini
+$RECYCLE.BIN/
+
+# =========================
+# Logs
+# =========================
+*.log
+logs/
+*.tlog
+*.vspscc
+*.vssscc
+
+# npm/yarn
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# =========================
+# Dotnet Tool Artifacts
+# =========================
+.project.lock.json
+project.lock.json
+artifacts/
+
+# Rider / JetBrains
+.idea/
+*.sln.iml

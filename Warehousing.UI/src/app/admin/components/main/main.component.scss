@@ -1,0 +1,23 @@
+.square-card {
+  border: 2px solid #dee2e6; // ✅ light gray border
+  border-radius: 1rem;
+  transition: all 0.3s ease;
+  height: 100%;
+  min-height: 130px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  .card-body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+
+  &:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.15);
+    border-color: #007bff; // ✅ optional: highlight on hover
+  }
+}

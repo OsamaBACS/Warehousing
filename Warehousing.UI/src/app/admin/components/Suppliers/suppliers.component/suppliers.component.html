@@ -1,0 +1,41 @@
+<div class="container-fluid">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="dark-mode-text">{{ 'SUPPLIERS.TITLE' | translate }}</h4>
+    <button class="btn btn-primary" (click)="openForm(null)">
+      <i class="bi bi-plus-circle me-2"></i> {{ 'SHARED.BUTTONS.ADD' | translate }}
+    </button>
+  </div>
+
+  <!-- Roles Table -->
+  <div class="table-responsive">
+    <table class="table table-striped table-hover">
+      <thead class="table-light dark-mode-bg">
+        <tr>
+          <th>#</th>
+          <th>{{ 'SUPPLIERS.NAME' | translate }}</th>
+          <th>{{ 'SUPPLIERS.PHONE' | translate }}</th>
+          <th>{{ 'SUPPLIERS.EMAIL' | translate }}</th>
+          <th>{{ 'SUPPLIERS.ADDRESS' | translate }}</th>
+          <th>{{ 'SHARED.ACTIONS' | translate }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let supplier of suppliers; let i = index">
+          <td>{{ i + 1 }}</td>
+          <td>{{ supplier.name }}</td>
+          <td>{{ supplier.phone }}</td>
+          <td>{{ supplier.email }}</td>
+          <td>{{ supplier.address }}</td>
+          <td dir="ltr">
+            <button class="btn btn-sm btn-outline-info me-2" (click)="openForm(supplier.id)">
+              <i class="bi bi-pencil"></i>
+            </button>
+            <button class="btn btn-sm btn-outline-danger">
+              <i class="bi bi-trash"></i>
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

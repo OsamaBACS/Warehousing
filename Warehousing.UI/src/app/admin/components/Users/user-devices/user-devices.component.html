@@ -1,0 +1,77 @@
+<div class="p-4">
+  <!-- Page Title -->
+  <h4 class="mb-4 fw-bold text-primary">أجهزة المستخدمين</h4>
+
+  <!-- Filter Section -->
+  <div class="row mb-4 align-items-end" [formGroup]="usersDropDowForm">
+    <div class="col-12 col-md-4">
+      <label class="form-label">اختر المستخدم</label>
+      <select class="form-select shadow-sm" formControlName="userId" (change)="loadUserDevices(+UserId.value)">
+        <option [ngValue]="0">-- اختر --</option>
+        <option *ngFor="let user of users" [ngValue]="user.id">{{ user.nameAr }}</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Devices Grid -->
+  <div class="row g-4">
+    <div *ngFor="let device of (userDevices$ | async)?.devices" class="col-12 col-sm-6 col-md-4 col-lg-3">
+      <div
+        class="card h-100 shadow-lg border-0 position-relative"
+        [ngClass]="device.isApproved ? 'bg-light border-start border-5 border-success' : 'bg-light border-start border-5 border-danger'"
+      >
+        <div class="card-body d-flex flex-column justify-content-between">
+          <!-- Status Badge -->
+          <div class="d-flex justify-content-between align-items-start mb-3">
+            <span class="badge" [ngClass]="device.isApproved ? 'bg-success' : 'bg-danger'">
+              {{ device.isApproved ? 'فعال' : 'محظور' }}
+            </span>
+            <div class="form-check form-switch">
+              <input
+                class="form-check-input"
+                type="checkbox"
+                [id]="'approveSwitch' + device.id"
+                [checked]="device.isApproved"
+                (change)="toggleApproval(device)"
+              />
+            </div>
+          </div>
+
+          <!-- Device Info -->
+          <div class="mb-3">
+            <h6 class="fw-semibold text-dark mb-2">معرف الجهاز: {{ device.id }}</h6>
+            <ul class="list-unstyled small lh-lg text-secondary">
+              <li><i class="fas fa-user me-2 text-primary"></i> المستخدم: {{ device.userId }}</li>
+              <li><i class="fas fa-fingerprint me-2 text-primary"></i> البصمة: {{ device.fingerprint | slice:0:16 }}...</li>
+              <li><i class="fas fa-network-wired me-2 text-primary"></i> IP: {{ device.iPAddress }}</li>
+              <li><i class="fas fa-calendar-alt me-2 text-primary"></i> أول ظهور: {{ device.firstSeen | date:'dd/MM/yyyy HH:mm' }}</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Empty State -->
+    <div *ngIf="!(userDevices$ | async)?.devices?.length" class="col-12 text-center text-muted mt-5">
+      <i class="fas fa-laptop-slash fa-3x text-secondary mb-3"></i>
+      <p class="lead">لا توجد أجهزة مسجلة لهذا المستخدم</p>
+    </div>
+  </div>
+
+  <!-- Pagination -->
+  <div class="d-flex justify-content-center align-items-center mt-5 gap-2 flex-wrap">
+    <button class="btn btn-outline-secondary btn-sm" [disabled]="pageIndex <= 1" (click)="changePage(pageIndex - 1)">
+      <i class="fas fa-angle-right"></i> السابق
+    </button>
+
+    <ng-container *ngFor="let p of getPageRange()">
+      <button class="btn btn-sm" [class.btn-primary]="pageIndex === p" [class.btn-outline-primary]="pageIndex !== p" (click)="changePage(p)">
+        {{ p }}
+      </button>
+    </ng-container>
+
+    <button class="btn btn-outline-secondary btn-sm" [disabled]="pageIndex >= totalPages" (click)="changePage(pageIndex + 1)">
+      التالي <i class="fas fa-angle-left"></i>
+    </button>
+  </div>
+</div>

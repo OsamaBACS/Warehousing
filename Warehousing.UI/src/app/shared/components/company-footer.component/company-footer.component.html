@@ -1,0 +1,8 @@
+<!-- <div class="text-center" [dir]=" lang.currentLang === 'ar' ? 'rtl' : 'ltr'" *ngIf="companies$ | async as company">
+    <p>{{ 'COMPANIES.PHONE' | translate }} : {{ company.phone }}</p>
+    <p>{{ 'COMPANIES.ADDRESS' | translate }} : {{ lang.currentLang === 'ar' ? company.addressAr : company.addressEn }}</p>
+</div> -->
+
+<div class="text-center" dir="rtl" *ngIf="user$ | async as user">
+    <p>{{ user.printFooter }}</p>
+</div>

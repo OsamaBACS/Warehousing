@@ -1,0 +1,209 @@
+{
+  "ADMIN": {
+    "TITLE": "Admin Panel",
+    "SIDEBAR": {
+      "DASHBOARD": "Dashboard",
+      "PRODUCTS": "Products",
+      "USERS": "Users",
+      "ROLES": "Roles",
+      "PERMISSIONS": "Permissions",
+      "CUSTOMERS": "Customers",
+      "SUPPLIERS": "Suppliers",
+      "PURCHASEORDERS": "Purchase Orders",
+      "SALEORDERS": "Sale Orders",
+      "COMPANIES": "Companies"
+    }
+  },
+  "SHARED": {
+    "TITLE": "Shared",
+    "UNIT": "Unit",
+    "BUTTONS": {
+      "ADD": "Add",
+      "EDIT": "Edit",
+      "DELETE": "Delete",
+      "CANCEL": "Cancel",
+      "SAVE": "Save",
+      "PRINT": {
+        "CURRENTPAGE": "Current Page",
+        "ALLPAGES": "All Pages"
+      }
+    },
+    "ACTIONS": "Actions",
+    "CREATEDAT": "Created At",
+    "CREATEDBY": "Created By",
+    "UPDATEDAT": "Updated At",
+    "UPDATEDBY": "Updated By",
+    "SEARCH": "Search"
+  },
+  "CATEGORIES": {
+    "TITLE": "Categories",
+    "ID": "ID",
+    "CODE": "Code",
+    "NAMEEN": "Name (English)",
+    "NAMEAR": "Name (Arabic)",
+    "DESCRIPTION": "Description"
+  },
+  "CUSTOMERS": {
+    "TITLE": "Customers",
+    "ID": "Id",
+    "NAMEEN": "Name (English)",
+    "NAMEAR": "Name (Arabic)",
+    "PHONE": "Phone",
+    "EMAIL": "Email",
+    "ADDRESS": "Address"
+  },
+  "INVENTORYTRANSACTIONS": {
+    "TITLE": "Inventory Transactions",
+    "ID": "Id",
+    "QUANTITYCHANGED": "Quantity Changed",
+    "TRANSACTIONDATE": "Transaction Date",
+    "NOTES": "Notes",
+    "PRODUCTID": "Product Id",
+    "TRANSACTIONTYPEID": "Transaction Type Id",
+    "PURCHASEORDERID": "Purchase Order Id",
+    "SALESORDERID": "Sales Order Id",
+    "BALANCE": "Balance"
+  },
+  "PERMISSIONS": {
+    "TITLE": "Permissions",
+    "ID": "Id",
+    "NAMEEN": "Name (English)",
+    "NAMEAR": "Name (Arabic)",
+    "CODE": "Code"
+  },
+  "PRODUCTS": {
+    "TITLE": "Products",
+    "ID": "Id",
+    "CODE": "Code",
+    "PRODUCTNAME": "Name",
+    "NAMEEN": "Name (English)",
+    "NAMEAR": "Name (Arabic)",
+    "DESCRIPTION": "Description",
+    "QUANTITYINSTOCK": "Quantity In Stock",
+    "REORDERLEVEL": "Reorder Level",
+    "COSTPRICE": "Cost Price",
+    "SELLINGPRICE": "Selling Price",
+    "IMAGEPATH": "Image Path",
+    "ISACTIVE": "Is Active",
+    "CATEGORY": "Category",
+    "UNIT": "Unit"
+  },
+  "PURCHASEORDERS": {
+    "TITLE": "Purchase Orders",
+    "ID": "Id",
+    "ORDERDATE": "Order Date",
+    "EXPECTEDDATE": "Expected Date",
+    "TOTALAMOUNT": "Total Amount",
+    "SUPPLIERID": "Supplier",
+    "STATUSID": "Status"
+  },
+  "PURCHASEORDERSITEMS": {
+    "TITLE": "Purchase Order Items",
+    "ID": "Number",
+    "ORDERDATE": "Order Date",
+    "EXPECTEDDATE": "Expected Date",
+    "TOTALAMOUNT": "Reported Amount",
+    "SUPPLIERID": "Supplier",
+    "STATUSID": "Status",
+    "QUANTITY": "Quantity",
+    "CATEGORY": "Category",
+    "PRODUCT": "Product",
+    "UNIT": "Unit",
+    "COSTPRICE": "Cost Price",
+    "SELLINGPRICE": "Selling Price",
+    "SUBTOTAL": "Total Amount",
+    "STORE": "Store"
+  },
+  "ROLES": {
+    "TITLE": "Roles",
+    "NAME": "Role Name",
+    "PERMISSIONS": "Permissions",
+    "ACTIONS": "Actions"
+  },
+  "SALESORDERITEMS": {
+    "TITLE": "Sales Order Items",
+    "ORDERDATE": "Order Date",
+    "CUSTOMER": "Customer",
+    "TOTALAMOUNT": "Total Amount",
+    "ID": "ID",
+    "PRODUCTID": "Product ID",
+    "SALESORDERID": "Sales Order ID",
+    "QUANTITY": "Quantity",
+    "CATEGORY": "Category",
+    "PRODUCT": "Product",
+    "UNIT": "Unit",
+    "UNITPRICE": "Unit Price",
+    "SUBTOTAL": "Subtotal"
+  },
+  "SALESORDERS": {
+    "TITLE": "Sales Orders",
+    "ID": "Id",
+    "ORDERDATE": "Order Date",
+    "TOTALAMOUNT": "Total Amount",
+    "CUSTOMERNAME": "Customer Name",
+    "STATUSID": "Status"
+  },
+  "SUPPLIERS": {
+    "TITLE": "Suppliers",
+    "ID": "Id",
+    "NAME": "Name",
+    "PHONE": "Phone",
+    "EMAIL": "Email",
+    "ADDRESS": "Address",
+    "ISACTIVE": "Is Active"
+  },
+  "TRANSACTIONTYPES": {
+    "TITLE": "Transaction Types",
+    "ID": "Id",
+    "CODE": "Code",
+    "NAMEEN": "Name (English)",
+    "NAMEAR": "Name (Arabic)",
+    "DESCRIPTION": "Description"
+  },
+  "USERS": {
+    "TITLE": "Users",
+    "ID": "Id",
+    "NAMEEN": "Name (English)",
+    "NAMEAR": "Name (Arabic)",
+    "PHONE": "Phone",
+    "EMAIL": "Email",
+    "ADDRESS": "Address",
+    "USERNAME": "Username",
+    "PASSWORDHASH": "Password Hash",
+    "CHANGEPASSWORD": "Change Password"
+  },
+  "COMPANIES": {
+    "TITLE": "Companies",
+    "ID": "Id",
+    "NAMEEN": "Name (English)",
+    "NAMEAR": "Name (Arabic)",
+    "PHONE": "Phone",
+    "EMAIL": "Email",
+    "ADDRESS": "Address",
+    "USERNAME": "Username",
+    "PASSWORDHASH": "Password Hash",
+    "TAXNUMBER": "Tax Number"
+  },
+  "STATUS": {
+    "COMPLETED": "Completed",
+    "COMPLETEDOrder": "Complete Order?",
+    "PENDING": "Pending"
+  },
+  "UNIT": {
+    "TITLE": "Unit"
+  },
+  "PAGINATION": {
+    "NEXT": "Next",
+    "PREVIOUS": "Previous"
+  },
+  "REPORTS" : {
+    "TITLE": "Reports",
+    "INVENTORYREPORT": "Inventory Report"
+  },
+  "PURCHASE" : {
+    "TITLE": "Purchases"
+  },
+  "SALE" : {
+    "TITLE": "Sales"
+  }
+}

@@ -1,0 +1,44 @@
+<div class="container py-4" dir="rtl">
+  <div class="row g-3">
+    <div class="col-12 col-sm-4 col-md-3 col-lg-2 m-3 border" *ngFor="let product of (products$ | async)">
+      <h6 class="fw-bold mb-2 text-truncate text-center">{{ product.nameAr }}</h6>
+      <div class="card h-100">
+
+        <!-- صورة المنتج -->
+        <div class="bg-white d-flex justify-content-center align-items-center p-2">
+          <img [src]="resourcesUrl + product.imagePath" [alt]="product.nameAr" class="img-fluid"
+            style="object-fit: contain;">
+        </div>
+
+        <!-- تفاصيل المنتج -->
+        <div class="card-body pt-2 pb-1 px-3 d-flex flex-column justify-content-between">
+          <div class="d-flex justify-content-between small text-muted">
+            <span class="fw-bold text-dark">{{ product.description }}</span>
+          </div>
+        </div>
+        <div class="card-body pt-2 pb-1 px-3 d-flex flex-column justify-content-between">
+          <div class="d-flex justify-content-between small text-muted">
+            <span>الكمية في المستودع</span>
+            <span class="fw-bold text-dark">{{ product.quantityInStock }}</span>
+          </div>
+        </div>
+        <div class="card-body pt-2 pb-1 px-3 d-flex flex-column justify-content-between">
+          <div class="d-flex justify-content-between small text-muted">
+            <span>{{ product.unit?.nameAr }}</span>
+            <span class="fw-bold text-dark">{{ product.sellingPrice }} د.أ</span>
+          </div>
+        </div>
+
+        <!-- التحكم بالكمية -->
+        <div class="card-footer border-top bg-white py-2 px-3">
+          <div class="d-flex justify-content-between align-items-center">
+            <button class="btn btn-outline-danger fw-bold fs-5 px-3" (click)="removeFromCart(product)">−</button>
+            <span class="fw-bold fs-5">{{ getQuantity(product.id) }}</span>
+            <button class="btn btn-outline-success fw-bold fs-5 px-3" (click)="addToCart(product)">+</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>

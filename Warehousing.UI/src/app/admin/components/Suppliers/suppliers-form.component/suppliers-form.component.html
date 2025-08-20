@@ -1,0 +1,50 @@
+<div class="dialog-container p-3 p-md-4">
+  <h5 class="mb-4 text-center">{{ isEditMode ? 'Edit Supplier' : 'Add Supplier' }}</h5>
+
+  <form [formGroup]="supplierForm" (ngSubmit)="onSubmit()">
+    <div class="row g-3">
+
+      <!-- Name (EN) -->
+      <div class="col-12 col-sm-6 col-md-4">
+        <div class="floating-label-input">
+          <input class="form-control" formControlName="name" placeholder=" " />
+          <label>Name (EN)</label>
+        </div>
+      </div>
+
+      <!-- Phone -->
+      <div class="col-12 col-sm-6 col-md-4">
+        <div class="floating-label-input">
+          <input class="form-control" formControlName="phone" placeholder=" " />
+          <label>Phone</label>
+        </div>
+      </div>
+
+      <!-- Email -->
+      <div class="col-12 col-sm-6 col-md-4">
+        <div class="floating-label-input">
+          <input type="email" class="form-control" formControlName="email" placeholder=" " />
+          <label>Email</label>
+        </div>
+      </div>
+
+      <!-- Address -->
+      <div class="col-12 col-md-8">
+        <div class="floating-label-textarea">
+          <textarea class="form-control" rows="3" formControlName="address" placeholder=" "></textarea>
+          <label>Address</label>
+        </div>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="col-12 mt-4 d-flex justify-content-end gap-2 flex-wrap">
+      <button type="button" class="btn btn-secondary flex-fill" (click)="cancel()">
+        Cancel
+      </button>
+      <button type="submit" class="btn btn-primary flex-fill" [disabled]="supplierForm.invalid">
+        {{ isEditMode ? 'Update' : 'Save' }}
+      </button>
+    </div>
+  </form>
+</div>

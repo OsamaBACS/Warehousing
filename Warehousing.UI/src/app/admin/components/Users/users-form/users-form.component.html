@@ -1,0 +1,117 @@
+<div class="dialog-container p-3 p-md-4">
+  <!-- <h5 class="mb-4 text-center">{{ userForm.get('id')?.value > 0 ? 'Edit User' : 'Add User' }}</h5> -->
+  <h5 class="mb-4 text-center">إضافة / تعديل مستخدم</h5>
+
+  <form [formGroup]="userForm" (ngSubmit)="save()">
+    <div class="row g-3">
+      <!-- Name (EN) -->
+      <div class="col-12 col-md-6">
+        <div class="floating-label-input">
+          <input type="text" class="form-control" formControlName="nameEn" placeholder=" " />
+          <label>الاسم بالانجليزي</label>
+        </div>
+      </div>
+
+      <!-- Name (AR) -->
+      <div class="col-12 col-md-6">
+        <div class="floating-label-input">
+          <input type="text" class="form-control" formControlName="nameAr" placeholder=" " />
+          <label>الاسم بالعربي</label>
+        </div>
+      </div>
+
+      <!-- Phone -->
+      <div class="col-12 col-md-6">
+        <div class="floating-label-input">
+          <input type="text" class="form-control" formControlName="phone" placeholder=" " />
+          <label>الهاتف</label>
+        </div>
+      </div>
+
+      <!-- Email -->
+      <div class="col-12 col-md-6">
+        <div class="floating-label-input">
+          <input type="email" class="form-control" formControlName="email" placeholder=" " />
+          <label>الايميل</label>
+        </div>
+      </div>
+
+      <!-- Address -->
+      <div class="col-12">
+        <div class="floating-label-input">
+          <input type="text" class="form-control" formControlName="address" placeholder=" " />
+          <label>العنوان</label>
+        </div>
+      </div>
+
+      <!-- Username -->
+      <div class="col-12 col-md-6">
+        <div class="floating-label-input">
+          <input type="text" class="form-control" formControlName="username" placeholder=" " />
+          <label>اسم المستخدم</label>
+        </div>
+      </div>
+
+      <!-- Password -->
+      <div class="col-12 col-md-6" *ngIf="!isEditMode">
+        <div class="floating-label-input">
+          <input type="password" class="form-control" formControlName="passwordHash" placeholder=" " />
+          <label>كلمة المرور</label>
+        </div>
+      </div>
+    </div>
+
+    <!-- printHeader -->
+    <div class="col-12 col-md-6">
+      <div class="form-floating">
+        <textarea class="form-control" formControlName="printHeader" id="printHeader" placeholder="عنوان الطباعه"
+          style="height: 100px"></textarea>
+        <label for="printHeader">عنوان الطباعه</label>
+      </div>
+    </div>
+
+    <!-- printFooter -->
+    <div class="col-12 col-md-6">
+      <div class="form-floating">
+        <textarea class="form-control" formControlName="printFooter" id="printFooter" placeholder="تذييل الطباعه"
+          style="height: 100px"></textarea>
+        <label for="printFooter">تذييل الطباعه</label>
+      </div>
+    </div>
+
+    <!-- Is Active -->
+    <div class="col-12 col-md-6 d-flex align-items-center">
+      <div class="form-check form-switch">
+        <input class="form-check-input" type="checkbox" formControlName="isActive" />
+        <label class="form-check-label">الحالة</label>
+      </div>
+    </div>
+
+    <!-- Roles Section -->
+    <div class="mb-4">
+      <label class="form-label fw-bold">تعيين صلاحية</label>
+      <div class="row g-2">
+        <div class="col-12 col-sm-6 col-md-4" *ngFor="let role of roles">
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="role_{{ role.id }}" [value]="role.id"
+              [checked]="userForm.get('roles')?.value.includes(role.id)" (change)="onRoleChange(role.id, $event)" />
+            <label class="form-check-label" [for]="'role_' + role.id">
+              <!-- {{ lang.currentLang === 'ar' ? role.nameAr : role.nameEn }} -->
+              {{ role.nameAr }}
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="d-flex gap-2 flex-wrap mt-4">
+      <button type="submit" class="btn btn-primary flex-fill" [disabled]="!userForm.valid">
+        <!-- {{ userForm.get('id')?.value > 0 ? 'Update' : 'Save' }} --> حفظ
+      </button>
+      <button type="button" class="btn btn-secondary flex-fill" (click)="cancel()">
+        إلغاء
+      </button>
+    </div>
+  </form>
+</div>

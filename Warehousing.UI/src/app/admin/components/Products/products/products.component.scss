@@ -1,0 +1,39 @@
+.card {
+  transition: transform 0.2s ease;
+  &:hover {
+    transform: translateY(-5px);
+  }
+}
+
+.badge.bg-secondary.bg-opacity-25 {
+  font-size: 0.7rem;
+  padding: 0.3em 0.6em;
+}
+
+.border-top {
+  border-top: 1px solid rgba(255,255,255,0.1)!important;
+}
+
+.w-sm-100 {
+  width: 100%;
+}
+
+.w-sm-100 .input-group {
+  width: 100%;
+}
+
+.input-group input {
+  min-width: 150px;
+}
+
+@media (max-width: 576px) {
+  .input-group .btn {
+    padding: 0.375rem 0.5rem;
+    font-size: 0.875rem;
+  }
+
+  .input-group input {
+    font-size: 0.875rem;
+    padding: 0.375rem 0.75rem;
+  }
+}

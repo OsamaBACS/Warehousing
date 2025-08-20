@@ -1,0 +1,208 @@
+{
+  "ADMIN": {
+    "TITLE": "الإدارة",
+    "SIDEBAR": {
+      "DASHBOARD": "الرئيسية",
+      "PRODUCTS": "المنتجات",
+      "USERS": "المستخدمون",
+      "ROLES": "الأدوار",
+      "PERMISSIONS": "الأذونات",
+      "CUSTOMERS": "العملاء",
+      "SUPPLIERS": "الموردون",
+      "PURCHASEORDERS": "طلبات الشراء",
+      "SALEORDERS": "طلبات البيع",
+      "COMPANIES": "الشركات"
+    }
+  },
+  "SHARED": {
+    "TITLE": "مشترك",
+    "BUTTONS": {
+      "ADD": "إضافة",
+      "EDIT": "تعديل",
+      "DELETE": "حذف",
+      "CANCEL": "إلغاء",
+      "SAVE": "حفظ",
+      "PRINT": {
+        "CURRENTPAGE": "الصفحة الحالية",
+        "ALLPAGES": "جميع الصفحات"
+      }
+    },
+    "ACTIONS": "الإجراءات",
+    "CREATEDAT": "تاريخ الإنشاء",
+    "CREATEDBY": "أنشئ بواسطة",
+    "UPDATEDAT": "تاريخ التحديث",
+    "UPDATEDBY": "حدث بواسطة",
+    "SEARCH": "بحث"
+  },
+  "CATEGORIES": {
+    "TITLE": "الفئات",
+    "ID": "الرقم",
+    "CODE": "الرمز",
+    "NAMEEN": "الاسم (بالإنجليزية)",
+    "NAMEAR": "الاسم (بالعربية)",
+    "DESCRIPTION": "الوصف"
+  },
+  "CUSTOMERS": {
+    "TITLE": "العملاء",
+    "ID": "الرقم",
+    "NAMEEN": "الاسم (بالإنجليزية)",
+    "NAMEAR": "الاسم (بالعربية)",
+    "PHONE": "الهاتف",
+    "EMAIL": "البريد الإلكتروني",
+    "ADDRESS": "العنوان"
+  },
+  "INVENTORYTRANSACTIONS": {
+    "TITLE": "حركات المخزون",
+    "ID": "الرقم",
+    "QUANTITYCHANGED": "الكمية المتغيرة",
+    "TRANSACTIONDATE": "تاريخ الحركة",
+    "NOTES": "ملاحظات",
+    "PRODUCTID": "المنتج",
+    "TRANSACTIONTYPEID": "نوع الحركة",
+    "PURCHASEORDERID": "رقم أمر الشراء",
+    "SALESORDERID": "رقم أمر البيع",
+    "BALANCE": "الرصيد"
+  },
+  "PERMISSIONS": {
+    "TITLE": "الأذونات",
+    "ID": "الرقم",
+    "NAMEEN": "الاسم (بالإنجليزية)",
+    "NAMEAR": "الاسم (بالعربية)",
+    "CODE": "الرمز"
+  },
+  "PRODUCTS": {
+    "TITLE": "المنتجات",
+    "ID": "الرقم",
+    "CODE": "الرمز",
+    "PRODUCTNAME": "الاسم",
+    "NAMEEN": "الاسم (بالإنجليزية)",
+    "NAMEAR": "الاسم (بالعربية)",
+    "DESCRIPTION": "الوصف",
+    "QUANTITYINSTOCK": "الكمية في المخزون",
+    "REORDERLEVEL": "مستوى إعادة الطلب",
+    "COSTPRICE": "سعر التكلفة",
+    "SELLINGPRICE": "سعر البيع",
+    "IMAGEPATH": "مسار الصورة",
+    "ISACTIVE": "نشط",
+    "CATEGORY": "الفئة",
+    "UNIT": "وحدة القياس"
+  },
+  "PURCHASEORDERS": {
+    "TITLE": "طلبات الشراء",
+    "ID": "الرقم",
+    "ORDERDATE": "تاريخ الطلب",
+    "EXPECTEDDATE": "تاريخ الاستلام المتوقع",
+    "TOTALAMOUNT": "المبلغ الإجمالي",
+    "SUPPLIERID": "المورد",
+    "STATUSID": "الحالة"
+  },
+  "PURCHASEORDERSITEMS": {
+    "TITLE": "عناصر طلبات الشراء",
+    "ID": "الرقم",
+    "ORDERDATE": "تاريخ الطلب",
+    "EXPECTEDDATE": "تاريخ الاستلام المتوقع",
+    "TOTALAMOUNT": "المبلغ الإجمالي",
+    "SUPPLIERID": "المورد",
+    "STATUSID": "الحالة",
+    "QUANTITY": "الكمية",
+    "CATEGORY": "الصنف",
+    "PRODUCT": "المنتج",
+    "UNIT": "الوحدة",
+    "COSTPRICE": "سعر التكلفة",
+    "SELLINGPRICE": "سعر البيع",
+    "SUBTOTAL": "المبلغ الكلي",
+    "STORE": "المستودع"
+  },
+  "ROLES": {
+    "TITLE": "إدارة الأدوار",
+    "NAME": "اسم الدور",
+    "PERMISSIONS": "الأذونات",
+    "ACTIONS": "الإجراءات"
+  },
+  "SALESORDERITEMS": {
+    "TITLE": "عناصر طلبات البيع",
+    "ORDERDATE": "تاريخ الطلب",
+    "CUSTOMER": "الزبون",
+    "TOTALAMOUNT": "المبلغ الإجمالي",
+    "ID": "الرقم",
+    "PRODUCTID": "رقم المنتج",
+    "SALESORDERID": "رقم أمر البيع",
+    "QUANTITY": "الكمية",
+    "CATEGORY": "الصنف",
+    "PRODUCT": "المنتج",
+    "UNIT": "الوحدة",
+    "UNITPRICE": "السعر للوحدة",
+    "SUBTOTAL": "المبلغ الكلي"
+  },
+  "SALESORDERS": {
+    "TITLE": "طلبات البيع",
+    "ID": "الرقم",
+    "ORDERDATE": "تاريخ الطلب",
+    "TOTALAMOUNT": "المبلغ الإجمالي",
+    "CUSTOMERNAME": "اسم العميل",
+    "STATUSID": "الحالة"
+  },
+  "SUPPLIERS": {
+    "TITLE": "الموردون",
+    "ID": "الرقم",
+    "NAME": "الاسم",
+    "PHONE": "الهاتف",
+    "EMAIL": "البريد الإلكتروني",
+    "ADDRESS": "العنوان",
+    "ISACTIVE": "نشط"
+  },
+  "TRANSACTIONTYPES": {
+    "TITLE": "أنواع الحركات",
+    "ID": "الرقم",
+    "CODE": "الرمز",
+    "NAMEEN": "الاسم (بالإنجليزية)",
+    "NAMEAR": "الاسم (بالعربية)",
+    "DESCRIPTION": "الوصف"
+  },
+  "USERS": {
+    "TITLE": "المستخدمون",
+    "ID": "الرقم",
+    "NAMEEN": "الاسم (بالإنجليزية)",
+    "NAMEAR": "الاسم (بالعربية)",
+    "PHONE": "الهاتف",
+    "EMAIL": "البريد الإلكتروني",
+    "ADDRESS": "العنوان",
+    "USERNAME": "اسم المستخدم",
+    "PASSWORDHASH": "تشفير كلمة المرور",
+    "CHANGEPASSWORD": "تغيير كلمة المرور"
+  },
+  "COMPANIES": {
+    "TITLE": "الشركات",
+    "ID": "الرقم",
+    "NAMEEN": "الاسم (بالإنجليزية)",
+    "NAMEAR": "الاسم (بالعربية)",
+    "PHONE": "الهاتف",
+    "EMAIL": "البريد الإلكتروني",
+    "ADDRESS": "العنوان",
+    "USERNAME": "اسم المستخدم",
+    "PASSWORDHASH": "تشفير كلمة المرور",
+    "TAXNUMBER": "الرقم الضريبي"
+  },
+  "STATUS": {
+    "COMPLETED": "مكتمل",
+    "COMPLETEDOrder": "إكمال الطلب ؟",
+    "PENDING": "قيد الانتظار"
+  },
+  "UNIT": {
+    "TITLE": "الوحدة"
+  },
+  "PAGINATION": {
+    "NEXT": "التالي",
+    "PREVIOUS": "السابق"
+  },
+  "REPORTS" : {
+    "TITLE": "التقارير",
+    "INVENTORYREPORT": "تقرير الجرد"
+  },
+  "PURCHASE" : {
+    "TITLE": "شاشة الشراء"
+  },
+  "SALE" : {
+    "TITLE": "شاشة البيع"
+  }
+}

@@ -1,0 +1,42 @@
+.app-wrapper {
+  font-family: 'Segoe UI', sans-serif;
+}
+
+.navbar {
+  background-color: var(--bs-light);
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #ddd;
+
+  .app-title {
+    font-size: 1.4rem;
+    font-weight: 600;
+    color: var(--bs-dark);
+  }
+
+  button {
+    border-radius: 50%;
+  }
+}
+
+body.dark-mode {
+  --bs-body-bg: #121212;
+  --bs-light: #1e1e1e;
+  --bs-dark: #fff;
+  --bs-primary: #90caf9;
+  background-color: var(--bs-body-bg);
+  color: var(--bs-dark);
+
+  .navbar {
+    background-color: var(--bs-light);
+    border-color: #333;
+  }
+
+  .main-container {
+    background-color: var(--bs-body-bg);
+    color: var(--bs-dark);
+  }
+
+  .app-title {
+    color: var(--bs-dark);
+  }
+}

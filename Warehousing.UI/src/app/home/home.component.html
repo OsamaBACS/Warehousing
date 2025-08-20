@@ -1,0 +1,42 @@
+<div class="container my-5" dir="rtl">
+  <div class="row justify-content-center g-4">
+
+    <!-- الإدارة -->
+    <div class="col-6 col-sm-4 col-md-4 col-lg-3 col-xl-2" *ngIf="authService.hasPermission('VIEW_ADMIN')">
+      <a routerLink="/admin" class="text-decoration-none">
+        <div class="card h-100 border shadow-sm text-center py-4">
+          <div class="card-body d-flex flex-column justify-content-center align-items-center">
+            <i class="bi bi-speedometer2 fs-2 mb-3 text-primary"></i>
+            <span class="fw-bold fs-5 text-dark">الإدارة</span>
+          </div>
+        </div>
+      </a>
+    </div>
+
+    <!-- الشراء -->
+    <div class="col-6 col-sm-4 col-md-4 col-lg-3 col-xl-2" *ngIf="authService.hasPermission('VIEW_PURCHASE_ORDERS')">
+      <a routerLink="/order/1" class="text-decoration-none">
+        <div class="card h-100 border shadow-sm text-center py-4">
+          <div class="card-body d-flex flex-column justify-content-center align-items-center">
+            <i class="bi bi-cart-check fs-2 mb-3 text-success"></i>
+            <span class="fw-bold fs-5 text-dark">الشراء</span>
+          </div>
+        </div>
+      </a>
+    </div>
+
+    <!-- البيع -->
+    <div class="col-6 col-sm-4 col-md-4 col-lg-3 col-xl-2" *ngIf="authService.hasPermission('VIEW_SALE_ORDERS')">
+      <a routerLink="/order/2" class="text-decoration-none">
+        <div class="card h-100 border shadow-sm text-center py-4">
+          <div class="card-body d-flex flex-column justify-content-center align-items-center">
+            <i class="bi bi-cash fs-2 mb-3 text-warning"></i>
+            <span class="fw-bold fs-5 text-dark">البيع</span>
+          </div>
+        </div>
+      </a>
+    </div>
+
+
+  </div>
+</div>
