@@ -424,30 +424,50 @@ namespace Warehousing.Api.Controllers
                         // Save updated order via repository
                         await _unitOfWork.OrderRepo.UpdateAsync(order);
 
+                        // STEP 1: Validate stock availability first
+                        var insufficientItems = new List<string>();
+
                         foreach (var item in order.Items)
                         {
                             if (item.Product == null)
                                 return BadRequest(new { success = false, message = $"Product not found for order item {item.Id}" });
 
-                            if (item.Product != null)
+                            // Only validate for sales (OrderTypeId != 1)
+                            if (order.OrderTypeId != 1 && item.Product.QuantityInStock < item.Quantity)
                             {
-                                //Purchase
-                                if (order.OrderTypeId == 1)
-                                {
-                                    item.Product.QuantityInStock += item.Quantity;
-                                }
-                                else
-                                {
-                                    item.Product.QuantityInStock -= item.Quantity;
-                                }
-                                await _unitOfWork.ProductRepo.UpdateAsync(item.Product);
+                                insufficientItems.Add($"{item.Product.NameAr} (Available: {item.Product.QuantityInStock}, Requested: {item.Quantity})");
+                            }
+                        }
+
+                        // If any insufficient items found → cancel before making changes
+                        if (insufficientItems.Any())
+                        {
+                            await transaction.RollbackAsync();
+                            return BadRequest(new
+                            {
+                                success = false,
+                                message = "Order cannot be completed due to insufficient stock for the following items:",
+                                insufficientItems
+                            });
+                        }
+
+                        foreach (var item in order.Items)
+                        {
+                            if (order.OrderTypeId == 1) // Purchase → Stock In
+                            {
+                                item.Product.QuantityInStock += item.Quantity;
+                            }
+                            else // Sale → Stock Out (already validated)
+                            {
+                                item.Product.QuantityInStock -= item.Quantity;
                             }
 
-                            // Create InventoryTransaction for stock in
+                            await _unitOfWork.ProductRepo.UpdateAsync(item.Product);
+
                             var transactionEntity = new InventoryTransaction
                             {
                                 ProductId = item.ProductId,
-                                QuantityChanged = item.Quantity,
+                                QuantityChanged = order.OrderTypeId == 1 ? item.Quantity : -item.Quantity,
                                 TransactionDate = DateTime.UtcNow,
                                 Notes = $"{transactionTypeCode} order #{order.Id} completed.",
                                 TransactionTypeId = transactionType.Id,
@@ -491,5 +511,175 @@ namespace Warehousing.Api.Controllers
                 });
             }
         }
+
+        [HttpPost]
+        [Route("UpdateApprovedOrder/{id}")]
+        public async Task<IActionResult> UpdateApprovedOrder(int id, [FromBody] Order updatedOrder)
+        {
+            try
+            {
+                var strategy = _unitOfWork.GetExecutionStrategy();
+
+                return await strategy.ExecuteAsync(async () =>
+                {
+                    await using var transaction = await _unitOfWork.BeginTransactionAsync();
+
+                    try
+                    {
+                        // Load existing order with items + products
+                        var existingOrder = await _unitOfWork.OrderRepo
+                            .GetAll()
+                            .Include(o => o.Items)
+                                .ThenInclude(i => i.Product)
+                            .FirstOrDefaultAsync(o => o.Id == id);
+
+                        if (existingOrder == null)
+                            return NotFound(new { success = false, message = "Order not found." });
+
+                        // Check if order is already completed
+                        var status = await _unitOfWork.StatusRepo.GetAll()
+                            .FirstOrDefaultAsync(s => s.Id == existingOrder.StatusId);
+
+                        if (status == null || status.Code != "COMPLETED")
+                            return BadRequest(new { success = false, message = "Only COMPLETED orders can be updated." });
+
+                        // Prepare stock validation
+                        var insufficientItems = new List<string>();
+
+                        // Map existing items by productId
+                        var existingItemsMap = existingOrder.Items.ToDictionary(i => i.ProductId, i => i);
+
+                        foreach (var updatedItem in updatedOrder.Items)
+                        {
+                            if (!existingItemsMap.TryGetValue(updatedItem.ProductId, out var oldItem))
+                            {
+                                // New item added to invoice
+                                if (existingOrder.OrderTypeId != 1 && updatedItem.Quantity > updatedItem.Product.QuantityInStock)
+                                {
+                                    insufficientItems.Add($"{updatedItem.Product?.NameAr ?? "Unknown"} (Available: {updatedItem.Product?.QuantityInStock}, Requested: {updatedItem.Quantity})");
+                                }
+                            }
+                            else
+                            {
+                                decimal diff = updatedItem.Quantity - oldItem.Quantity;
+
+                                if (existingOrder.OrderTypeId != 1 && diff > 0) // Sales: more qty requested
+                                {
+                                    if (oldItem.Product.QuantityInStock < diff)
+                                    {
+                                        insufficientItems.Add($"{oldItem.Product?.NameAr ?? "Unknown"} (Available: {oldItem.Product?.QuantityInStock}, Extra Requested: {diff})");
+                                    }
+                                }
+                            }
+                        }
+
+                        if (insufficientItems.Any())
+                        {
+                            await transaction.RollbackAsync();
+                            return BadRequest(new
+                            {
+                                success = false,
+                                message = "Update failed due to insufficient stock for the following items:",
+                                insufficientItems
+                            });
+                        }
+
+                        // Apply changes
+                        foreach (var updatedItem in updatedOrder.Items)
+                        {
+                            if (!existingItemsMap.TryGetValue(updatedItem.ProductId, out var oldItem))
+                            {
+                                // New item added
+                                if (existingOrder.OrderTypeId == 1) // Purchase
+                                {
+                                    updatedItem.Product.QuantityInStock += updatedItem.Quantity;
+                                }
+                                else // Sales
+                                {
+                                    updatedItem.Product.QuantityInStock -= updatedItem.Quantity;
+                                }
+
+                                await _unitOfWork.ProductRepo.UpdateAsync(updatedItem.Product);
+
+                                var newTransaction = new InventoryTransaction
+                                {
+                                    ProductId = updatedItem.ProductId,
+                                    QuantityChanged = existingOrder.OrderTypeId == 1 ? updatedItem.Quantity : -updatedItem.Quantity,
+                                    TransactionDate = DateTime.UtcNow,
+                                    Notes = $"Invoice #{existingOrder.Id} updated (new item).",
+                                    TransactionTypeId = existingOrder.OrderTypeId == 1 ? 1 : 2, // example lookup
+                                    OrderId = existingOrder.Id
+                                };
+                                await _unitOfWork.InventoryTransactionRepo.CreateAsync(newTransaction);
+                            }
+                            else
+                            {
+                                // Existing item modified
+                                decimal diff = updatedItem.Quantity - oldItem.Quantity;
+
+                                if (diff != 0)
+                                {
+                                    if (existingOrder.OrderTypeId == 1) // Purchase
+                                    {
+                                        oldItem.Product.QuantityInStock += diff;
+                                    }
+                                    else // Sales
+                                    {
+                                        oldItem.Product.QuantityInStock -= diff;
+                                    }
+
+                                    await _unitOfWork.ProductRepo.UpdateAsync(oldItem.Product);
+
+                                    var updateTransaction = new InventoryTransaction
+                                    {
+                                        ProductId = oldItem.ProductId,
+                                        QuantityChanged = existingOrder.OrderTypeId == 1 ? diff : -diff,
+                                        TransactionDate = DateTime.UtcNow,
+                                        Notes = $"Invoice #{existingOrder.Id} updated (qty changed).",
+                                        TransactionTypeId = existingOrder.OrderTypeId == 1 ? 1 : 2, // example lookup
+                                        OrderId = existingOrder.Id
+                                    };
+                                    await _unitOfWork.InventoryTransactionRepo.CreateAsync(updateTransaction);
+
+                                    oldItem.Quantity = updatedItem.Quantity; // update order item quantity
+                                }
+                            }
+                        }
+
+                        // Save updated order and items
+                        existingOrder.Items = updatedOrder.Items;
+                        await _unitOfWork.OrderRepo.UpdateAsync(existingOrder);
+
+                        await _unitOfWork.SaveAsync();
+                        await transaction.CommitAsync();
+
+                        return Ok(new
+                        {
+                            success = true,
+                            message = $"Invoice #{existingOrder.Id} updated successfully.",
+                            result = existingOrder
+                        });
+                    }
+                    catch (Exception ex)
+                    {
+                        await transaction.RollbackAsync();
+                        return StatusCode(500, new
+                        {
+                            success = false,
+                            message = $"Error updating approved order: {ex.Message}"
+                        });
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    message = $"Error: {ex.Message}"
+                });
+            }
+        }
+
     }
 }

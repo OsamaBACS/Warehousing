@@ -39,4 +39,8 @@ export class OrderService {
   UpdateOrderStatusToComplete(id: number) {
     return this.http.post<ApiResponse>(`${this.url}UpdateOrderStatusToComplete/${id}`, {});
   }
+
+  UpdateApprovedOrder(id: number, orderDto: OrderDto) {
+    return this.http.post<ApiResponse>(`${this.url}UpdateApprovedOrder/${id}`, orderDto);
+  }
 }

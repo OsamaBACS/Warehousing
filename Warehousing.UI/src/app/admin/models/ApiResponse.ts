@@ -4,5 +4,6 @@ import { OrderDto } from "./OrderDto";
 export interface ApiResponse {
   success: boolean;
   message: string;
-  result: OrderDto
+  result: OrderDto;
+  insufficientItems: string[];
 }

@@ -78,7 +78,7 @@ namespace Warehousing.Api.Controllers
         {
             try
             {
-                var subCategories = await _unitOfWork.SubCategoryRepo.GetByCondition(u => u.CategoryId == CategoryId).ToListAsync();
+                var subCategories = await _unitOfWork.SubCategoryRepo.GetByCondition(u => u.CategoryId == CategoryId && u.IsActive).ToListAsync();
                 if (subCategories == null)
                 {
                     return NotFound("No sub Categories Found!");

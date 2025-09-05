@@ -224,6 +224,45 @@ export class CartComponent implements OnInit {
     });
   }
 
+  onEdit(orderId: number) {
+    const config = {
+      initialState: {
+        message: 'هل انت متاكد من هذا الجراء؟',
+        cancelBtn: 'لا',
+        confirmBtn: 'نعم'
+      }
+    };
+
+    this.bsModalRef = this.modalService.show(ConfirmModalComponent, config);
+    this.bsModalRef.content?.onClose.subscribe((result: boolean) => {
+      if (result) {
+        console.log(result)
+        if (orderId) {
+          this.EditApprovedOrder(+orderId);
+        }
+      }
+    });
+  }
+
+  EditApprovedOrder(orderId: number) {
+    this.orderService.UpdateApprovedOrder(orderId, this.cartService.cartForm.value).subscribe({
+      next: (res) => {
+        if (res.success) {
+          this.cartService.clearCart();
+          this.toastr.success('تم التعديل');
+          this.printOrder();
+        } else {
+          var errors = res.insufficientItems.join('\n');
+          this.toastr.warning(errors, res.message);
+        }
+      },
+      error: (err) => {
+        console.error(err);
+        this.toastr.error(err.error, 'Order');
+      }
+    });
+  }
+
   onDelete(index: number) {
     const array = this.cartService.cartItems;
     array.removeAt(index);

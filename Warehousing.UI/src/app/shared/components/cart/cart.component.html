@@ -1,4 +1,4 @@
-<div class="container py-4">
+<div class="container py-4 bottom-padded-container">
   <h2 class="text-center mb-4">{{ title }}</h2>
 
   <div [formGroup]="cartService.cartForm">
@@ -47,12 +47,11 @@
         <div class="d-flex justify-content-between align-items-center mt-3">
           <!-- Quantity Input (right, more space) -->
           <div class="flex-grow-1 text-end ms-1">
-            <input type="number" formControlName="quantity" class="form-control text-center w-100 d-inline-block"
-              readonly />
+            <input type="number" formControlName="quantity" class="form-control text-center w-100 d-inline-block" />
           </div>
 
           <!-- + / - Buttons (left) -->
-          <div class="d-flex">
+          <div class="d-flex" *ngIf="hasAnyPermission(permissionsEnum.EDIT_APPROVED_INVOICE)">
             <button class="btn btn-outline-secondary ms-1"
               (click)="decreaseQuantity(item.get('productId')?.value)">-</button>
             <button class="btn btn-outline-secondary"
@@ -67,7 +66,7 @@
             item.get('sellingPrice')?.value) | number }} :
             <strong>الإجمالي</strong>
           </div>
-          <div class="d-flex">
+          <div class="d-flex" *ngIf="hasAnyPermission(permissionsEnum.EDIT_APPROVED_INVOICE)">
             <button class="btn btn-danger" (click)="onDelete(i)"><i class="bi bi-trash"></i></button>
           </div>
         </div>
@@ -81,7 +80,7 @@
     </div>
 
     <!-- Total -->
-    <div class="card mt-4 shadow-sm">
+    <div class="card mt-4 shadow-sm total-section">
       <div class="card-body text-end">
         <h5 class="card-title">المجموع الكلي</h5>
         <p class="card-text fs-4 fw-bold">
@@ -91,69 +90,74 @@
     </div>
 
     <!-- Submit Order -->
-    <div class="d-flex flex-row justify-content-center mt-4" *ngIf="getCartItemFormGroups().length > 0">
-      <ng-container
-        *ngIf="
-            cartService.cartForm.get('statusId')?.value != '6'
-            && cartService.cartForm.get('statusId')?.value != '1'
-            && cartService.cartForm.get('statusId')?.value != '8'
-          ">
-
-        <div class="p-2 w-100" *ngIf="cartService.cartForm.get('statusId')?.value != '11'">
-          <button class="btn btn-secondary btn-lg w-100 text-center" (click)="onSave()">
-            حفظ
-          </button>
-        </div>
-        <div class="p-2 w-100">
-          <button class="btn btn-danger btn-lg w-100 text-center" (click)="onCancel()">
-            إلغاء
-          </button>
-        </div>
-        <div class="p-2 w-100">
-          <button class="btn btn-primary btn-lg w-100 text-center" (click)="onSubmit()">
-            إرسال
-          </button>
-        </div>
-      </ng-container>
-      <ng-container
-        *ngIf="
-            cartService.cartForm.get('statusId')?.value == '6'
-            || cartService.cartForm.get('statusId')?.value == '1'
-          ">
-        <div class="p-2 w-100">
-          <button class="btn btn-secondary btn-lg w-100 text-center" (click)="cartService.clearCart()">إفراغ السلة</button>
-        </div>
-      </ng-container>
-      <ng-container *ngIf="
-          hasAnyPermission(permissionsEnum.PRINT_SALE_ORDER) 
-          && cartService.cartItems.length > 0
-          && cartService.cartForm.get('statusId')?.value != '6'
-          && cartService.cartForm.get('statusId')?.value != '11'
-          && cartService.cartForm.get('statusId')?.value != '8'
-          && cartService.cartForm.get('statusId')?.value != null
-        ">
-        <div class="p-2 w-100">
-          <button class="btn btn-danger btn-lg w-100 text-center" (click)="onCancel()">
-            إلغاء
-          </button>
-        </div>
-        <div class="p-2 w-100">
-          <button class="btn btn-success btn-lg w-100 text-center" (click)="onConfirm(cartService.cartForm.get('id')?.value)">إعتماد الطلب</button>
-        </div>
-      </ng-container>
-      <ng-container *ngIf="
-          hasAnyPermission(permissionsEnum.PRINT_SALE_ORDER) 
-          && cartService.cartItems.length > 0
-          && cartService.cartForm.get('statusId')?.value == '8'
-        ">
-        <div class="p-2 w-100">
-          <button class="btn btn-secondary btn-lg w-100 text-center" (click)="cartService.clearCart()">إفراغ السلة</button>
-        </div>
-        <div class="p-2 w-100">
-          <button class="btn btn-info btn-lg w-100 text-center" (click)="printOrder()">طباعه</button>
-        </div>
-      </ng-container>
-    </div>
+     <div class="fixed-bottom-actions">
+       <div class="d-flex flex-row justify-content-center mt-4" *ngIf="getCartItemFormGroups().length > 0">
+         <ng-container
+           *ngIf="
+               cartService.cartForm.get('statusId')?.value != '6'
+               && cartService.cartForm.get('statusId')?.value != '1'
+               && cartService.cartForm.get('statusId')?.value != '8'
+             ">
+   
+           <div class="p-2 w-100" *ngIf="cartService.cartForm.get('statusId')?.value != '11'">
+             <button class="btn btn-secondary btn-lg w-100 text-center" (click)="onSave()">
+               حفظ
+             </button>
+           </div>
+           <div class="p-2 w-100">
+             <button class="btn btn-danger btn-lg w-100 text-center" (click)="onCancel()">
+               إلغاء
+             </button>
+           </div>
+           <div class="p-2 w-100">
+             <button class="btn btn-primary btn-lg w-100 text-center" (click)="onSubmit()">
+               إرسال
+             </button>
+           </div>
+         </ng-container>
+         <ng-container
+           *ngIf="
+               cartService.cartForm.get('statusId')?.value == '6'
+               || cartService.cartForm.get('statusId')?.value == '1'
+             ">
+           <div class="p-2 w-100">
+             <button class="btn btn-secondary btn-lg w-100 text-center" (click)="cartService.clearCart()">إفراغ السلة</button>
+           </div>
+         </ng-container>
+         <ng-container *ngIf="
+             hasAnyPermission(permissionsEnum.PRINT_SALE_ORDER) 
+             && cartService.cartItems.length > 0
+             && cartService.cartForm.get('statusId')?.value != '6'
+             && cartService.cartForm.get('statusId')?.value != '11'
+             && cartService.cartForm.get('statusId')?.value != '8'
+             && cartService.cartForm.get('statusId')?.value != null
+           ">
+           <div class="p-2 w-100">
+             <button class="btn btn-danger btn-lg w-100 text-center" (click)="onCancel()">
+               إلغاء
+             </button>
+           </div>
+           <div class="p-2 w-100">
+             <button class="btn btn-success btn-lg w-100 text-center" (click)="onConfirm(cartService.cartForm.get('id')?.value)">إعتماد الطلب</button>
+           </div>
+         </ng-container>
+         <ng-container *ngIf="
+             hasAnyPermission(permissionsEnum.PRINT_SALE_ORDER) 
+             && cartService.cartItems.length > 0
+             && cartService.cartForm.get('statusId')?.value == '8'
+           ">
+           <div class="p-2 w-100">
+             <button class="btn btn-secondary btn-lg w-100 text-center" (click)="cartService.clearCart()">إفراغ السلة</button>
+           </div>
+           <div class="p-2 w-100" *ngIf="hasAnyPermission(permissionsEnum.EDIT_APPROVED_INVOICE)">
+             <button class="btn btn-primary btn-lg w-100 text-center" (click)="onEdit(cartService.cartForm.get('id')?.value)">تعديل الطلب</button>
+           </div>
+           <div class="p-2 w-100">
+             <button class="btn btn-info btn-lg w-100 text-center" (click)="printOrder()">طباعه</button>
+           </div>
+         </ng-container>
+       </div>
+     </div>
 
     <!-- Footer Note -->
     <!-- <small class="text-muted mt-3 d-block text-center">
