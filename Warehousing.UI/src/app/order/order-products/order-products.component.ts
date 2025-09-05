@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { ProductsService } from '../../admin/services/products.service';
 import { CartService } from '../../shared/services/cart.service';
-import { FormBuilder, FormGroup } from '@angular/forms';
+import { AbstractControl, FormBuilder, FormControl, FormGroup } from '@angular/forms';
 import { BreadcrumbService } from '../../shared/services/breadcrumb.service';
 import { Product } from '../../admin/models/product';
 import { Observable } from 'rxjs';
@@ -22,7 +22,7 @@ export class OrderProductsComponent implements OnInit {
   constructor(
     private route: ActivatedRoute,
     private productsService: ProductsService,
-    private cartService: CartService,
+    public cartService: CartService,
     private fb: FormBuilder,
     private breadcrumbService: BreadcrumbService
   ) {
@@ -137,6 +137,21 @@ export class OrderProductsComponent implements OnInit {
     );
 
     return index > -1 ? this.cartService.cartItems.at(index).get('quantity')?.value || 0 : 0;
+  }
+
+  getCartItemIndexByProductId(productId: number): number | null {
+    const index = this.cartService.cartItems.controls.findIndex(
+      group => group.get('productId')?.value === productId
+    );
+    return index >= 0 ? index : null;
+  }
+
+  getQuantityFormControl(productId: number): FormControl | null {
+    const index = this.getCartItemIndexByProductId(productId);
+    if (index === null) return null;
+
+    const control = this.cartService.cartItems.at(index).get('quantity');
+    return control as FormControl; // ✅ Safe cast if you're sure it's a FormControl
   }
 
   private formatDate(dateString: string): string {

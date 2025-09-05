@@ -1,4 +1,4 @@
-import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
+import { Component, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { CartService } from '../../services/cart.service';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Product } from '../../../admin/models/product';
@@ -19,6 +19,7 @@ import { SubCategory } from '../../../admin/models/SubCategory';
 import { Unit } from '../../../admin/models/unit';
 import { PrintService } from '../../services/print.service';
 import { OrderItemDto } from '../../../admin/models/OrderItemDto';
+import { Subject } from 'rxjs';
 
 @Component({
   selector: 'app-cart',
@@ -26,7 +27,7 @@ import { OrderItemDto } from '../../../admin/models/OrderItemDto';
   templateUrl: './cart.component.html',
   styleUrl: './cart.component.scss'
 })
-export class CartComponent implements OnInit {
+export class CartComponent implements OnInit, OnDestroy {
   cartItems: OrderItemDto[] = [];
   orderTypeId: number = 1; // Default to Purchase
 
@@ -52,6 +53,23 @@ export class CartComponent implements OnInit {
     this.title = cartService.orderTypeId == 1 ? 'سلة المشتريات' : 'سلة المبيعات';
   }
 
+  ngOnInit(): void {
+    this.orderTypeId = this.cartService.orderTypeId;
+
+    this.calculateAndSetTotalAmount();
+
+    // Optional: Also recalculate if cart items change dynamically
+    this.cartService.cartItems.valueChanges.subscribe(() => {
+      this.calculateAndSetTotalAmount();
+    });
+  }
+
+  ngOnDestroy() {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  private destroy$ = new Subject<void>();
   title: string = '';
   products: Product[] = [];
   suppliers: Supplier[] = [];
@@ -82,10 +100,6 @@ export class CartComponent implements OnInit {
   getStatusInfo(statusId: number) {
     const status = this.statuses.find(s => s.id === statusId);
     return status;
-  }
-
-  ngOnInit(): void {
-    this.orderTypeId = this.cartService.orderTypeId;
   }
 
   getCartItemFormGroups(): FormGroup[] {
@@ -297,6 +311,25 @@ export class CartComponent implements OnInit {
   getUnitName(id: number): string {
     const unit = this.units.find(p => p.id === id);
     return unit ? (this.lang.currentLang === 'ar' ? unit.nameAr : unit.nameEn) : '';
+  }
+
+  calculateAndSetTotalAmount() {
+    const items = this.cartService.cartItems.controls as FormGroup[];
+    let total = 0;
+
+    for (const item of items) {
+      const quantity = item.get('quantity')?.value || 0;
+      const price = this.cartService.orderTypeId === 1
+        ? item.get('costPrice')?.value || 0
+        : item.get('sellingPrice')?.value || 0;
+
+      total += quantity * price;
+    }
+
+    // Update the form control
+    this.cartService.cartForm.patchValue({
+      totalAmount: total
+    });
   }
 
   printOrder() {
