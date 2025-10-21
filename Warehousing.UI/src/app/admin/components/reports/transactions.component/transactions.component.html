@@ -64,8 +64,8 @@
                             <span class="text-muted">{{ 'PRODUCTS.QUANTITYINSTOCK' | translate }}</span>
                             <div class="d-flex justify-content-between mt-1">
                                 <span class="text-muted">{{ 'PRODUCTS.QUANTITYINSTOCK' | translate }}</span>
-                                <strong [class.text-danger]="t.product.quantityInStock <= t.product.reorderLevel!">
-                                    {{ t.product.quantityInStock }}
+                                <strong *ngFor="let inv of t.product.inventories">
+                                    {{ inv.quantity }}
                                     <small class="text-muted ms-1">
                                         {{ lang.currentLang === 'ar' ? t.product?.unit?.nameAr : t.product?.unit?.nameEn }}
                                     </small>
@@ -174,8 +174,8 @@
                             <span class="text-muted">{{ 'PRODUCTS.QUANTITYINSTOCK' | translate }}</span>
                             <div class="d-flex justify-content-between mt-1">
                                 <span class="text-muted">{{ 'PRODUCTS.QUANTITYINSTOCK' | translate }}</span>
-                                <strong [class.text-danger]="t.product.quantityInStock <= t.product.reorderLevel!">
-                                    {{ t.product.quantityInStock }}
+                                <strong *ngFor="let inv of t.product.inventories">
+                                    {{ inv.quantity }}
                                     <small class="text-muted ms-1">
                                         {{ lang.currentLang === 'ar' ? t.product?.unit?.nameAr : t.product?.unit?.nameEn }}
                                     </small>
@@ -190,7 +190,6 @@
 
         <!-- Summary Footer -->
         <div class="mt-5 text-center small">
-            <p class="mb-1">Opening Balance: {{ data.transactions[0].product.openingBalance }}</p>
             <p class="mb-1">Total Movement:
                 {{ data.transactions | getQuantityChangedSum }}
             </p>

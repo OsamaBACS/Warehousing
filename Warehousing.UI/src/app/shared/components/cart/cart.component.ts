@@ -54,14 +54,23 @@ export class CartComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    this.orderTypeId = this.cartService.orderTypeId;
+    // Show loading indicator
+    this.isLoading = true;
+    
+    // Simulate loading time to ensure all data is loaded
+    setTimeout(() => {
+      this.orderTypeId = this.cartService.orderTypeId;
 
-    this.calculateAndSetTotalAmount();
-
-    // Optional: Also recalculate if cart items change dynamically
-    this.cartService.cartItems.valueChanges.subscribe(() => {
       this.calculateAndSetTotalAmount();
-    });
+
+      // Optional: Also recalculate if cart items change dynamically
+      this.cartService.cartItems.valueChanges.subscribe(() => {
+        this.calculateAndSetTotalAmount();
+      });
+
+      // Hide loading indicator
+      this.isLoading = false;
+    }, 500); // 500ms delay to show loading indicator
   }
 
   ngOnDestroy() {
@@ -71,6 +80,7 @@ export class CartComponent implements OnInit, OnDestroy {
 
   private destroy$ = new Subject<void>();
   title: string = '';
+  isLoading: boolean = true; // Loading indicator
   products: Product[] = [];
   suppliers: Supplier[] = [];
   customers: Customer[] = [];
@@ -106,21 +116,65 @@ export class CartComponent implements OnInit, OnDestroy {
     return this.cartService.cartItems.controls as FormGroup[];
   }
 
-  increaseQuantity(productId: number): void {
-    const product = this.cartService.cartItems?.controls.find(i => i.get('productId')?.value == productId);
-    if (product) {
-      this.cartService.addToCart({ id: productId } as any, 1);
+  async increaseQuantity(productId: number): Promise<void> {
+    const cartItem = this.cartService.cartItems?.controls.find(i => i.get('productId')?.value == productId);
+    if (cartItem) {
+      const currentQuantity = cartItem.get('quantity')?.value || 0;
+      const storeId = cartItem.get('storeId')?.value;
+      const newQuantity = currentQuantity + 1;
+      
+      // Validate stock before increasing
+      const isValid = await this.cartService.validateStockForCartItem(productId, storeId, newQuantity);
+      if (isValid) {
+        this.cartService.addToCart({ id: productId } as any, 1, storeId);
+      }
     }
   }
 
   decreaseQuantity(productId: number): void {
-    const product = this.cartService.cartItems?.controls.find(i => i.get('productId')?.value == productId);
-    if (product) {
-      this.cartService.addToCart({ id: productId } as any, -1);
+    const cartItem = this.cartService.cartItems?.controls.find(i => i.get('productId')?.value == productId);
+    if (cartItem) {
+      const storeId = cartItem.get('storeId')?.value;
+      this.cartService.addToCart({ id: productId } as any, -1, storeId);
     }
   }
 
-  onCostPriceChange() {
+  async onQuantityChange(productId: number, event: any): Promise<void> {
+    const newQuantity = parseInt(event.target.value) || 0;
+    
+    const cartItem = this.cartService.cartItems?.controls.find(i => i.get('productId')?.value == productId);
+    if (!cartItem) {
+      return;
+    }
+
+    if (newQuantity < 0) {
+      event.target.value = 0;
+      cartItem.get('quantity')?.setValue(0);
+      return;
+    }
+
+    const storeId = cartItem.get('storeId')?.value;
+    
+    // Validate stock before updating quantity
+    const isValid = await this.cartService.validateStockForCartItem(productId, storeId, newQuantity);
+    if (!isValid) {
+      // Clear the input field and revert to previous value if validation fails
+      const currentQuantity = cartItem.get('quantity')?.value || 0;
+      event.target.value = currentQuantity;
+      cartItem.get('quantity')?.setValue(currentQuantity);
+      return;
+    }
+    
+    // Update the quantity if validation passes
+    cartItem.get('quantity')?.setValue(newQuantity);
+    
+    // Force update the input value to ensure synchronization
+    setTimeout(() => {
+      event.target.value = newQuantity;
+    }, 0);
+  }
+
+  onUnitCostChange() {
     this.cartService.calculateTotal();
   }
 
@@ -129,20 +183,26 @@ export class CartComponent implements OnInit, OnDestroy {
   }
 
   onSave() {
+    // Store the original statusId to restore it if save fails
+    const originalStatusId = this.cartService.cartForm.get('statusId')?.value;
+    
     this.cartService.cartForm.get('statusId')?.setValue(11); //DRAFT
+    this.cartService.cartForm.get('orderTypeId')?.setValue(this.cartService.orderTypeId);
     this.orderService.SaveOrder(this.cartService.cartForm.value).subscribe({
       next: (response) => {
         if (response) {
-          if (response) {
-            console.log(response);
-            this.toastr.success('تم حفظ الطلب بنجاح');
-            this.cartService.clearCart();
-            this.router.navigate(['/']);
-          }
+          console.log(response);
+          this.toastr.success('تم حفظ الطلب بنجاح');
+          this.cartService.clearCart();
+          this.router.navigate(['/']);
         }
       },
       error: (err) => {
         console.error('Error saving order:', err);
+        // Restore the original statusId so the button remains visible
+        this.cartService.cartForm.get('statusId')?.setValue(originalStatusId);
+        this.toastr.error('فشل في حفظ الطلب. يرجى المحاولة مرة أخرى.');
+        // Don't clear cart on error - keep the data so user can try again
       }
     });
   }
@@ -172,6 +232,8 @@ export class CartComponent implements OnInit, OnDestroy {
           },
           error: (err) => {
             console.error('Error saving order:', err);
+            this.toastr.error('فشل في إلغاء الطلب. يرجى المحاولة مرة أخرى.');
+            // Don't clear cart on error - keep the data so user can try again
           }
         });
       }
@@ -183,7 +245,11 @@ export class CartComponent implements OnInit, OnDestroy {
   }
 
   onSubmit(): void {
+    // Store the original statusId to restore it if submit fails
+    const originalStatusId = this.cartService.cartForm.get('statusId')?.value;
+    
     this.cartService.cartForm.get('statusId')?.setValue(1);
+    this.cartService.cartForm.get('orderTypeId')?.setValue(this.cartService.orderTypeId);
     this.orderService.SaveOrder(this.cartService.cartForm.value).subscribe({
       next: (response) => {
         if (response) {
@@ -195,6 +261,10 @@ export class CartComponent implements OnInit, OnDestroy {
       },
       error: (err) => {
         console.error('Error saving order:', err);
+        // Restore the original statusId so the button remains visible
+        this.cartService.cartForm.get('statusId')?.setValue(originalStatusId);
+        this.toastr.error('فشل في إرسال الطلب. يرجى المحاولة مرة أخرى.');
+        // Don't clear cart on error - keep the data so user can try again
       }
     });
   }
@@ -277,6 +347,45 @@ export class CartComponent implements OnInit, OnDestroy {
     });
   }
 
+  onCancelApprovedOrder(orderId: number) {
+    const config = {
+      initialState: {
+        message: 'هل انت متاكد من هذا الجراء؟',
+        cancelBtn: 'لا',
+        confirmBtn: 'نعم'
+      }
+    };
+
+    this.bsModalRef = this.modalService.show(ConfirmModalComponent, config);
+    this.bsModalRef.content?.onClose.subscribe((result: boolean) => {
+      if (result) {
+        console.log(result)
+        if (orderId) {
+          this.CancelApprovedOrder(+orderId);
+        }
+      }
+    });
+  }
+
+  CancelApprovedOrder(orderId: number) {
+    this.orderService.CancelApprovedOrder(orderId).subscribe({
+      next: (res) => {
+        if (res.success) {
+          this.cartService.clearCart();
+          this.toastr.success('تم الإلغاء');
+          this.printOrder();
+        } else {
+          var errors = res.insufficientItems.join('\n');
+          this.toastr.warning(errors, res.message);
+        }
+      },
+      error: (err) => {
+        console.error(err);
+        this.toastr.error(err.error, 'Order');
+      }
+    });
+  }
+
   onDelete(index: number) {
     const array = this.cartService.cartItems;
     array.removeAt(index);
@@ -320,8 +429,8 @@ export class CartComponent implements OnInit, OnDestroy {
     for (const item of items) {
       const quantity = item.get('quantity')?.value || 0;
       const price = this.cartService.orderTypeId === 1
-        ? item.get('costPrice')?.value || 0
-        : item.get('sellingPrice')?.value || 0;
+        ? item.get('unitCost')?.value || 0
+        : item.get('unitPrice')?.value || 0;
 
       total += quantity * price;
     }

@@ -14,14 +14,22 @@
     <!-- Single category Card -->
     <div class="col" *ngFor="let category of categorys">
       <div class="card h-100 shadow-sm">
+        <!-- Category Image -->
+        <div class="card-img-top bg-light d-flex justify-content-center align-items-center p-3">
+          <app-image-uploader [initialImageUrl]="serverUrl + category.imagePath" [readonly]="true">
+          </app-image-uploader>
+        </div>
+        
         <div class="card-body d-flex flex-column">
-          <h5 class="card-title">
-            {{ category.nameEn }} <small class="text-muted">({{ category.nameAr }})</small>
-          </h5>
-          <p class="card-text text-muted flex-grow-1">
-            {{ category.description }}
+          <h6 class="card-title text-center mb-2">
+            {{ category.nameAr }}
+            <small class="text-muted d-block">{{ category.nameEn }}</small>
+          </h6>
+          <p class="card-text text-muted flex-grow-1 small" 
+             [title]="category.description">
+            {{ (category.description?.length || 0) > 50 ? (category.description | slice:0:50) + '...' : category.description }}
           </p>
-          <div>
+          <div class="text-center">
             <span class="badge bg-success" *ngIf="category.isActive">Active</span>
             <span class="badge bg-danger" *ngIf="!category.isActive">Inactive</span>
           </div>

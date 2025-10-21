@@ -17,5 +17,10 @@ namespace Warehousing.Repo.Shared
         Task<IList<T>> GetAllPagination(int pageIndex, int pageSize, Expression<Func<T, object>> orderBy, Expression<Func<T, bool>>? expression, params Expression<Func<T, object>>[]? includes);
         Task<IList<T>> Search(int pageIndex, int pageSize, Expression<Func<T, bool>> expression, Expression<Func<T, int>> orderBy, params Expression<Func<T, object>>[]? includes);
         Task<int> GetTotalCount();
+        
+        // Additional async methods for better controller support
+        Task<IEnumerable<T>> GetAllAsync();
+        Task<T?> GetByIdAsync(int id);
+        Task DeleteAsync(int id);
     }
 }

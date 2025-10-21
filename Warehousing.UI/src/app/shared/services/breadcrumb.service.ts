@@ -12,12 +12,8 @@ export class BreadcrumbService {
   public breadcrumbs$ = this.breadcrumbsSubject.asObservable();
 
   constructor(private router: Router) {
-    // Optional: Reset breadcrumbs on navigation
-    this.router.events
-      .pipe(filter(event => event instanceof NavigationEnd))
-      .subscribe(() => {
-        this.reset();
-      });
+    // Don't automatically reset breadcrumbs on navigation
+    // Let components manually control their breadcrumbs
   }
 
   // Set breadcrumbs manually

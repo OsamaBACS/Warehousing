@@ -1,5 +1,6 @@
 import { CommonModule } from "@angular/common";
 import { NgModule } from "@angular/core";
+import { ReactiveFormsModule, FormsModule } from "@angular/forms";
 import { TranslateModule } from "@ngx-translate/core";
 import { ToastrModule } from "ngx-toastr";
 import { MySharedModule } from "../shared/my-shared-module";
@@ -34,6 +35,8 @@ import { SubCategoryFormComponent } from './components/SubCategories/sub-categor
 import { UserDevicesComponent } from './components/Users/user-devices/user-devices.component';
 import { OrderListComponent } from './components/Orders/order-list/order-list.component';
 import { OrderItemsListComponent } from './components/Orders/order-items-list/order-items-list.component';
+import { StoreTransferFormComponent } from './components/StoreTransfers/store-transfer-form/store-transfer-form.component';
+import { InventoryManagementComponent } from './components/Inventory/inventory-management/inventory-management.component';
 
 
 
@@ -68,14 +71,18 @@ import { OrderItemsListComponent } from './components/Orders/order-items-list/or
     SubCategoryFormComponent,
     UserDevicesComponent,
     OrderListComponent,
-    OrderItemsListComponent
+    OrderItemsListComponent,
+    StoreTransferFormComponent,
+    InventoryManagementComponent
   ],
   imports: [
     CommonModule,
     AdminRoutingModule,
     TranslateModule,
     ToastrModule,
-    MySharedModule
+    MySharedModule,
+    ReactiveFormsModule,
+    FormsModule
   ]
 })
 export class AdminModule { }

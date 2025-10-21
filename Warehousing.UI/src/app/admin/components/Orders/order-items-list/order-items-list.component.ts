@@ -133,7 +133,7 @@ export class OrderItemsListComponent implements OnInit {
       ],
       unitId: [{ value: item?.product?.unitId || null, disabled: true }],
       quantity: [{ value: item?.quantity || 0, disabled: true }],
-      sellingPrice: [{ value: item?.sellingPrice || 0, disabled: true}],
+      unitPrice: [{ value: item?.unitPrice || 0, disabled: true}],
     });
 
     return fg;

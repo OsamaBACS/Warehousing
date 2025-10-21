@@ -1,49 +1,65 @@
 <div class="container py-4" dir="rtl">
-  <div class="row g-3">
-    <div class="col-12 col-sm-4 col-md-3 col-lg-2 m-3 border"
-      *ngFor="let product of (products$ | async); let i = index;">
-      <h6 class="fw-bold mb-2 text-truncate text-center">{{ product.nameAr }}</h6>
-      <div class="card h-100">
-
-        <!-- صورة المنتج -->
-        <div class="bg-white d-flex justify-content-center align-items-center p-2">
-          <img [src]="resourcesUrl + product.imagePath" [alt]="product.nameAr" class="img-fluid"
-            style="object-fit: contain;">
+  <div class="row g-4">
+    <div class="col-sm-6 col-md-4 col-lg-3" *ngFor="let product of (products$ | async)">
+      <div class="card h-100 border-0 shadow-sm rounded">
+        
+        <!-- Product Image -->
+        <div class="card-img-top bg-light d-flex justify-content-center align-items-center p-3">
+          <app-image-uploader [initialImageUrl]="serverUrl + product.imagePath" [readonly]="true">
+          </app-image-uploader>
         </div>
 
-        <!-- تفاصيل المنتج -->
-        <div class="card-body pt-2 pb-1 px-3 d-flex flex-column justify-content-between">
-          <div class="d-flex justify-content-between small text-muted">
-            <span class="fw-bold text-dark">{{ product.description }}</span>
-          </div>
-        </div>
-        <div class="card-body pt-2 pb-1 px-3 d-flex flex-column justify-content-between">
-          <div class="d-flex justify-content-between small text-muted">
-            <span>الكمية في المستودع</span>
-            <span class="fw-bold text-dark">{{ product.quantityInStock }}</span>
-          </div>
-        </div>
-        <div class="card-body pt-2 pb-1 px-3 d-flex flex-column justify-content-between">
-          <div class="d-flex justify-content-between small text-muted">
-            <span>{{ product.unit?.nameAr }}</span>
-            <span class="fw-bold text-dark">{{ product.sellingPrice }} د.أ</span>
-          </div>
-        </div>
+        <!-- Card Body -->
+        <div class="card-body d-flex flex-column">
+          <!-- Product Name -->
+          <h6 class="card-title fw-bold text-primary mb-1">
+            {{ product.nameAr }}
+          </h6>
+          
+          <!-- Description -->
+          <p class="card-text text-muted small mb-2" [title]="product.description">
+            {{ product.description | slice:0:50 }}{{ (product.description?.length || 0) > 50 ? '...' : '' }}
+          </p>
 
-        <!-- التحكم بالكمية -->
-        <div class="card-footer border-top bg-white py-2 px-3" [formGroup]="cartService.cartForm">
-          <div class="d-flex justify-content-between align-items-center">
-            <button class="btn btn-outline-danger fw-bold fs-5 px-3" (click)="removeFromCart(product)">−</button>
-            <ng-container *ngIf="getQuantityFormControl(product.id) as ctrl">
-              <input [formControl]="ctrl" class="form-control text-center w-100" />
-            </ng-container>
-            <ng-template #notInCart>
-              <span class="fw-bold fs-5">{{ getQuantity(product.id) }}</span>
-            </ng-template>
-            <button class="btn btn-outline-success fw-bold fs-5 px-3" (click)="addToCart(product)">+</button>
+          <!-- Price -->
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <span class="fw-semibold text-success fs-5">{{ product.sellingPrice | currency }}</span>
+            <span class="text-muted small">{{ product.unit?.nameAr }}</span>
+          </div>
+
+          <!-- Total Quantity Across All Stores -->
+          <div class="mb-2">
+            <div class="d-flex justify-content-between small">
+              <span class="text-muted">إجمالي الكمية:</span>
+              <strong class="text-primary">{{ getTotalQuantity(product) }}</strong>
+            </div>
+          </div>
+
+          <!-- Store Selection -->
+          <div class="mb-2" *ngIf="isStoreSelectionRequired()">
+            <label class="form-label small">{{ getStoreSelectionLabel() }}</label>
+            <select class="form-select form-select-sm" 
+                    [ngModel]="selectedStores[product.id]" 
+                    (ngModelChange)="onStoreChange(product.id, $event)">
+              <option value="">-- اختر المستودع --</option>
+              <option *ngFor="let store of getAvailableStores(product)" [value]="store.storeId">
+                {{ store.store?.nameAr || 'مستودع ' + store.storeId }}
+                <span *ngIf="orderTypeId === 2">({{ store.quantity }})</span>
+              </option>
+            </select>
+          </div>
+
+          <!-- Quantity Controls -->
+          <div class="mt-auto">
+            <div class="d-flex justify-content-between align-items-center">
+              <button class="btn btn-outline-danger btn-sm" (click)="removeFromCart(product)">−</button>
+              <input type="number" [value]="getQuantity(product.id)" [attr.data-product-id]="product.id" 
+                     class="form-control text-center" style="width: 60px;" 
+                     (input)="onQuantityChangeInOrderProducts(product.id, $event)" />
+              <button class="btn btn-outline-success btn-sm" (click)="addToCart(product)">+</button>
+            </div>
           </div>
         </div>
-
       </div>
     </div>
   </div>

@@ -49,6 +49,15 @@
             </div>
         </div>
 
+        <!-- Image Upload -->
+        <div class="col-12">
+            <label class="form-label">SubCategory Image</label>
+            <app-image-uploader 
+                formControlName="image"
+                [initialImageUrl]="subCategoryForm.get('imagePath')?.value">
+            </app-image-uploader>
+        </div>
+
         <!-- Active Toggle -->
         <div class="col-12">
             <div class="form-check form-switch">

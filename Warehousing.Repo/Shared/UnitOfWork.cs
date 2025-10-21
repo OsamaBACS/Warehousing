@@ -63,6 +63,12 @@ namespace Warehousing.Repo.Shared
         public IRoleProductRepo RoleProductRepo => new RoleProductRepo(_context, _loggerFactory.CreateLogger<RoleProductRepo>(), _config);
         public ISubCategoryRepo SubCategoryRepo => new SubCategoryRepo(_context, _loggerFactory.CreateLogger<SubCategoryRepo>(), _config);
 
+        public IInventoryRepo InventoryRepo => new InventoryRepo(_context, _loggerFactory.CreateLogger<InventoryRepo>(), _config);
+
+        public IStoreTransferRepo StoreTransferRepo => new StoreTransferRepo(_context, _loggerFactory.CreateLogger<StoreTransferRepo>(), _config);
+
+        public IProductRecipeRepo ProductRecipeRepo => new ProductRecipeRepo(_context, _loggerFactory.CreateLogger<ProductRecipeRepo>(), _config);
+
         public async Task SaveAsync()
         {
             await _context.SaveChangesAsync(); // <-- This will use your overridden SaveChangesAsync

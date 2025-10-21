@@ -1,7 +1,15 @@
 <div class="container py-4 bottom-padded-container">
   <h2 class="text-center mb-4">{{ title }}</h2>
 
-  <div [formGroup]="cartService.cartForm">
+  <!-- Loading Indicator -->
+  <div *ngIf="isLoading" class="text-center py-5">
+    <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+      <span class="visually-hidden">جاري التحميل...</span>
+    </div>
+    <p class="mt-3 text-muted">جاري تحميل سلة التسوق...</p>
+  </div>
+
+  <div [formGroup]="cartService.cartForm" *ngIf="!isLoading">
     <!-- Supplier / Customer -->
     <div class="d-flex flex-wrap justify-content-center align-items-center mb-3">
       <div class="p-1 flex-fill" *ngIf="cartService.orderTypeId == 1">
@@ -152,6 +160,9 @@
            <div class="p-2 w-100" *ngIf="hasAnyPermission(permissionsEnum.EDIT_APPROVED_INVOICE)">
              <button class="btn btn-primary btn-lg w-100 text-center" (click)="onEdit(cartService.cartForm.get('id')?.value)">تعديل الطلب</button>
            </div>
+           <div class="p-2 w-100" *ngIf="hasAnyPermission(permissionsEnum.EDIT_APPROVED_INVOICE)">
+             <button class="btn btn-danger btn-lg w-100 text-center" (click)="onEdit(cartService.cartForm.get('id')?.value)">إلغاء الطلب</button>
+           </div>
            <div class="p-2 w-100">
              <button class="btn btn-info btn-lg w-100 text-center" (click)="printOrder()">طباعه</button>
            </div>
@@ -253,15 +264,15 @@
           <td>
             {{ 
               cartService.orderTypeId === 1 ?
-                item.get('costPrice')?.value :
-                item.get('sellingPrice')?.value 
+                item.get('unitCost')?.value :
+                item.get('unitPrice')?.value 
             }}
           </td>
           <td>
             {{ 
               (cartService.orderTypeId === 1 ?
-                item.get('quantity')?.value * item.get('costPrice')?.value :
-                item.get('quantity')?.value * item.get('sellingPrice')?.value
+                item.get('quantity')?.value * item.get('unitCost')?.value :
+                item.get('quantity')?.value * item.get('unitPrice')?.value
               )
                | currency 
             }}

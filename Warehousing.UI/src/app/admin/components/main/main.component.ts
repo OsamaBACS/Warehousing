@@ -32,11 +32,13 @@ export class MainComponent implements OnInit {
 
   dashboardCards = [
     { label: 'لوحة التحكم', route: '/admin/dashboard', icon: 'bi bi-speedometer2' },
-    { label: 'التصنيفات', route: '/admin/category', icon: 'bi bi-box-seam' },
-    { label: 'التصنيفات الفرعية', route: '/admin/sub-category', icon: 'bi bi-box-seam' },
-    { label: 'وحدات القياس', route: '/admin/unit', icon: 'bi bi-box-seam' },
-    { label: 'المستودعات', route: '/admin/store', icon: 'bi bi-box-seam' },
+    { label: 'التصنيفات', route: '/admin/category', icon: 'bi bi-box-seam', permission: this.permissionsEnum.VIEW_CATEGORIES },
+    { label: 'التصنيفات الفرعية', route: '/admin/sub-category', icon: 'bi bi-diagram-3', permission: this.permissionsEnum.VIEW_SUBCATEGORIES },
+    { label: 'وحدات القياس', route: '/admin/unit', icon: 'bi bi-rulers', permission: this.permissionsEnum.VIEW_UNITS },
+    { label: 'المستودعات', route: '/admin/store', icon: 'bi bi-building', permission: this.permissionsEnum.VIEW_STORES },
     { label: 'المنتجات', route: '/admin/products', icon: 'bi bi-box-seam', permission: this.permissionsEnum.VIEW_PRODUCTS },
+    { label: 'نقلات المستودعات', route: '/admin/store-transfers', icon: 'bi bi-arrow-left-right', permission: this.permissionsEnum.VIEW_STORE_TRANSFERS },
+    { label: 'إدارة المخزون', route: '/admin/inventory-management', icon: 'bi bi-clipboard-data', permission: this.permissionsEnum.VIEW_INVENTORY_MANAGEMENT },
     { label: 'المستخدمين', route: '/admin/users', icon: 'bi bi-people', permission: this.permissionsEnum.VIEW_USERS },
     { label: 'اجهزة المستخدمين', route: '/admin/users-devices', icon: 'bi bi-phone', permission: this.permissionsEnum.VIEW_USERS },
     { label: 'الصلاحيات', route: '/admin/roles', icon: 'bi bi-person-badge', permission: this.permissionsEnum.VIEW_ROLES },

@@ -30,7 +30,7 @@ namespace Warehousing.Api.Controllers
                     .GetAll()
                     .Include(c => c.SubCategory)
                     .Include(u => u.Unit)
-                    .Include(u => u.Store)
+                    .Include(u => u.Inventories).ThenInclude(s => s.Store)
                     .ToListAsync();
                 return Ok(list);
             }
@@ -46,37 +46,15 @@ namespace Warehousing.Api.Controllers
         {
             try
             {
-                var product = await _unitOfWork.ProductRepo.GetAll()
-                    .Where(p => p.SubCategoryId == SubCategoryId && p.IsActive)
+                var products = await _unitOfWork.ProductRepo
+                    .GetByCondition(p => p.SubCategoryId == SubCategoryId && p.IsActive)
                     .Include(ps => ps.SubCategory)
                     .Include(ps => ps.Unit)
-                    .Include(ps => ps.Store)
-                    .Select(p => new ProductDto
-                    {
-                        Id = p.Id,
-                        Code = p.Code,
-                        NameAr = p.NameAr,
-                        NameEn = p.NameEn,
-                        Description = p.Description,
-                        OpeningBalance = p.OpeningBalance,
-                        ReorderLevel = p.ReorderLevel,
-                        QuantityInStock = p.QuantityInStock,
-                        CostPrice = p.CostPrice,
-                        SellingPrice = p.SellingPrice,
-                        IsActive = p.IsActive,
-                        SubCategoryId = p.SubCategoryId,
-                        SubCategory = _mapper.Map<SubCategoryDto>(p.SubCategory),
-                        UnitId = p.UnitId,
-                        Unit = _mapper.Map<UnitDto>(p.Unit),
-                        Store = _mapper.Map<StoreDto>(p.Store),
-                        StoreId = p.StoreId,
-                        ImagePath = p.ImagePath
-                    })
+                    .Include(u => u.Inventories).ThenInclude(s => s.Store)
+                    .ProjectTo<ProductDto>(_mapper.ConfigurationProvider)
                     .ToListAsync();
 
-
-
-                return Ok(product);
+                return Ok(products);
             }
             catch (Exception ex)
             {
@@ -118,7 +96,7 @@ namespace Warehousing.Api.Controllers
                     .GetAll()
                     .Include(c => c.SubCategory)
                     .Include(u => u.Unit)
-                    .Include(p => p.Store);
+                    .Include(u => u.Inventories).ThenInclude(s => s.Store);
 
                 var products = await query
                     .OrderBy(p => p.Id)
@@ -133,9 +111,6 @@ namespace Warehousing.Api.Controllers
                     NameEn = p.NameEn,
                     NameAr = p.NameAr,
                     Description = p.Description ?? string.Empty,
-                    OpeningBalance = p.OpeningBalance,
-                    ReorderLevel = p.ReorderLevel,
-                    QuantityInStock = p.QuantityInStock,
                     CostPrice = p.CostPrice,
                     SellingPrice = p.SellingPrice,
                     ImagePath = p.ImagePath,
@@ -144,8 +119,7 @@ namespace Warehousing.Api.Controllers
                     SubCategory = _mapper.Map<SubCategoryDto>(p.SubCategory),
                     UnitId = p.UnitId,
                     Unit = _mapper.Map<UnitDto>(p.Unit),
-                    Store = _mapper.Map<StoreDto>(p.Store),
-                    StoreId = p.StoreId,
+                    Inventories = _mapper.Map<List<InventoryDto>>(p.Inventories),
                 }).ToList();
 
                 var totalSize = await _unitOfWork.ProductRepo.GetTotalCount();
@@ -172,8 +146,6 @@ namespace Warehousing.Api.Controllers
             {
                 var query = _unitOfWork.ProductRepo.GetAll(); // IQueryable<Product>
 
-                var test = _unitOfWork.ProductRepo.GetByCondition(x => x.StoreId == StoreId).ToList();
-
                 // Apply search filter
                 if (!string.IsNullOrWhiteSpace(keyword))
                 {
@@ -183,7 +155,7 @@ namespace Warehousing.Api.Controllers
 
                 if (StoreId > 0)
                 {
-                    query = query.Where(x => x.StoreId == StoreId);
+                    query = query.Where(x => x.Inventories.Any(s => s.StoreId == StoreId));
                 }
 
                 // Get total count *before* pagination
@@ -193,7 +165,7 @@ namespace Warehousing.Api.Controllers
                 var list = await query
                     .Include(c => c.SubCategory)
                     .Include(u => u.Unit)
-                    .Include(p => p.Store)
+                    .Include(u => u.Inventories).ThenInclude(s => s.Store)
                     .OrderBy(x => x.Id)
                     .Select(p => new ProductDto
                     {
@@ -202,9 +174,6 @@ namespace Warehousing.Api.Controllers
                         NameEn = p.NameEn,
                         NameAr = p.NameAr,
                         Description = p.Description ?? string.Empty,
-                        OpeningBalance = p.OpeningBalance,
-                        ReorderLevel = p.ReorderLevel,
-                        QuantityInStock = p.QuantityInStock,
                         CostPrice = p.CostPrice,
                         SellingPrice = p.SellingPrice,
                         ImagePath = p.ImagePath,
@@ -213,8 +182,7 @@ namespace Warehousing.Api.Controllers
                         SubCategory = _mapper.Map<SubCategoryDto>(p.SubCategory),
                         UnitId = p.UnitId,
                         Unit = _mapper.Map<UnitDto>(p.Unit),
-                        Store = _mapper.Map<StoreDto>(p.Store),
-                        StoreId = p.StoreId,
+                        Inventories = _mapper.Map<List<InventoryDto>>(p.Inventories),
                     })
                     .Skip(pageSize * (pageIndex - 1))
                     .Take(pageSize)
@@ -275,5 +243,176 @@ namespace Warehousing.Api.Controllers
                 return StatusCode(500, ex.Message);
             }
         }
+
+        [HttpGet("search/{searchTerm}")]
+        public async Task<ActionResult<IEnumerable<ProductDto>>> SearchProducts(string searchTerm)
+        {
+            try
+            {
+                var products = await _unitOfWork.ProductRepo
+                    .GetByCondition(p => p.NameAr.Contains(searchTerm) || 
+                                         p.NameEn.Contains(searchTerm) || 
+                                         p.Code.Contains(searchTerm))
+                    .ProjectTo<ProductDto>(_mapper.ConfigurationProvider)
+                    .ToListAsync();
+
+                return Ok(products);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpGet("by-category/{categoryId}")]
+        public async Task<ActionResult<IEnumerable<ProductDto>>> GetProductsByCategory(int categoryId)
+        {
+            try
+            {
+                var products = await _unitOfWork.ProductRepo
+                    .GetByCondition(p => p.SubCategory.CategoryId == categoryId && p.IsActive)
+                    .ProjectTo<ProductDto>(_mapper.ConfigurationProvider)
+                    .ToListAsync();
+
+                return Ok(products);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpGet("by-subcategory/{subCategoryId}")]
+        public async Task<ActionResult<IEnumerable<ProductDto>>> GetProductsBySubCategory(int subCategoryId)
+        {
+            try
+            {
+                var products = await _unitOfWork.ProductRepo
+                    .GetByCondition(p => p.SubCategoryId == subCategoryId && p.IsActive)
+                    .ProjectTo<ProductDto>(_mapper.ConfigurationProvider)
+                    .ToListAsync();
+
+                return Ok(products);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpGet("low-stock")]
+        public async Task<ActionResult<IEnumerable<object>>> GetLowStockProducts([FromQuery] decimal threshold = 10)
+        {
+            try
+            {
+                var lowStockProducts = await _unitOfWork.InventoryRepo
+                    .GetByCondition(i => i.Quantity <= threshold)
+                    .Select(i => new
+                    {
+                        ProductId = i.ProductId,
+                        ProductNameAr = i.Product.NameAr,
+                        ProductNameEn = i.Product.NameEn,
+                        ProductCode = i.Product.Code,
+                        StoreId = i.StoreId,
+                        StoreNameAr = i.Store.NameAr,
+                        StoreNameEn = i.Store.NameEn,
+                        StoreCode = i.Store.Code,
+                        CurrentQuantity = i.Quantity,
+                        Threshold = threshold
+                    })
+                    .ToListAsync();
+
+                return Ok(lowStockProducts);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpGet("{id}/inventory")]
+        public async Task<ActionResult<IEnumerable<object>>> GetProductInventory(int id)
+        {
+            try
+            {
+                var inventory = await _unitOfWork.InventoryRepo
+                    .GetByCondition(i => i.ProductId == id)
+                    .Select(i => new
+                    {
+                        StoreId = i.StoreId,
+                        StoreNameAr = i.Store.NameAr,
+                        StoreNameEn = i.Store.NameEn,
+                        StoreCode = i.Store.Code,
+                        Quantity = i.Quantity
+                    })
+                    .ToListAsync();
+
+                return Ok(inventory);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpGet("ValidateStock")]
+        public async Task<ActionResult<object>> ValidateStock(int productId, int storeId, decimal quantity)
+        {
+            try
+            {
+                var inventory = await _unitOfWork.InventoryRepo
+                    .GetByCondition(i => i.ProductId == productId && i.StoreId == storeId)
+                    .FirstOrDefaultAsync();
+
+                var availableQuantity = inventory?.Quantity ?? 0;
+                var isValid = availableQuantity >= quantity;
+
+                return Ok(new
+                {
+                    isValid = isValid,
+                    availableQuantity = availableQuantity,
+                    requestedQuantity = quantity,
+                    shortage = isValid ? 0 : quantity - availableQuantity,
+                    message = isValid ? "Stock available" : $"Insufficient stock. Available: {availableQuantity}, Requested: {quantity}"
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { isValid = false, message = ex.Message });
+            }
+        }
+
+        [HttpPost("validate-stock")]
+        public async Task<ActionResult<object>> ValidateStockPost([FromBody] StockValidationRequest request)
+        {
+            try
+            {
+                var inventory = await _unitOfWork.InventoryRepo
+                    .GetByCondition(i => i.ProductId == request.ProductId && i.StoreId == request.StoreId)
+                    .FirstOrDefaultAsync();
+
+                var availableQuantity = inventory?.Quantity ?? 0;
+                var isValid = availableQuantity >= request.RequestedQuantity;
+
+                return Ok(new
+                {
+                    IsValid = isValid,
+                    AvailableQuantity = availableQuantity,
+                    RequestedQuantity = request.RequestedQuantity,
+                    Shortage = isValid ? 0 : request.RequestedQuantity - availableQuantity
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+    }
+
+    public class StockValidationRequest
+    {
+        public int ProductId { get; set; }
+        public int StoreId { get; set; }
+        public decimal RequestedQuantity { get; set; }
     }
 }

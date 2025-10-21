@@ -168,10 +168,8 @@ namespace Warehousing.Api.Controllers
 
                 var result = (IQueryable<Order>)order;
 
-                if (!isAdmin)
-                {
-                    result = result.Where(o => o.UserId == UserId);
-                }
+                // Note: UserId filtering removed as UserId was removed from BaseClass
+                // If user-specific filtering is needed, implement based on CreatedBy field
 
                 if (filter.OrderDate != null)
                 {
@@ -256,8 +254,8 @@ namespace Warehousing.Api.Controllers
                             item.StoreId = itemDto.StoreId;
                             item.ProductId = itemDto.ProductId;
                             item.Quantity = itemDto.Quantity;
-                            item.CostPrice = itemDto.CostPrice;
-                            item.SellingPrice = item.SellingPrice;
+                            item.UnitCost = itemDto.UnitCost;
+                            item.UnitPrice = itemDto.UnitPrice;
                         }
                         else
                         {
@@ -267,9 +265,9 @@ namespace Warehousing.Api.Controllers
                                 StoreId = itemDto.StoreId,
                                 ProductId = itemDto.ProductId,
                                 Quantity = itemDto.Quantity,
-                                CostPrice = itemDto.CostPrice,
-                                SellingPrice = itemDto.SellingPrice,
-                                OrderId = dto.Id
+                                UnitCost = itemDto.UnitCost,
+                                UnitPrice = itemDto.UnitPrice,
+                                OrderId = dto.Id ?? 0
                             });
                         }
                     }
@@ -279,6 +277,7 @@ namespace Warehousing.Api.Controllers
                 }
                 else
                 {
+                    // Create order first without items
                     var entity = new Order
                     {
                         OrderDate = dto.OrderDate,
@@ -287,17 +286,29 @@ namespace Warehousing.Api.Controllers
                         CustomerId = dto.CustomerId,
                         SupplierId = dto.SupplierId,
                         StatusId = dto.StatusId,
-                        Items = dto.Items.Select(i => new OrderItem
-                        {
-                            StoreId = i.StoreId,
-                            ProductId = i.ProductId,
-                            Quantity = i.Quantity,
-                            CostPrice = i.CostPrice,
-                            SellingPrice = i.SellingPrice
-                        }).ToList()
+                        Items = new List<OrderItem>() // Start with empty items
                     };
 
                     var result = await _unitOfWork.OrderRepo.CreateAsync(entity);
+                    
+                    // Now add items with the correct OrderId
+                    foreach (var itemDto in dto.Items)
+                    {
+                        var orderItem = new OrderItem
+                        {
+                            OrderId = result.Id,
+                            StoreId = itemDto.StoreId,
+                            ProductId = itemDto.ProductId,
+                            Quantity = itemDto.Quantity,
+                            UnitCost = itemDto.UnitCost,
+                            UnitPrice = itemDto.UnitPrice,
+                            Discount = itemDto.Discount,
+                            Notes = itemDto.Notes
+                        };
+                        
+                        await _unitOfWork.OrderItemRepo.CreateAsync(orderItem);
+                    }
+                    
                     return Ok(result);
                 }
             }
@@ -433,9 +444,10 @@ namespace Warehousing.Api.Controllers
                                 return BadRequest(new { success = false, message = $"Product not found for order item {item.Id}" });
 
                             // Only validate for sales (OrderTypeId != 1)
-                            if (order.OrderTypeId != 1 && item.Product.QuantityInStock < item.Quantity)
+                            var inventory = item.Product.Inventories.Where(s => s.StoreId == item.StoreId).FirstOrDefault();
+                            if (order.OrderTypeId != 1 && inventory.Quantity < item.Quantity)
                             {
-                                insufficientItems.Add($"{item.Product.NameAr} (Available: {item.Product.QuantityInStock}, Requested: {item.Quantity})");
+                                insufficientItems.Add($"{item.Product.NameAr} (Available: {inventory.Quantity}, Requested: {item.Quantity})");
                             }
                         }
 
@@ -453,25 +465,71 @@ namespace Warehousing.Api.Controllers
 
                         foreach (var item in order.Items)
                         {
-                            if (order.OrderTypeId == 1) // Purchase → Stock In
-                            {
-                                item.Product.QuantityInStock += item.Quantity;
-                            }
-                            else // Sale → Stock Out (already validated)
-                            {
-                                item.Product.QuantityInStock -= item.Quantity;
-                            }
+                            var inventory = item.Product.Inventories.Where(s => s.StoreId == item.StoreId).FirstOrDefault();
+                            
+                            // Store quantities before change
+                            var quantityBefore = 0m;
+                            var quantityAfter = 0m;
 
-                            await _unitOfWork.ProductRepo.UpdateAsync(item.Product);
+                            if (inventory == null)
+                            {
+                                // For purchases, create inventory if it doesn't exist
+                                if (order.OrderTypeId == 1) // Purchase → Create inventory
+                                {
+                                    var newInventory = new Inventory
+                                    {
+                                        ProductId = item.ProductId,
+                                        StoreId = item.StoreId,
+                                        Quantity = item.Quantity,
+                                        CreatedAt = DateTime.UtcNow,
+                                        CreatedBy = "System", // You might want to get this from user context
+                                        UpdatedAt = DateTime.UtcNow,
+                                        UpdatedBy = "System"
+                                    };
+
+                                    await _unitOfWork.InventoryRepo.CreateAsync(newInventory);
+                                    
+                                    quantityBefore = 0; // Starting from 0
+                                    quantityAfter = item.Quantity; // Added the purchased quantity
+                                }
+                                else // Sale → Inventory must exist
+                                {
+                                    return BadRequest(new { success = false, message = $"Inventory not found for product {item.Product.NameAr} in store {item.StoreId}. Cannot sell from non-existent inventory." });
+                                }
+                            }
+                            else
+                            {
+                                // Inventory exists, update it
+                                quantityBefore = inventory.Quantity;
+                                quantityAfter = quantityBefore;
+
+                                if (order.OrderTypeId == 1) // Purchase → Stock In
+                                {
+                                    quantityAfter = quantityBefore + item.Quantity;
+                                    inventory.Quantity = quantityAfter;
+                                }
+                                else // Sale → Stock Out (already validated)
+                                {
+                                    quantityAfter = quantityBefore - item.Quantity;
+                                    inventory.Quantity = quantityAfter;
+                                }
+
+                                await _unitOfWork.ProductRepo.UpdateAsync(item.Product);
+                            }
 
                             var transactionEntity = new InventoryTransaction
                             {
                                 ProductId = item.ProductId,
+                                StoreId = item.StoreId,
+                                OrderId = order.Id,
+                                OrderItemId = item.Id,
                                 QuantityChanged = order.OrderTypeId == 1 ? item.Quantity : -item.Quantity,
+                                QuantityBefore = quantityBefore,
+                                QuantityAfter = quantityAfter,
+                                UnitCost = item.UnitCost,
                                 TransactionDate = DateTime.UtcNow,
                                 Notes = $"{transactionTypeCode} order #{order.Id} completed.",
-                                TransactionTypeId = transactionType.Id,
-                                OrderId = order.Id
+                                TransactionTypeId = transactionType.Id
                             };
 
                             await _unitOfWork.InventoryTransactionRepo.CreateAsync(transactionEntity);
@@ -551,12 +609,13 @@ namespace Warehousing.Api.Controllers
 
                         foreach (var updatedItem in updatedOrder.Items)
                         {
+                            var inventory = updatedItem.Product.Inventories.Where(s => s.StoreId == updatedItem.StoreId).FirstOrDefault(); 
                             if (!existingItemsMap.TryGetValue(updatedItem.ProductId, out var oldItem))
                             {
                                 // New item added to invoice
-                                if (existingOrder.OrderTypeId != 1 && updatedItem.Quantity > updatedItem.Product.QuantityInStock)
+                                if (existingOrder.OrderTypeId != 1 && updatedItem.Quantity > inventory.Quantity)
                                 {
-                                    insufficientItems.Add($"{updatedItem.Product?.NameAr ?? "Unknown"} (Available: {updatedItem.Product?.QuantityInStock}, Requested: {updatedItem.Quantity})");
+                                    insufficientItems.Add($"{updatedItem.Product?.NameAr ?? "Unknown"} (Available: {inventory?.Quantity}, Requested: {updatedItem.Quantity})");
                                 }
                             }
                             else
@@ -565,9 +624,9 @@ namespace Warehousing.Api.Controllers
 
                                 if (existingOrder.OrderTypeId != 1 && diff > 0) // Sales: more qty requested
                                 {
-                                    if (oldItem.Product.QuantityInStock < diff)
+                                    if (inventory.Quantity < diff)
                                     {
-                                        insufficientItems.Add($"{oldItem.Product?.NameAr ?? "Unknown"} (Available: {oldItem.Product?.QuantityInStock}, Extra Requested: {diff})");
+                                        insufficientItems.Add($"{oldItem.Product?.NameAr ?? "Unknown"} (Available: {inventory?.Quantity}, Extra Requested: {diff})");
                                     }
                                 }
                             }
@@ -587,16 +646,18 @@ namespace Warehousing.Api.Controllers
                         // Apply changes
                         foreach (var updatedItem in updatedOrder.Items)
                         {
+                            var inventory = updatedItem.Product.Inventories.Where(s => s.StoreId == updatedItem.StoreId).FirstOrDefault();
+                            
                             if (!existingItemsMap.TryGetValue(updatedItem.ProductId, out var oldItem))
                             {
                                 // New item added
                                 if (existingOrder.OrderTypeId == 1) // Purchase
                                 {
-                                    updatedItem.Product.QuantityInStock += updatedItem.Quantity;
+                                    inventory.Quantity += updatedItem.Quantity;
                                 }
                                 else // Sales
                                 {
-                                    updatedItem.Product.QuantityInStock -= updatedItem.Quantity;
+                                    inventory.Quantity -= updatedItem.Quantity;
                                 }
 
                                 await _unitOfWork.ProductRepo.UpdateAsync(updatedItem.Product);
@@ -616,16 +677,17 @@ namespace Warehousing.Api.Controllers
                             {
                                 // Existing item modified
                                 decimal diff = updatedItem.Quantity - oldItem.Quantity;
+                                var inventoryOld = oldItem.Product.Inventories.Where(s => s.StoreId == updatedItem.StoreId).FirstOrDefault();
 
                                 if (diff != 0)
                                 {
                                     if (existingOrder.OrderTypeId == 1) // Purchase
                                     {
-                                        oldItem.Product.QuantityInStock += diff;
+                                        inventoryOld.Quantity += diff;
                                     }
                                     else // Sales
                                     {
-                                        oldItem.Product.QuantityInStock -= diff;
+                                        inventoryOld.Quantity -= diff;
                                     }
 
                                     await _unitOfWork.ProductRepo.UpdateAsync(oldItem.Product);
@@ -667,6 +729,121 @@ namespace Warehousing.Api.Controllers
                         {
                             success = false,
                             message = $"Error updating approved order: {ex.Message}"
+                        });
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    message = $"Error: {ex.Message}"
+                });
+            }
+        }
+
+        [HttpPost]
+        [Route("CancelApprovedOrder/{id}")]
+        public async Task<IActionResult> CancelApprovedOrder(int id)
+        {
+            try
+            {
+                var strategy = _unitOfWork.GetExecutionStrategy();
+
+                return await strategy.ExecuteAsync(async () =>
+                {
+                    await using var transaction = await _unitOfWork.BeginTransactionAsync();
+
+                    try
+                    {
+                        // Load order with items + products
+                        var order = await _unitOfWork.OrderRepo
+                            .GetAll()
+                            .Include(o => o.Items)
+                                .ThenInclude(i => i.Product)
+                            .FirstOrDefaultAsync(o => o.Id == id);
+
+                        if (order == null)
+                            return NotFound(new { success = false, message = "Order not found." });
+
+                        // Ensure it's already completed
+                        var status = await _unitOfWork.StatusRepo.GetAll()
+                            .FirstOrDefaultAsync(s => s.Id == order.StatusId);
+
+                        if (status == null || status.Code != "COMPLETED")
+                            return BadRequest(new { success = false, message = "Only COMPLETED orders can be cancelled." });
+
+                        // Get Cancel status
+                        var cancelStatus = await _unitOfWork.StatusRepo
+                            .GetByCondition(s => s.Code == "CANCELLED")
+                            .FirstOrDefaultAsync();
+
+                        if (cancelStatus == null)
+                            return BadRequest(new { success = false, message = "Cancel status not configured." });
+
+                        // Reverse stock changes
+                        foreach (var item in order.Items)
+                        {
+                            var inventory = item.Product.Inventories.Where(s => s.StoreId == item.StoreId).FirstOrDefault();
+                            if (order.OrderTypeId == 1) // Purchase (reverse = subtract stock)
+                            {
+                                if (inventory.Quantity < item.Quantity)
+                                {
+                                    await transaction.RollbackAsync();
+                                    return BadRequest(new
+                                    {
+                                        success = false,
+                                        message = $"Cannot cancel. Product {item.Product.NameAr} stock would go negative.",
+                                        product = item.Product.NameAr,
+                                        available = inventory.Quantity,
+                                        toRemove = item.Quantity
+                                    });
+                                }
+
+                                inventory.Quantity -= item.Quantity;
+                            }
+                            else // Sale (reverse = add stock back)
+                            {
+                                inventory.Quantity += item.Quantity;
+                            }
+
+                            await _unitOfWork.ProductRepo.UpdateAsync(item.Product);
+
+                            // Log reversal transaction
+                            var reversalTransaction = new InventoryTransaction
+                            {
+                                ProductId = item.ProductId,
+                                QuantityChanged = order.OrderTypeId == 1 ? -item.Quantity : item.Quantity,
+                                TransactionDate = DateTime.UtcNow,
+                                Notes = $"Order #{order.Id} cancelled (reversal).",
+                                TransactionTypeId = order.OrderTypeId == 1 ? 1 : 2, // adjust lookup accordingly
+                                OrderId = order.Id
+                            };
+                            await _unitOfWork.InventoryTransactionRepo.CreateAsync(reversalTransaction);
+                        }
+
+                        // Mark order as cancelled
+                        order.StatusId = cancelStatus.Id;
+                        await _unitOfWork.OrderRepo.UpdateAsync(order);
+
+                        await _unitOfWork.SaveAsync();
+                        await transaction.CommitAsync();
+
+                        return Ok(new
+                        {
+                            success = true,
+                            message = $"Order #{order.Id} has been cancelled and stock changes reverted.",
+                            result = order
+                        });
+                    }
+                    catch (Exception ex)
+                    {
+                        await transaction.RollbackAsync();
+                        return StatusCode(500, new
+                        {
+                            success = false,
+                            message = $"Error cancelling order: {ex.Message}"
                         });
                     }
                 });

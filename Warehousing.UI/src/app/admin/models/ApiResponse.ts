@@ -6,4 +6,7 @@ export interface ApiResponse {
   message: string;
   result: OrderDto;
   insufficientItems: string[];
+  product: string;
+  available: number;
+  toRemove: number;
 }

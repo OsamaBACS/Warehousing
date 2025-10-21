@@ -220,6 +220,26 @@ namespace Warehousing.Data.Context
                 }
             );
 
+            // Seed data for OrderTypes
+            modelBuilder.Entity<OrderType>().HasData(
+                new OrderType
+                {
+                    Id = 1,
+                    NameEn = "Purchase Order",
+                    NameAr = "أمر شراء",
+                    Description = "Order for purchasing products from suppliers",
+                    IsActive = true
+                },
+                new OrderType
+                {
+                    Id = 2,
+                    NameEn = "Sale Order",
+                    NameAr = "أمر بيع",
+                    Description = "Order for selling products to customers",
+                    IsActive = true
+                }
+            );
+
             // Seed data for TransactionTypes
             modelBuilder.Entity<TransactionType>().HasData(
                 new TransactionType
@@ -430,28 +450,78 @@ namespace Warehousing.Data.Context
                 new RolePermission { Id = 4, RoleId = 1, PermissionId = 4 },
                 new RolePermission { Id = 5, RoleId = 1, PermissionId = 5 }
             );
+
+            // Configure ProductRecipe relationships
+            modelBuilder.Entity<ProductRecipe>()
+                .HasOne(pr => pr.ParentProduct)
+                .WithMany(p => p.RecipeAsParent)
+                .HasForeignKey(pr => pr.ParentProductId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<ProductRecipe>()
+                .HasOne(pr => pr.ComponentProduct)
+                .WithMany(p => p.RecipeAsComponent)
+                .HasForeignKey(pr => pr.ComponentProductId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Configure StoreTransfer relationships
+            modelBuilder.Entity<StoreTransfer>()
+                .HasOne(st => st.FromStore)
+                .WithMany()
+                .HasForeignKey(st => st.FromStoreId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<StoreTransfer>()
+                .HasOne(st => st.ToStore)
+                .WithMany()
+                .HasForeignKey(st => st.ToStoreId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<StoreTransfer>()
+                .HasOne(st => st.Status)
+                .WithMany()
+                .HasForeignKey(st => st.StatusId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Configure StoreTransferItem relationships
+            modelBuilder.Entity<StoreTransferItem>()
+                .HasOne(sti => sti.Transfer)
+                .WithMany(st => st.Items)
+                .HasForeignKey(sti => sti.TransferId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<StoreTransferItem>()
+                .HasOne(sti => sti.Product)
+                .WithMany(p => p.TransferItems)
+                .HasForeignKey(sti => sti.ProductId)
+                .OnDelete(DeleteBehavior.Restrict);
         }
 
 
         public DbSet<Category> Categories { get; set; }
         public DbSet<Customer> Customers { get; set; }
+        public DbSet<Inventory> Inventories { get; set; }
         public DbSet<InventoryTransaction> InventoryTransactions { get; set; }
         public DbSet<Permission> Permissions { get; set; }
         public DbSet<Product> Products { get; set; }
+        public DbSet<ProductRecipe> ProductRecipes { get; set; }
         public DbSet<Order> Orders { get; set; }
         public DbSet<OrderItem> OrderItems { get; set; }
         public DbSet<OrderType> OrderTypes { get; set; }
         public DbSet<Role> Roles { get; set; }
         public DbSet<RolePermission> RolePermissions { get; set; }
         public DbSet<Status> Statuses { get; set; }
+        public DbSet<Store> Stores { get; set; }
+        public DbSet<StoreTransfer> StoreTransfers { get; set; }
+        public DbSet<StoreTransferItem> StoreTransferItems { get; set; }
+        public DbSet<SubCategory> SubCategories { get; set; }
         public DbSet<Supplier> Suppliers { get; set; }
         public DbSet<TransactionType> TransactionTypes { get; set; }
         public DbSet<Unit> Units { get; set; }
         public DbSet<User> Users { get; set; }
+        public DbSet<UserDevice> UserDevices { get; set; }
         public DbSet<UserRole> UserRoles { get; set; }
         public DbSet<Company> Companies { get; set; }
-        public DbSet<Store> Stores { get; set; }
-        public DbSet<UserDevice> UserDevices { get; set; }
         public DbSet<RoleCategory> RoleCategories { get; set; }
         public DbSet<RoleProduct> RoleProducts { get; set; }
 
@@ -467,20 +537,18 @@ namespace Warehousing.Data.Context
         public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {
             var userNameClaim = _httpContextAccessor.HttpContext?.User?.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Name)?.Value;
-            var userIdClaim = _httpContextAccessor.HttpContext?.User?.Claims.FirstOrDefault(c => c.Type == "UserId")?.Value;
 
             foreach (var entry in ChangeTracker.Entries<BaseClass>())
             {
                 if (entry.State == EntityState.Added)
                 {
-                    entry.Entity.UserId = Convert.ToInt32(userIdClaim);
                     entry.Entity.CreatedBy = userNameClaim;
                     entry.Entity.CreatedAt = DateTime.UtcNow;
                     Console.WriteLine($"CreatedBy: {entry.Entity.CreatedBy}, CreatedAt: {entry.Entity.CreatedAt}");
                 }
                 else if (entry.State == EntityState.Modified)
                 {
-                    entry.Entity.UpdatedBy = userIdClaim;
+                    entry.Entity.UpdatedBy = userNameClaim;
                     entry.Entity.UpdatedAt = DateTime.UtcNow;
                     Console.WriteLine($"UpdatedBy: {entry.Entity.UpdatedBy}, UpdatedAt: {entry.Entity.UpdatedAt}");
                 }

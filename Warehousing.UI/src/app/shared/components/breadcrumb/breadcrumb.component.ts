@@ -1,30 +1,24 @@
-import { Component } from '@angular/core';
-import { Router } from '@angular/router';
-import { Breadcrumb } from '../../models/Breadcrumb';
+import { Component, OnInit } from '@angular/core';
 import { BreadcrumbService } from '../../services/breadcrumb.service';
+import { Breadcrumb } from '../../models/Breadcrumb';
 
 @Component({
   selector: 'app-breadcrumb',
-  standalone: false,
   templateUrl: './breadcrumb.component.html',
-  styleUrl: './breadcrumb.component.scss'
+  styleUrls: ['./breadcrumb.component.scss'],
+  standalone: false
 })
-export class BreadcrumbComponent {
-
+export class BreadcrumbComponent implements OnInit {
   breadcrumbs: Breadcrumb[] = [];
 
   constructor(
-    private breadcrumbService: BreadcrumbService,
-    private router: Router
-  ) {
+    private breadcrumbService: BreadcrumbService
+  ) {}
+
+  ngOnInit(): void {
     this.breadcrumbService.breadcrumbs$.subscribe(breadcrumbs => {
       this.breadcrumbs = breadcrumbs;
     });
   }
 
-  navigate(route: string | null): void {
-    if (route) {
-      this.router.navigateByUrl(route);
-    }
-  }
 }

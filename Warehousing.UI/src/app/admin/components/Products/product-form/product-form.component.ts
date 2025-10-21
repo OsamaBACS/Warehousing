@@ -5,7 +5,6 @@ import { CategoriesService } from '../../../services/categories.service';
 import { UnitsService } from '../../../services/units.service';
 import { NotificationService } from '../../../../core/services/notification.service';
 import { ActivatedRoute, Router } from '@angular/router';
-import { Category } from '../../../models/category';
 import { Unit } from '../../../models/unit';
 import { environment } from '../../../../../environments/environment';
 import { Product } from '../../../models/product';
@@ -74,16 +73,15 @@ export class ProductFormComponent implements OnInit {
       nameEn: [product?.nameEn || ''],
       nameAr: [product?.nameAr || '', Validators.required],
       description: [product?.description || ''],
-      openingBalance: [product?.openingBalance, Validators.required],
-      reorderLevel: [product?.reorderLevel, Validators.required],
-      quantityInStock: [product?.quantityInStock, Validators.required],
+      openingBalance: [product?.openingBalance || 0],
+      reorderLevel: [product?.reorderLevel || 0],
       costPrice: [product?.costPrice, Validators.required],
       sellingPrice: [product?.sellingPrice, Validators.required],
       image: [null],
       isActive: [product?.isActive ?? true],
       subCategoryId: [product?.subCategoryId || null, Validators.required],
       unitId: [product?.unitId || null, Validators.required],
-      storeId: [product?.storeId || null, Validators.required],
+      storeId: [product?.storeId || null],
     });
     if(product) {
       this.initialImageUrl = this.url + product.imagePath;
@@ -129,7 +127,6 @@ export class ProductFormComponent implements OnInit {
       formData.append('description', this.description.value);
       formData.append('openingBalance', this.openingBalance.value);
       formData.append('reorderLevel', this.reorderLevel.value);
-      formData.append('quantityInStock', this.quantityInStock.value);
       formData.append('costPrice', this.costPrice.value);
       formData.append('sellingPrice', this.sellingPrice.value);
       formData.append('storeId', this.storeId.value);
@@ -189,9 +186,6 @@ export class ProductFormComponent implements OnInit {
   }
   get reorderLevel(): FormControl {
     return this.productForm.get('reorderLevel') as FormControl;
-  }
-  get quantityInStock(): FormControl {
-    return this.productForm.get('quantityInStock') as FormControl;
   }
   get costPrice(): FormControl {
     return this.productForm.get('costPrice') as FormControl;

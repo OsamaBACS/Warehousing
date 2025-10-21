@@ -50,30 +50,6 @@
         </div>
       </div>
 
-      <!-- Quantity In Stock -->
-      <div class="col-12 col-sm-6 col-md-3">
-        <div class="floating-label-input">
-          <input type="number" class="form-control" formControlName="openingBalance" placeholder=" " />
-          <label>الرصيد الافتتاحي</label>
-        </div>
-      </div>
-
-      <!-- Reorder Level -->
-      <div class="col-12 col-sm-6 col-md-3">
-        <div class="floating-label-input">
-          <input type="number" class="form-control" formControlName="reorderLevel" placeholder=" " />
-          <label>مستوى إعادة الطلب</label>
-        </div>
-      </div>
-
-      <!-- quantityInStock -->
-      <div class="col-12 col-sm-6 col-md-3">
-        <div class="floating-label-input">
-          <input type="number" class="form-control" formControlName="quantityInStock" placeholder=" " />
-          <label>الكمية</label>
-        </div>
-      </div>
-
       <!-- costPrice -->
       <div class="col-12 col-sm-6 col-md-3">
         <div class="floating-label-input">
@@ -87,17 +63,6 @@
         <div class="floating-label-input">
           <input type="number" class="form-control" formControlName="sellingPrice" placeholder=" " />
           <label>سعر البيع</label>
-        </div>
-      </div>
-
-      <!-- Store -->
-      <div class="col-12 col-sm-6 col-md-3">
-        <div class="floating-label-select">
-          <select class="form-select" id="supplierId" formControlName="storeId">
-            <option value="">يرجى اختيار المستودع</option>
-            <option *ngFor="let store of stores" [value]="store.id">{{ store.nameAr }}</option>
-          </select>
-          <label>المستودع</label>
         </div>
       </div>
 

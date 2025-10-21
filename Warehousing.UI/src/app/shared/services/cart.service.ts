@@ -3,13 +3,19 @@ import { FormArray, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { BehaviorSubject } from 'rxjs';
 import { Product } from '../../admin/models/product';
 import { OrderDto } from '../../admin/models/OrderDto';
+import { ProductsService } from '../../admin/services/products.service';
+import { NotificationService } from '../../core/services/notification.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class CartService {
 
-  constructor(private fb: FormBuilder) {
+  constructor(
+    private fb: FormBuilder,
+    private productsService: ProductsService,
+    private notification: NotificationService
+  ) {
     this.loadCartFromLocalStorage();
   }
 
@@ -107,51 +113,113 @@ export class CartService {
   }
 
   // Add or update product in cart
-  addToCart(product: Product, quantity: number = 1): void {
+  addToCart(product: Product, quantity: number = 1, storeId?: number): void {
     const itemsArray = this.cartItems;
 
+    // Use the provided storeId, fallback to product.storeId, or null
+    const targetStoreId = storeId || product.storeId || null;
+
     const index = itemsArray.controls.findIndex(
-      ctrl => ctrl.value.productId === product.id
+      ctrl => ctrl.value.productId === product.id && ctrl.value.storeId === targetStoreId
     );
 
     if (index > -1) {
       const currentQty = this.cartItems.at(index).get('quantity')?.value;
-      if (currentQty <= 1 && quantity === -1) {
+      const newQuantity = currentQty + quantity;
+      
+      if (newQuantity <= 0) {
         this.removeFromCart(product.id);
       }
       else {
-        this.cartItems.at(index).patchValue({ quantity: currentQty + quantity });
+        this.cartItems.at(index).patchValue({ quantity: newQuantity });
+        this.calculateTotal();
+        this.saveCartToLocalStorage();
       }
     } else {
+      // Validate stock before adding to cart
+      this.validateStockBeforeAdd(product, targetStoreId, quantity).then(isValid => {
+        if (isValid) {
+          const itemGroup = this.createCartItemGroup({
+            productId: product.id,
+            unitCost: product.costPrice || 0,
+            unitPrice: product.sellingPrice || 0,
+            storeId: targetStoreId,
+            quantity: quantity
+          });
 
-      const itemGroup =
-        this.createCartItemGroup({
-          productId: product.id,
-          costPrice: product.costPrice || 0,
-          sellingPrice: product.sellingPrice || 0,
-          storeId: product.storeId || null,
-          quantity: quantity
-        })
-
-      if (product.quantityInStock) {
-        itemGroup.get('quantity')?.setValidators(Validators.max(product.quantityInStock))
-        itemsArray.push(itemGroup);
-      }
-      else {
-        if (this.orderTypeId == 1) {
           itemsArray.push(itemGroup);
+          this.calculateTotal();
+          this.saveCartToLocalStorage();
+          this.cartCount$.next(1);
         }
-        else {
-          alert('لا يوجد رصيد كافي لهذه المادة!');
-          return;
-        }
-      }
+      });
+    }
+  }
+
+  // Validate stock before adding to cart
+  private async validateStockBeforeAdd(product: Product, storeId: number | null, quantity: number): Promise<boolean> {
+    if (this.orderTypeId === 1) { // Purchase order - no stock validation needed
+      return true;
     }
 
-    this.calculateTotal();
-    this.saveCartToLocalStorage();
+    if (!storeId) {
+      this.notification.warning('يجب اختيار المستودع', 'تحذير');
+      return false;
+    }
 
-    this.cartCount$.next(1);
+    try {
+      // Calculate total quantity that will be in cart after adding this quantity
+      const existingCartItem = this.getCartItemByProductId(product.id);
+      const currentQuantityInCart = existingCartItem ? existingCartItem.get('quantity')?.value || 0 : 0;
+      const totalQuantityAfterAdd = currentQuantityInCart + quantity;
+
+      const result = await this.productsService.ValidateStock(product.id, storeId, totalQuantityAfterAdd).toPromise();
+      
+      if (result && result.isValid) {
+        return true;
+      } else {
+        const message = result?.message || `لا يوجد رصيد كافي! المتاح: ${result?.availableQuantity || 0}, المطلوب: ${totalQuantityAfterAdd}`;
+        this.notification.error(message, 'خطأ في المخزون');
+        return false;
+      }
+    } catch (error) {
+      console.error('Stock validation error:', error);
+      this.notification.error('خطأ في التحقق من المخزون', 'خطأ');
+      return false;
+    }
+  }
+
+  // Get cart item by product ID
+  getCartItemByProductId(productId: number): FormGroup | null {
+    return this.cartItems.controls.find(item => item.get('productId')?.value === productId) as FormGroup || null;
+  }
+
+  // Validate stock when quantity changes in cart
+  async validateStockForCartItem(productId: number, storeId: number, newQuantity: number): Promise<boolean> {
+    if (this.orderTypeId === 1) { // Purchase order - no stock validation needed
+      return true;
+    }
+
+    if (!storeId) {
+      this.notification.warning('يجب اختيار المستودع', 'تحذير');
+      return false;
+    }
+
+    try {
+      const result = await this.productsService.ValidateStock(productId, storeId, newQuantity).toPromise();
+      
+      if (result && result.isValid) {
+        return true;
+      } else {
+        const message = result?.message || `لا يوجد رصيد كافي! المتاح: ${result?.availableQuantity || 0}, المطلوب: ${newQuantity}`;
+        this.notification.error(message, 'خطأ في المخزون');
+        return false;
+      }
+    } catch (error) {
+      console.error('Stock validation error:', error);
+      this.notification.error('خطأ في التحقق من المخزون', 'خطأ');
+      return false;
+    }
   }
 
   // Calculate total
@@ -161,10 +229,12 @@ export class CartService {
 
     const sum = itemsArray.controls.reduce((acc, control) => {
       const price = (this.orderTypeId == 1)
-        ? +control.get('costPrice')?.value
-        : +control.get('sellingPrice')?.value;
+        ? +control.get('unitCost')?.value || +control.get('costPrice')?.value
+        : +control.get('unitPrice')?.value || +control.get('sellingPrice')?.value;
       const qty = +control.get('quantity')?.value;
-      return acc + (price * qty || 0);
+      const discount = +control.get('discount')?.value || 0;
+      const itemTotal = (price * qty) - discount;
+      return acc + (itemTotal || 0);
     }, 0);
 
     totalAmountControl?.setValue(sum);
@@ -190,8 +260,10 @@ export class CartService {
       storeId: [item?.storeId || null],
       productId: [item?.productId || null],
       quantity: [item?.quantity || 0],
-      costPrice: [item?.costPrice || null],
-      sellingPrice: [item?.sellingPrice || null],
+      unitCost: [item?.unitCost || item?.costPrice || null],
+      unitPrice: [item?.unitPrice || item?.sellingPrice || null],
+      discount: [item?.discount || 0],
+      notes: [item?.notes || '']
     });
   }
 
@@ -208,6 +280,7 @@ export class CartService {
 
       if (itemsArray.length <= 0) {
         this.cartCount$.next(0);
+        this.orderTypeId = 0; // Reset orderTypeId when cart becomes empty
       }
     }
   }
@@ -215,30 +288,35 @@ export class CartService {
   // Clear cart
   clearCart(): void {
     this.cartItems.clear();
+    this.orderTypeId = 0; // Reset orderTypeId first
     this.cartForm.reset({
       id: 0,
       orderDate: this.formatDate(new Date().toString()),
       totalAmount: 0,
-      orderTypeId: this.orderTypeId,
+      orderTypeId: 0, // Use 0 instead of this.orderTypeId
       customerId: null,
       supplierId: null,
       statusId: null
     });
 
     localStorage.removeItem('cartForm');
-
     localStorage.removeItem('orderId');
-    this.orderTypeId = 0;
     this.cartCount$.next(0);
   }
 
   hasActiveOrder(orderTypeId: number): boolean {
-    if (this.orderTypeId == orderTypeId) {
+    // If cart is empty, no active order
+    if (this.cartItems.length === 0) {
       return false;
     }
-    else {
-      return this.cartItems.length > 0;
+    
+    // If there are items in cart and orderTypeId doesn't match, there's an active order of different type
+    if (this.orderTypeId != 0 && this.orderTypeId != orderTypeId) {
+      return true; // There's an active order of a different type
     }
+    
+    // Same order type or no conflicting order type, allow adding items
+    return false;
   }
 
   getQuantity(productId: number): number {

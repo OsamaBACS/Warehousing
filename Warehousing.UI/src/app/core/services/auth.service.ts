@@ -100,7 +100,7 @@ export class AuthService {
     const prod = localStorage.getItem('product');
     const userId = localStorage.getItem('userId');
     const username = localStorage.getItem('username');
-    if (stored) {
+    if (stored && stored !== 'undefined') {
       try {
         this.permissions = JSON.parse(stored);
       } catch (e) {
@@ -111,7 +111,7 @@ export class AuthService {
       this.permissions = [];
     }
 
-    if (cat) {
+    if (cat && cat !== 'undefined') {
       try {
         this.categoryIds = JSON.parse(cat);
       } catch (e) {
@@ -123,7 +123,7 @@ export class AuthService {
       this.categoryIds = [];
     }
 
-    if (prod) {
+    if (prod && prod !== 'undefined') {
       try {
         this.productIds = JSON.parse(prod);
       } catch (e) {

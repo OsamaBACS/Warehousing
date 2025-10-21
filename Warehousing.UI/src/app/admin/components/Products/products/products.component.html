@@ -67,7 +67,7 @@
 
             <!-- Description -->
             <p class="card-text text-muted small mb-2" [title]="product.description">
-              {{ product.description | slice:0:50 }}{{ product.description.length > 50 ? '...' : '' }}
+              {{ product.description | slice:0:50 }}{{ (product.description?.length || 0) > 50 ? '...' : '' }}
             </p>
 
             <!-- Price -->
@@ -101,8 +101,8 @@
                     الكمية في المستودع
                 </span>
                 <div class="d-flex justify-content-between mt-1">
-                  <strong [class.text-danger]="product.quantityInStock <= product.reorderLevel!">
-                    {{ product.quantityInStock }}
+                  <strong *ngFor="let inv of product.inventories">
+                    {{ inv.quantity }}
                     <small class="text-muted ms-1">
                       <!-- {{ lang.currentLang === 'ar' ? product?.unit?.nameAr : product?.unit?.nameEn }} -->
                         {{ product?.unit?.nameAr }}

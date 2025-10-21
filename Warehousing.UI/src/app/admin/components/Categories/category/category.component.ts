@@ -22,9 +22,11 @@ export class CategoryComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadcategorys();
+    this.serverUrl = this.categoriesService.url.substring(0, this.categoriesService.url.indexOf('api'));
   }
 
   categorys$!: Observable<Category[]>;
+  serverUrl = '';
 
   loadcategorys() {
     this.categorys$ = this.categoriesService.GetCategories();
@@ -37,4 +39,5 @@ export class CategoryComponent implements OnInit {
       this.router.navigate(['../category-form'], { relativeTo: this.route });
     }
   }
+
 }

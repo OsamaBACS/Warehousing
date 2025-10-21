@@ -46,7 +46,6 @@
           <th class="text-end">سعر الشراء</th>
           <th class="text-end">سعر البيع</th>
           <th class="text-center">الكمية</th>
-          <th class="text-center">مستوى اعادة الطلب</th>
           <th class="text-center">الحالة</th>
         </tr>
       </thead>
@@ -71,8 +70,8 @@
               <span class="text-muted">{{ 'PRODUCTS.QUANTITYINSTOCK' | translate }}</span>
               <div class="d-flex justify-content-between mt-1">
                 <span class="text-muted">{{ 'PRODUCTS.QUANTITYINSTOCK' | translate }}</span>
-                <strong [class.text-danger]="item.quantityInStock <= item.reorderLevel!">
-                  {{ item.quantityInStock }}
+                <strong *ngFor="let inv of item.inventories">
+                  {{ inv.quantity }}
                   <small class="text-muted ms-1">
                     {{ lang.currentLang === 'ar' ? item?.unit?.nameAr : item?.unit?.nameEn }}
                   </small>
@@ -80,7 +79,6 @@
               </div>
             </div>
           </td>
-          <td class="text-center">{{ item.reorderLevel }}</td>
           <td class="text-center">
             <span class="badge" [class.bg-success]="item.isActive" [class.bg-secondary]="!item.isActive">
               {{ item.isActive ? 'Active' : 'Inactive' }}
@@ -167,7 +165,6 @@
             <th>سعر الشراء</th>
             <th>سعر البيع</th>
             <th class="text-center">الكمية</th>
-            <th class="text-center">مستوى اعادة الطلب</th>
             <th class="text-center">الحالة</th>
           </tr>
         </thead>
@@ -185,15 +182,14 @@
               <span class="text-muted">{{ 'PRODUCTS.QUANTITYINSTOCK' | translate }}</span>
               <div class="d-flex justify-content-between mt-1">
                 <span class="text-muted">{{ 'PRODUCTS.QUANTITYINSTOCK' | translate }}</span>
-                <strong [class.text-danger]="item.quantityInStock <= item.reorderLevel!">
-                  {{ item.quantityInStock }}
+                <strong *ngFor="let inv of item.inventories">
+                  {{ inv.quantity }}
                   <small class="text-muted ms-1">
                     {{ lang.currentLang === 'ar' ? item?.unit?.nameAr : item?.unit?.nameEn }}
                   </small>
                 </strong>
               </div>
             </div>
-            <td class="text-center">{{ item.reorderLevel }}</td>
             <td class="text-center">
               <span class="badge" [class.bg-success]="item.isActive" [class.bg-secondary]="!item.isActive">
                 {{ item.isActive ? 'Active' : 'Inactive' }}

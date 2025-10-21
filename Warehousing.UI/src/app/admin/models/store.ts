@@ -1,7 +1,14 @@
+import { Inventory } from "./Inventory";
+
 export interface Store {
     id: number;
-    nameEn: string;
+    code: string | null;
+    nameEn: string | null;
     nameAr: string;
-    description: string;
+    description: string | null;
+    address: string | null;
+    phone: string | null;
+    isMainWarehouse: boolean;
     isActive: boolean;
+    inventories?: Inventory[];
 }

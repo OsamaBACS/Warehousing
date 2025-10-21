@@ -1,5 +1,6 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RouterModule } from '@angular/router';
 import { Spinner } from './components/spinner/spinner';
 import { MatDialogModule } from '@angular/material/dialog';
 import { ImageUploader } from './components/image-uploader/image-uploader';
@@ -30,6 +31,7 @@ import { OrderPendingListComponent } from './components/order-pending-list/order
   ],
   imports: [
     CommonModule,
+    RouterModule,
     MatDialogModule,
     ReactiveFormsModule,
     FormsModule,
@@ -52,7 +54,8 @@ import { OrderPendingListComponent } from './components/order-pending-list/order
     CompanyHeaderComponent,
     CompanyFooterComponent,
     BreadcrumbComponent,
-    ReactiveFormsModule
+    ReactiveFormsModule,
+    RouterModule
   ]
 })
 export class MySharedModule { }

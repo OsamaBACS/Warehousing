@@ -43,4 +43,8 @@ export class OrderService {
   UpdateApprovedOrder(id: number, orderDto: OrderDto) {
     return this.http.post<ApiResponse>(`${this.url}UpdateApprovedOrder/${id}`, orderDto);
   }
+
+  CancelApprovedOrder(id: number) {
+    return this.http.post<ApiResponse>(`${this.url}CancelApprovedOrder/${id}`, {});
+  }
 }

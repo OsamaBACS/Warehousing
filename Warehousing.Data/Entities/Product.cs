@@ -7,21 +7,25 @@ namespace Warehousing.Data.Entities
         public string? NameEn { get; set; } = string.Empty;
         public string NameAr { get; set; } = string.Empty;
         public string? Description { get; set; } = string.Empty;
-        public decimal? OpeningBalance { get; set; }
-        public decimal? ReorderLevel { get; set; } = 10;
         public string? ImagePath { get; set; } = string.Empty;
         public bool IsActive { get; set; } = true;
-        public decimal QuantityInStock { get; set; }
         public decimal CostPrice { get; set; }
         public decimal SellingPrice { get; set; }
-        public DateTime LastStockUpdateDate { get; set; } = DateTime.UtcNow;
 
         // FKs
         public SubCategory? SubCategory { get; set; }
         public int? SubCategoryId { get; set; }
         public int? UnitId { get; set; }
         public Unit? Unit { get; set; }
-        public int? StoreId { get; set; }
-        public Store? Store { get; set; }
+
+        // Navigation properties
+        public ICollection<Inventory> Inventories { get; set; } = new List<Inventory>();
+        public ICollection<InventoryTransaction> Transactions { get; set; } = new List<InventoryTransaction>();
+        public ICollection<OrderItem> OrderItems { get; set; } = new List<OrderItem>();
+        
+        // Recipe support (future)
+        public ICollection<ProductRecipe> RecipeAsParent { get; set; } = new List<ProductRecipe>();
+        public ICollection<ProductRecipe> RecipeAsComponent { get; set; } = new List<ProductRecipe>();
+        public ICollection<StoreTransferItem> TransferItems { get; set; } = new List<StoreTransferItem>();
     }
 }

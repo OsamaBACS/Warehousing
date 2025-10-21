@@ -163,5 +163,29 @@ namespace Warehousing.Repo.Shared
         {
             return await _context.Set<T>().CountAsync();
         }
+
+        // Additional async methods for better controller support
+        public async Task<IEnumerable<T>> GetAllAsync()
+        {
+            _logger.LogInformation("Retrieving all records for {Entity}", typeof(T).Name);
+            return await _context.Set<T>().AsNoTracking().ToListAsync();
+        }
+
+        public async Task<T?> GetByIdAsync(int id)
+        {
+            _logger.LogInformation("Retrieving {Entity} with ID {Id}", typeof(T).Name, id);
+            return await _context.Set<T>().FindAsync(id);
+        }
+
+        public async Task DeleteAsync(int id)
+        {
+            _logger.LogInformation("Deleting {Entity} with ID {Id}", typeof(T).Name, id);
+            var entity = await GetByIdAsync(id);
+            if (entity != null)
+            {
+                _context.Set<T>().Remove(entity);
+                await _context.SaveChangesAsync();
+            }
+        }
     }
 }

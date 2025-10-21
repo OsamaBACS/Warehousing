@@ -2,6 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { environment } from '../../../environments/environment';
 import { Product, ProductPagination } from '../models/product';
+import { Inventory } from '../models/Inventory';
 
 @Injectable({
   providedIn: 'root'
@@ -23,6 +24,30 @@ export class ProductsService {
       this.url +
       `SearchProductsPagination?pageIndex=${pageIndex}&pageSize=${pageSize}&keyword=${keyword}&StoreId=${storeId}`
     );
+  }
+
+  SearchProducts(keyword: string) {
+    return this.http.get<Product[]>(`${this.url}SearchProducts?keyword=${keyword}`);
+  }
+
+  GetProductsByCategory(categoryId: number) {
+    return this.http.get<Product[]>(`${this.url}GetProductsByCategory?categoryId=${categoryId}`);
+  }
+
+  GetProductsBySubCategory(subCategoryId: number) {
+    return this.http.get<Product[]>(`${this.url}GetProductsBySubCategory?subCategoryId=${subCategoryId}`);
+  }
+
+  GetLowStockProducts() {
+    return this.http.get<Product[]>(`${this.url}GetLowStockProducts`);
+  }
+
+  GetProductInventory(productId: number) {
+    return this.http.get<Inventory[]>(`${this.url}GetProductInventory?productId=${productId}`);
+  }
+
+  ValidateStock(productId: number, storeId: number, quantity: number) {
+    return this.http.get<any>(`${this.url}ValidateStock?productId=${productId}&storeId=${storeId}&quantity=${quantity}`);
   }
 
   SaveProduct(product: any) {

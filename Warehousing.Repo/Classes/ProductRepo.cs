@@ -47,14 +47,21 @@ namespace Warehousing.Repo.Classes
                 product.NameEn = dto.NameEn != null ? dto.NameEn : dto.NameAr;
                 product.NameAr = dto.NameAr;
                 product.Description = dto.Description!;
-                product.OpeningBalance = dto.OpeningBalance;
-                product.ReorderLevel = dto.ReorderLevel;
                 product.SubCategoryId = dto.SubCategoryId;
                 product.UnitId = dto.UnitId;
-                product.QuantityInStock = dto.QuantityInStock;
                 product.CostPrice = dto.CostPrice;
                 product.SellingPrice = dto.SellingPrice;
-                product.StoreId = dto.StoreId;
+                foreach (var item in dto.Inventories)
+                {
+                    var inventory = new Inventory
+                    {
+                        Id = item.Id,
+                        ProductId = item.ProductId,
+                        StoreId = item.StoreId,
+                        Quantity = item.Quantity,
+                    };
+                    product.Inventories.Add(inventory);
+                }
 
                 var createdProduct = await CreateAsync(product);
 
@@ -107,14 +114,21 @@ namespace Warehousing.Repo.Classes
                     product.NameAr = dto.NameAr;
                     product.Description = dto.Description!;
                     product.IsActive = dto.IsActive;
-                    product.OpeningBalance = dto.OpeningBalance;
-                    product.ReorderLevel = dto.ReorderLevel;
                     product.SubCategoryId = dto.SubCategoryId;
                     product.UnitId = dto.UnitId;
-                    product.QuantityInStock = dto.QuantityInStock;
                     product.CostPrice = dto.CostPrice;
                     product.SellingPrice = dto.SellingPrice;
-                    product.StoreId = dto.StoreId;
+                    foreach (var item in dto.Inventories)
+                    {
+                        var inventory = new Inventory
+                        {
+                            Id = item.Id,
+                            ProductId = item.ProductId,
+                            StoreId = item.StoreId,
+                            Quantity = item.Quantity,
+                        };
+                        product.Inventories.Add(inventory);
+                    }
 
                     var updatedProduct = await UpdateAsync(product);
 

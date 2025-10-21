@@ -42,6 +42,8 @@ import { UserDevicesComponent } from "./components/Users/user-devices/user-devic
 import { UsersListResolver } from "./resolvers/users-list-resolver";
 import { OrderListComponent } from "./components/Orders/order-list/order-list.component";
 import { OrderItemsListComponent } from "./components/Orders/order-items-list/order-items-list.component";
+import { StoreTransferFormComponent } from "./components/StoreTransfers/store-transfer-form/store-transfer-form.component";
+import { InventoryManagementComponent } from "./components/Inventory/inventory-management/inventory-management.component";
 
 
 const routes: Routes = [
@@ -247,6 +249,36 @@ const routes: Routes = [
         component: UnitFormComponent,
         canActivate: [PermissionGuard],
         data: { permission: [PermissionsEnum.VIEW_UNITS, PermissionsEnum.ADD_UNIT, PermissionsEnum.EDIT_UNIT] }
+      },
+      {
+        path: 'store-transfers',
+        component: StoreTransferFormComponent,
+        canActivate: [PermissionGuard],
+        data: { permission: [PermissionsEnum.VIEW_STORE_TRANSFERS, PermissionsEnum.ADD_STORE_TRANSFER] },
+        resolve: {
+          StoresResolver: StoresResolver,
+          productsResolver: ProductsResolver
+        }
+      },
+      {
+        path: 'store-transfers-form',
+        component: StoreTransferFormComponent,
+        canActivate: [PermissionGuard],
+        data: { permission: [PermissionsEnum.ADD_STORE_TRANSFER, PermissionsEnum.EDIT_STORE_TRANSFER] },
+        resolve: {
+          StoresResolver: StoresResolver,
+          productsResolver: ProductsResolver
+        }
+      },
+      {
+        path: 'inventory-management',
+        component: InventoryManagementComponent,
+        canActivate: [PermissionGuard],
+        data: { permission: [PermissionsEnum.VIEW_INVENTORY_MANAGEMENT, PermissionsEnum.MANAGE_INVENTORY] },
+        resolve: {
+          StoresResolver: StoresResolver,
+          productsResolver: ProductsResolver
+        }
       },
       { path: '**', redirectTo: 'dashboard' }
     ]

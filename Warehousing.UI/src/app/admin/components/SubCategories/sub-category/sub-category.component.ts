@@ -22,9 +22,11 @@ export class SubCategoryComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadcategorys();
+    this.serverUrl = this.subCategoryService.url.substring(0, this.subCategoryService.url.indexOf('api'));
   }
 
   subCategorys$!: Observable<SubCategory[]>;
+  serverUrl = '';
 
   loadcategorys() {
     this.subCategorys$ = this.subCategoryService.GetSubCategories();
@@ -37,4 +39,5 @@ export class SubCategoryComponent implements OnInit {
       this.router.navigate(['../sub-category-form'], { relativeTo: this.route });
     }
   }
+
 }

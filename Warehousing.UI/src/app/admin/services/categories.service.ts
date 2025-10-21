@@ -23,7 +23,29 @@ export class CategoriesService {
     return this.http.get<Category>(`${this.url}GetCategoryById?Id=${categoryId}`);
   }
 
+  GetCategoriesWithSubCategories() {
+    return this.http.get<Category[]>(`${this.url}GetCategoriesWithSubCategories`);
+  }
+
+  SearchCategories(keyword: string) {
+    return this.http.get<Category[]>(`${this.url}SearchCategories?keyword=${keyword}`);
+  }
+
   SaveCategory(category: any) {
-    return this.http.post<any>(`${this.url}SaveCategory`, category);
+    // If category is FormData, don't set content-type header
+    if (category instanceof FormData) {
+      return this.http.post<any>(`${this.url}SaveCategory`, category, {
+        headers: {
+          // Don't set Content-Type header - let browser set it with boundary
+        }
+      });
+    } else {
+      // For regular JSON data
+      return this.http.post<any>(`${this.url}SaveCategory`, category);
+    }
+  }
+
+  DeleteCategory(categoryId: number) {
+    return this.http.delete<any>(`${this.url}DeleteCategory?Id=${categoryId}`);
   }
 }

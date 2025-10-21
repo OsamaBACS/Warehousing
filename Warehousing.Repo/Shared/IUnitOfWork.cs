@@ -27,6 +27,9 @@ namespace Warehousing.Repo.Shared
         IRoleCategoryRepo RoleCategoryRepo{ get; }
         IRoleProductRepo RoleProductRepo{ get; }
         ISubCategoryRepo SubCategoryRepo{ get; }
+        IInventoryRepo InventoryRepo { get; }
+        IStoreTransferRepo StoreTransferRepo { get; }
+        IProductRecipeRepo ProductRecipeRepo { get; }
 
         Task SaveAsync();
         Task<IDbContextTransaction> BeginTransactionAsync();

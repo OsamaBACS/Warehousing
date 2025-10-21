@@ -28,6 +28,16 @@ export class SubCategoryService {
   }
 
   SaveSubCategory(subCategory: any) {
-    return this.http.post<any>(`${this.url}SaveSubCategory`, subCategory);
+    // If subCategory is FormData, don't set content-type header
+    if (subCategory instanceof FormData) {
+      return this.http.post<any>(`${this.url}SaveSubCategory`, subCategory, {
+        headers: {
+          // Don't set Content-Type header - let browser set it with boundary
+        }
+      });
+    } else {
+      // For regular JSON data
+      return this.http.post<any>(`${this.url}SaveSubCategory`, subCategory);
+    }
   }
 }
