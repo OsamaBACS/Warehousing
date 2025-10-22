@@ -24,5 +24,9 @@ namespace Warehousing.Repo.Dtos
 
         public IFormFile? Image { get; set; }
         public string? ImagePath { get; set; } = string.Empty;
+        
+        // Variants and Modifiers support
+        public ICollection<ProductVariantDto> Variants { get; set; } = new List<ProductVariantDto>();
+        public ICollection<ProductModifierGroupDto> ModifierGroups { get; set; } = new List<ProductModifierGroupDto>();
     }
 }

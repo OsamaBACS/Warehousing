@@ -1,0 +1,260 @@
+<div class="product-modifiers-container">
+  <div class="header">
+    <h3>Product Modifiers</h3>
+    <button class="btn btn-primary" (click)="resetModifierForm()" *ngIf="!isEditing">
+      ➕ Add Modifier
+    </button>
+  </div>
+
+  <!-- Modifier Group Form -->
+  <div class="modifier-form" *ngIf="isEditing || modifierGroups.length === 0 || showAddModifierForm">
+    <form [formGroup]="modifierForm" (ngSubmit)="onModifierSubmit()">
+      <div class="row">
+        <div class="col-md-6">
+          <div class="form-group">
+            <label for="modifierId">Modifier *</label>
+            <select id="modifierId" formControlName="modifierId" class="form-control">
+              <option value="">Select a modifier</option>
+              <option *ngFor="let modifier of availableModifiers" [value]="modifier.id">
+                {{ modifier.name }}
+              </option>
+            </select>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="form-group">
+            <label for="maxSelections">Max Selections</label>
+            <input type="number" id="maxSelections" formControlName="maxSelections" class="form-control" min="1">
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="form-group">
+            <label for="displayOrder">Display Order</label>
+            <input type="number" id="displayOrder" formControlName="displayOrder" class="form-control">
+          </div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-md-6">
+          <div class="form-group">
+            <div class="form-check">
+              <input type="checkbox" id="isRequired" formControlName="isRequired" class="form-check-input">
+              <label for="isRequired" class="form-check-label">Required</label>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="form-group">
+            <div class="form-check">
+              <input type="checkbox" id="isActive" formControlName="isActive" class="form-check-input">
+              <label for="isActive" class="form-check-label">Active</label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button type="submit" class="btn btn-success" [disabled]="modifierForm.invalid">
+          💾 {{ isEditing ? 'Update' : 'Add' }} Modifier
+        </button>
+        <button type="button" class="btn btn-secondary" (click)="cancelEdit()">
+          ❌ Cancel
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Modifier Groups List -->
+  <div class="modifier-groups-list" *ngIf="modifierGroups.length > 0">
+    <div class="table-responsive">
+      <table class="table table-striped">
+        <thead>
+          <tr>
+            <th>Modifier</th>
+            <th>Required</th>
+            <th>Max Selections</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let group of modifierGroups">
+            <td>{{ group.modifierName || 'N/A' }}</td>
+            <td>
+              <span class="badge" [class.badge-warning]="group.isRequired" [class.badge-secondary]="!group.isRequired">
+                {{ group.isRequired ? 'Required' : 'Optional' }}
+              </span>
+            </td>
+            <td>{{ group.maxSelections }}</td>
+            <td>
+              <span class="badge" [class.badge-success]="group.isActive" [class.badge-danger]="!group.isActive">
+                {{ group.isActive ? 'Active' : 'Inactive' }}
+              </span>
+            </td>
+            <td>
+              <button class="btn btn-sm btn-primary me-2" (click)="editModifierGroup(group)" title="Edit">
+                ✏️
+              </button>
+              <button class="btn btn-sm btn-danger" (click)="deleteModifierGroup(group)" title="Delete">
+                🗑️
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Available Modifiers -->
+  <div class="available-modifiers" *ngIf="availableModifiers.length > 0">
+    <h4>Available Modifiers</h4>
+    <div class="modifiers-grid">
+      <div class="modifier-card" *ngFor="let modifier of availableModifiers" (click)="selectModifier(modifier)">
+        <div class="modifier-header">
+          <h5>{{ modifier.name }}</h5>
+          <span class="badge badge-info">{{ modifier.isMultiple ? 'Multiple' : 'Single' }}</span>
+        </div>
+        <p class="modifier-description">{{ modifier.description || 'No description' }}</p>
+        <div class="modifier-details">
+          <small>Price Adjustment: {{ modifier.priceAdjustment | currency }}</small>
+          <small>Options: {{ modifier.options?.length || 0 }}</small>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Selected Modifier Options -->
+  <div class="modifier-options" *ngIf="selectedModifier">
+    <div class="options-header">
+      <h4>{{ selectedModifier.name }} Options</h4>
+      <button class="btn btn-sm btn-primary" (click)="resetOptionForm()" *ngIf="!isEditingOption">
+        ➕ Add Option
+      </button>
+    </div>
+
+    <!-- Option Form -->
+    <div class="option-form" *ngIf="isEditingOption || (selectedModifier.options && selectedModifier.options.length === 0) || showAddOptionForm">
+      <form [formGroup]="optionForm" (ngSubmit)="onOptionSubmit()">
+        <div class="row">
+          <div class="col-md-6">
+            <div class="form-group">
+              <label for="optionName">Option Name *</label>
+              <input type="text" id="optionName" formControlName="name" class="form-control" placeholder="e.g., Extra Cheese">
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="form-group">
+              <label for="optionCode">Option Code</label>
+              <input type="text" id="optionCode" formControlName="code" class="form-control" placeholder="e.g., CHEESE">
+            </div>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-md-12">
+            <div class="form-group">
+              <label for="optionDescription">Description</label>
+              <textarea id="optionDescription" formControlName="description" class="form-control" rows="2"></textarea>
+            </div>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-md-3">
+            <div class="form-group">
+              <label for="optionPriceAdjustment">Price Adjustment</label>
+              <input type="number" id="optionPriceAdjustment" formControlName="priceAdjustment" class="form-control" step="0.01">
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="form-group">
+              <label for="optionCostAdjustment">Cost Adjustment</label>
+              <input type="number" id="optionCostAdjustment" formControlName="costAdjustment" class="form-control" step="0.01">
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="form-group">
+              <label for="optionDisplayOrder">Display Order</label>
+              <input type="number" id="optionDisplayOrder" formControlName="displayOrder" class="form-control">
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="form-group">
+              <div class="form-check">
+                <input type="checkbox" id="optionIsDefault" formControlName="isDefault" class="form-check-input">
+                <label for="optionIsDefault" class="form-check-label">Default</label>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" class="btn btn-success" [disabled]="optionForm.invalid">
+            💾 {{ isEditingOption ? 'Update' : 'Create' }} Option
+          </button>
+          <button type="button" class="btn btn-secondary" (click)="resetOptionForm()">
+            ❌ Cancel
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Options List -->
+    <div class="options-list" *ngIf="selectedModifier.options && selectedModifier.options.length > 0">
+      <div class="table-responsive">
+        <table class="table table-sm">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Code</th>
+              <th>Price Adjustment</th>
+              <th>Default</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let option of selectedModifier.options">
+              <td>{{ option.name }}</td>
+              <td>{{ option.code || '-' }}</td>
+              <td>{{ option.priceAdjustment | currency }}</td>
+              <td>
+                <span class="badge badge-info" *ngIf="option.isDefault">Default</span>
+              </td>
+              <td>
+                <span class="badge" [class.badge-success]="option.isActive" [class.badge-danger]="!option.isActive">
+                  {{ option.isActive ? 'Active' : 'Inactive' }}
+                </span>
+              </td>
+              <td>
+                <button class="btn btn-sm btn-primary me-2" (click)="editModifierOption(option)" title="Edit">
+                  ✏️
+                </button>
+                <button class="btn btn-sm btn-danger" (click)="deleteModifierOption(option)" title="Delete">
+                  🗑️
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div class="loading" *ngIf="loading">
+    <div class="spinner-border" role="status">
+      <span class="sr-only">Loading...</span>
+    </div>
+  </div>
+
+  <!-- Empty State -->
+  <div class="empty-state" *ngIf="!loading && modifierGroups.length === 0 && !isEditing">
+    <div class="text-center">
+      ⚙️
+      <h4>No Modifiers Found</h4>
+      <p>This product doesn't have any modifiers yet. Click "Add Modifier" to create the first one.</p>
+    </div>
+  </div>
+</div>

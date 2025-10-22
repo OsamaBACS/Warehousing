@@ -51,6 +51,20 @@ namespace Warehousing.Repo.Classes
                 product.UnitId = dto.UnitId;
                 product.CostPrice = dto.CostPrice;
                 product.SellingPrice = dto.SellingPrice;
+                
+                // Handle inventories - if StoreId is provided, create inventory for that store
+                if (dto.StoreId.HasValue && dto.StoreId.Value > 0)
+                {
+                    var inventory = new Inventory
+                    {
+                        ProductId = product.Id, // Will be set after product is created
+                        StoreId = dto.StoreId.Value,
+                        Quantity = 0, // Default quantity
+                    };
+                    product.Inventories.Add(inventory);
+                }
+                
+                // Also handle any existing inventories from DTO
                 foreach (var item in dto.Inventories)
                 {
                     var inventory = new Inventory
@@ -118,6 +132,25 @@ namespace Warehousing.Repo.Classes
                     product.UnitId = dto.UnitId;
                     product.CostPrice = dto.CostPrice;
                     product.SellingPrice = dto.SellingPrice;
+                    
+                    // Handle inventories - if StoreId is provided, create inventory for that store
+                    if (dto.StoreId.HasValue && dto.StoreId.Value > 0)
+                    {
+                        // Check if inventory already exists for this store
+                        var existingInventory = product.Inventories.FirstOrDefault(i => i.StoreId == dto.StoreId.Value);
+                        if (existingInventory == null)
+                        {
+                            var inventory = new Inventory
+                            {
+                                ProductId = product.Id,
+                                StoreId = dto.StoreId.Value,
+                                Quantity = 0, // Default quantity
+                            };
+                            product.Inventories.Add(inventory);
+                        }
+                    }
+                    
+                    // Also handle any existing inventories from DTO
                     foreach (var item in dto.Inventories)
                     {
                         var inventory = new Inventory

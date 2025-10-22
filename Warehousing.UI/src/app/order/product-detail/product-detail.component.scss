@@ -1,0 +1,75 @@
+.card {
+  border-radius: 15px;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1) !important;
+}
+
+.btn {
+  border-radius: 10px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.btn:hover {
+  transform: translateY(-1px);
+}
+
+.form-check-input {
+  border-radius: 6px;
+}
+
+.form-select {
+  border-radius: 10px;
+  border: 2px solid #e9ecef;
+  transition: border-color 0.3s ease;
+}
+
+.form-select:focus {
+  border-color: #0d6efd;
+  box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+}
+
+.spinner-border {
+  width: 2rem;
+  height: 2rem;
+}
+
+.card-title {
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.card-text {
+  line-height: 1.6;
+}
+
+.form-label {
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+}
+
+.btn-lg {
+  padding: 0.75rem 1.5rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+  
+  .card-body {
+    padding: 1.5rem !important;
+  }
+  
+  .btn-lg {
+    padding: 0.6rem 1.2rem;
+    font-size: 1rem;
+  }
+}

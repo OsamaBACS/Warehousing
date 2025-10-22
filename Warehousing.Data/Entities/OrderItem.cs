@@ -21,6 +21,10 @@ namespace Warehousing.Data.Entities
         
         public Order Order { get; set; } = null!;
         public int OrderId { get; set; }
+        
+        // Variant support
+        public ProductVariant? Variant { get; set; }
+        public int? VariantId { get; set; }
 
         // Computed properties
         public decimal TotalCost => Quantity * UnitCost;
@@ -28,5 +32,6 @@ namespace Warehousing.Data.Entities
 
         // Navigation properties
         public ICollection<InventoryTransaction> Transactions { get; set; } = new List<InventoryTransaction>();
+        public ICollection<OrderItemModifier> Modifiers { get; set; } = new List<OrderItemModifier>();
     }
 }

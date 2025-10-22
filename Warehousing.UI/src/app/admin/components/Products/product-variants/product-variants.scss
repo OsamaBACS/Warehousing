@@ -1,0 +1,100 @@
+.product-variants-container {
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    
+    h3 {
+      margin: 0;
+      color: #333;
+    }
+  }
+
+  .variant-form {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    border: 1px solid #e9ecef;
+
+    .form-group {
+      margin-bottom: 15px;
+    }
+
+    .form-actions {
+      margin-top: 20px;
+      display: flex;
+      gap: 10px;
+    }
+  }
+
+  .variants-list {
+    .table {
+      th {
+        background-color: #f8f9fa;
+        border-top: none;
+        font-weight: 600;
+        color: #495057;
+      }
+
+      td {
+        vertical-align: middle;
+      }
+
+      .badge {
+        font-size: 0.75em;
+      }
+    }
+  }
+
+  .loading {
+    text-align: center;
+    padding: 40px;
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: #6c757d;
+
+    i {
+      margin-bottom: 20px;
+    }
+
+    h4 {
+      margin-bottom: 10px;
+      color: #495057;
+    }
+
+    p {
+      margin-bottom: 0;
+    }
+  }
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  
+  i {
+    font-size: 0.9em;
+  }
+}
+
+.form-check {
+  margin-top: 8px;
+}
+
+.badge-success {
+  background-color: #28a745;
+}
+
+.badge-danger {
+  background-color: #dc3545;
+}
+
+.badge-info {
+  background-color: #17a2b8;
+}

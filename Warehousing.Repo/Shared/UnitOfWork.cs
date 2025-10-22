@@ -68,6 +68,13 @@ namespace Warehousing.Repo.Shared
         public IStoreTransferRepo StoreTransferRepo => new StoreTransferRepo(_context, _loggerFactory.CreateLogger<StoreTransferRepo>(), _config);
 
         public IProductRecipeRepo ProductRecipeRepo => new ProductRecipeRepo(_context, _loggerFactory.CreateLogger<ProductRecipeRepo>(), _config);
+        
+        // Variants and Modifiers
+        public IProductVariantRepo ProductVariantRepo => new ProductVariantRepo(_context, _loggerFactory.CreateLogger<ProductVariantRepo>(), _config);
+        public IProductModifierRepo ProductModifierRepo => new ProductModifierRepo(_context, _loggerFactory.CreateLogger<ProductModifierRepo>(), _config);
+        public IProductModifierOptionRepo ProductModifierOptionRepo => new ProductModifierOptionRepo(_context, _loggerFactory.CreateLogger<ProductModifierOptionRepo>(), _config);
+        public IProductModifierGroupRepo ProductModifierGroupRepo => new ProductModifierGroupRepo(_context, _loggerFactory.CreateLogger<ProductModifierGroupRepo>(), _config);
+        public IOrderItemModifierRepo OrderItemModifierRepo => new OrderItemModifierRepo(_context, _loggerFactory.CreateLogger<OrderItemModifierRepo>(), _config);
 
         public async Task SaveAsync()
         {

@@ -3,7 +3,7 @@ import { FormArray, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
 import { Product } from '../../models/product';
-import { Store } from '../../models/store';
+import { StoreSimple } from '../../models/StoreSimple';
 import { InitialStockItem, InitialStockService } from '../../services/initial-stock.service';
 import { ProductsService } from '../../services/products.service';
 import { StoreService } from '../../services/store.service';
@@ -17,7 +17,7 @@ import { StoreService } from '../../services/store.service';
 export class InitialStockComponent implements OnInit {
   initialStockForm!: FormGroup;
   products: Product[] = [];
-  stores: Store[] = [];
+  stores: StoreSimple[] = [];
   isLoading = false;
   isSubmitting = false;
 
@@ -86,7 +86,7 @@ export class InitialStockComponent implements OnInit {
 
   getStoreName(storeId: number): string {
     const store = this.stores.find(s => s.id === storeId);
-    return store ? store.nameAr : '';
+    return store ? store.name : '';
   }
 
   onSubmit(): void {

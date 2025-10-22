@@ -6,6 +6,7 @@ import { OrderComponent } from './order.component';
 import { OrderCategoriesComponent } from './order-categories/order-categories.component';
 import { OrderSubCategoriesComponent } from './order-sub-categories/order-sub-categories.component';
 import { OrderProductsComponent } from './order-products/order-products.component';
+import { ProductDetailComponent } from './product-detail/product-detail.component';
 import { MySharedModule } from '../shared/my-shared-module';
 
 
@@ -14,7 +15,8 @@ import { MySharedModule } from '../shared/my-shared-module';
     OrderComponent,
     OrderCategoriesComponent,
     OrderSubCategoriesComponent,
-    OrderProductsComponent
+    OrderProductsComponent,
+    ProductDetailComponent
   ],
   imports: [
     CommonModule,

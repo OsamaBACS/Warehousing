@@ -91,6 +91,36 @@
       </div>
     </div>
 
+    <!-- Variants and Modifiers Section -->
+    <div class="row g-3 mt-4" *ngIf="productForm.get('id')?.value > 0">
+      <div class="col-12">
+        <div class="card">
+          <div class="card-header">
+            <h5 class="mb-0">إدارة المتغيرات والتعديلات</h5>
+          </div>
+          <div class="card-body">
+            <!-- Product Variants -->
+            <div class="mb-4">
+              <h6>متغيرات المنتج</h6>
+              <app-product-variants 
+                [productId]="productForm.get('id')?.value" 
+                (variantsUpdated)="onVariantsUpdated($event)">
+              </app-product-variants>
+            </div>
+
+            <!-- Product Modifiers -->
+            <div>
+              <h6>تعديلات المنتج</h6>
+              <app-product-modifiers 
+                [productId]="productForm.get('id')?.value" 
+                (modifiersUpdated)="onModifiersUpdated($event)">
+              </app-product-modifiers>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Actions -->
     <div class="col-12 mt-4 d-flex justify-content-end gap-2 flex-wrap">
       <button class="btn btn-secondary flex-fill" (click)="cancel()">إلغاء</button>

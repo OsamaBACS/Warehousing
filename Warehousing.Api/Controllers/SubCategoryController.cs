@@ -29,7 +29,8 @@ namespace Warehousing.Api.Controllers
             {
                 var list = await _unitOfWork.SubCategoryRepo
                     .GetAll()
-                    .ProjectTo<SubCategoryDto>(_mapper.ConfigurationProvider)
+                    .Include(s => s.Category) // Only include Category for CategoryName mapping
+                    .ProjectTo<SubCategorySimpleDto>(_mapper.ConfigurationProvider)
                     .ToListAsync();
                 return Ok(list);
             }
@@ -47,7 +48,8 @@ namespace Warehousing.Api.Controllers
             {
                 var list = await _unitOfWork.SubCategoryRepo
                     .GetByCondition(c => c.IsActive)
-                    .ProjectTo<SubCategoryDto>(_mapper.ConfigurationProvider)
+                    .Include(s => s.Category) // Only include Category for CategoryName mapping
+                    .ProjectTo<SubCategorySimpleDto>(_mapper.ConfigurationProvider)
                     .ToListAsync();
                 return Ok(list);
             }
@@ -89,7 +91,8 @@ namespace Warehousing.Api.Controllers
             {
                 var subCategories = await _unitOfWork.SubCategoryRepo
                     .GetByCondition(u => u.CategoryId == CategoryId && u.IsActive)
-                    .ProjectTo<SubCategoryDto>(_mapper.ConfigurationProvider)
+                    .Include(s => s.Category) // Only include Category for CategoryName mapping
+                    .ProjectTo<SubCategorySimpleDto>(_mapper.ConfigurationProvider)
                     .ToListAsync();
                 
                 if (subCategories == null || !subCategories.Any())

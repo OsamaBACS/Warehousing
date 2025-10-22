@@ -21,10 +21,17 @@ namespace Warehousing.Repo.Dtos
         
         public OrderDto? Order { get; set; }
         public int OrderId { get; set; }
+        
+        // Variant support
+        public ProductVariantDto? Variant { get; set; }
+        public int? VariantId { get; set; }
 
         // Computed properties
         public decimal TotalCost => Quantity * UnitCost;
         public decimal TotalPrice => (Quantity * UnitPrice) - Discount;
+
+        // Navigation properties
+        public ICollection<OrderItemModifierDto> Modifiers { get; set; } = new List<OrderItemModifierDto>();
 
         // Audit fields
         public DateTime? CreatedAt { get; set; }

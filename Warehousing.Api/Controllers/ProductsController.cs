@@ -50,8 +50,8 @@ namespace Warehousing.Api.Controllers
                     .GetByCondition(p => p.SubCategoryId == SubCategoryId && p.IsActive)
                     .Include(ps => ps.SubCategory)
                     .Include(ps => ps.Unit)
-                    .Include(u => u.Inventories).ThenInclude(s => s.Store)
-                    .ProjectTo<ProductDto>(_mapper.ConfigurationProvider)
+                    .Include(ps => ps.Inventories)
+                    .ProjectTo<ProductSimpleDto>(_mapper.ConfigurationProvider)
                     .ToListAsync();
 
                 return Ok(products);

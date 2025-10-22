@@ -2,6 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { environment } from '../../../environments/environment';
 import { Store } from '../models/store';
+import { StoreSimple } from '../models/StoreSimple';
 import { Inventory } from '../models/Inventory';
 
 @Injectable({
@@ -17,7 +18,7 @@ export class StoreService {
   }
 
   GetActiveStores() {
-    return this.http.get<Store[]>(`${this.url}active`);
+    return this.http.get<StoreSimple[]>(`${this.url}active`);
   }
 
   GetWarehouses() {

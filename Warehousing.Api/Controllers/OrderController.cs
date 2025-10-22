@@ -484,10 +484,14 @@ namespace Warehousing.Api.Controllers
                                 return BadRequest(new { success = false, message = $"Product not found for order item {item.Id}" });
 
                             // Only validate for sales (OrderTypeId != 1)
-                            var inventory = item.Product.Inventories.Where(s => s.StoreId == item.StoreId).FirstOrDefault();
-                            if (order.OrderTypeId != 1 && inventory.Quantity < item.Quantity)
+                            var inventory = item.VariantId.HasValue 
+                                ? item.Product.Inventories.Where(s => s.StoreId == item.StoreId && s.VariantId == item.VariantId).FirstOrDefault()
+                                : item.Product.Inventories.Where(s => s.StoreId == item.StoreId && s.VariantId == null).FirstOrDefault();
+                            
+                            if (order.OrderTypeId != 1 && inventory != null && inventory.Quantity < item.Quantity)
                             {
-                                insufficientItems.Add($"{item.Product.NameAr} (Available: {inventory.Quantity}, Requested: {item.Quantity})");
+                                var variantInfo = item.VariantId.HasValue ? $" (Variant ID: {item.VariantId})" : "";
+                                insufficientItems.Add($"{item.Product.NameAr}{variantInfo} (Available: {inventory.Quantity}, Requested: {item.Quantity})");
                             }
                         }
 
@@ -505,7 +509,10 @@ namespace Warehousing.Api.Controllers
 
                         foreach (var item in order.Items)
                         {
-                            var inventory = item.Product.Inventories.Where(s => s.StoreId == item.StoreId).FirstOrDefault();
+                            // Handle inventory for variants or base product
+                            var inventory = item.VariantId.HasValue 
+                                ? item.Product.Inventories.Where(s => s.StoreId == item.StoreId && s.VariantId == item.VariantId).FirstOrDefault()
+                                : item.Product.Inventories.Where(s => s.StoreId == item.StoreId && s.VariantId == null).FirstOrDefault();
                             
                             // Store quantities before change
                             var quantityBefore = 0m;
@@ -520,6 +527,7 @@ namespace Warehousing.Api.Controllers
                                     {
                                         ProductId = item.ProductId,
                                         StoreId = item.StoreId,
+                                        VariantId = item.VariantId,
                                         Quantity = item.Quantity,
                                         CreatedAt = DateTime.UtcNow,
                                         CreatedBy = "System", // You might want to get this from user context
@@ -534,7 +542,8 @@ namespace Warehousing.Api.Controllers
                                 }
                                 else // Sale → Inventory must exist
                                 {
-                                    return BadRequest(new { success = false, message = $"Inventory not found for product {item.Product.NameAr} in store {item.StoreId}. Cannot sell from non-existent inventory." });
+                                    var variantInfo = item.VariantId.HasValue ? $" (Variant ID: {item.VariantId})" : "";
+                                    return BadRequest(new { success = false, message = $"Inventory not found for product {item.Product.NameAr}{variantInfo} in store {item.StoreId}. Cannot sell from non-existent inventory." });
                                 }
                             }
                             else
@@ -894,6 +903,118 @@ namespace Warehousing.Api.Controllers
                 {
                     success = false,
                     message = $"Error: {ex.Message}"
+                });
+            }
+        }
+
+        // New endpoints for variants and modifiers support
+
+        [HttpGet]
+        [Route("GetProductVariants/{productId}")]
+        public async Task<IActionResult> GetProductVariants(int productId)
+        {
+            try
+            {
+                var variants = await _unitOfWork.ProductVariantRepo
+                    .GetByCondition(v => v.ProductId == productId && v.IsActive)
+                    .OrderBy(v => v.DisplayOrder)
+                    .ToListAsync();
+
+                return Ok(variants);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = ex.Message });
+            }
+        }
+
+        [HttpGet]
+        [Route("GetProductModifiers/{productId}")]
+        public async Task<IActionResult> GetProductModifiers(int productId)
+        {
+            try
+            {
+                var modifierGroups = await _unitOfWork.ProductModifierGroupRepo
+                    .GetByCondition(mg => mg.ProductId == productId && mg.IsActive)
+                    .Include(mg => mg.Modifier)
+                        .ThenInclude(m => m.Options)
+                    .OrderBy(mg => mg.DisplayOrder)
+                    .ToListAsync();
+
+                return Ok(modifierGroups);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = ex.Message });
+            }
+        }
+
+        [HttpPost]
+        [Route("SaveOrderWithVariantsAndModifiers")]
+        public async Task<IActionResult> SaveOrderWithVariantsAndModifiers([FromBody] OrderWithVariantsAndModifiersDto orderDto)
+        {
+            try
+            {
+                using var transaction = await _unitOfWork.BeginTransactionAsync();
+
+                try
+                {
+                    // Create the order
+                    var order = _mapper.Map<Order>(orderDto);
+                    order.CreatedAt = DateTime.UtcNow;
+                    order.UpdatedAt = DateTime.UtcNow;
+
+                    await _unitOfWork.OrderRepo.CreateAsync(order);
+                    await _unitOfWork.SaveAsync();
+
+                    // Create order items with variants and modifiers
+                    foreach (var itemDto in orderDto.Items)
+                    {
+                        var orderItem = _mapper.Map<OrderItem>(itemDto);
+                        orderItem.OrderId = order.Id;
+                        orderItem.CreatedAt = DateTime.UtcNow;
+                        orderItem.UpdatedAt = DateTime.UtcNow;
+
+                        await _unitOfWork.OrderItemRepo.CreateAsync(orderItem);
+                        await _unitOfWork.SaveAsync();
+
+                        // Create order item modifiers if any
+                        if (itemDto.Modifiers != null && itemDto.Modifiers.Any())
+                        {
+                            foreach (var modifierDto in itemDto.Modifiers)
+                            {
+                                var orderItemModifier = _mapper.Map<OrderItemModifier>(modifierDto);
+                                orderItemModifier.OrderItemId = orderItem.Id;
+                                orderItemModifier.CreatedAt = DateTime.UtcNow;
+                                orderItemModifier.UpdatedAt = DateTime.UtcNow;
+
+                                await _unitOfWork.OrderItemModifierRepo.CreateAsync(orderItemModifier);
+                            }
+                        }
+                    }
+
+                    await _unitOfWork.SaveAsync();
+                    await transaction.CommitAsync();
+
+                    return Ok(new
+                    {
+                        success = true,
+                        message = "Order saved successfully with variants and modifiers.",
+                        orderId = order.Id
+                    });
+                }
+                catch (Exception ex)
+                {
+                    await transaction.RollbackAsync();
+                    throw;
+                }
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    message = $"Error saving order: {ex.Message}"
                 });
             }
         }

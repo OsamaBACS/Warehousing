@@ -1,4 +1,4 @@
-import { CommonModule } from "@angular/common";
+import { CommonModule, CurrencyPipe, DatePipe, DecimalPipe, SlicePipe } from "@angular/common";
 import { NgModule } from "@angular/core";
 import { ReactiveFormsModule, FormsModule } from "@angular/forms";
 import { TranslateModule } from "@ngx-translate/core";
@@ -14,7 +14,6 @@ import { CustomersFormComponent } from "./components/Customers/customers-form.co
 import { CustomersComponent } from "./components/Customers/customers.component/customers.component";
 import { Dashboard } from "./components/dashboard/dashboard";
 import { MainComponent } from "./components/main/main.component";
-import { ProductFormComponent } from "./components/Products/product-form/product-form.component";
 import { InventoryReportComponent } from "./components/reports/inventory-report.component/inventory-report.component";
 import { TransactionsComponent } from "./components/reports/transactions.component/transactions.component";
 import { RolesFormComponent } from "./components/Roles/roles-form/roles-form.component";
@@ -38,6 +37,8 @@ import { OrderItemsListComponent } from './components/Orders/order-items-list/or
 import { StoreTransferFormComponent } from './components/StoreTransfers/store-transfer-form/store-transfer-form.component';
 import { InventoryManagementComponent } from './components/Inventory/inventory-management/inventory-management.component';
 import { InitialStockComponent } from './components/initial-stock/initial-stock.component';
+import { ProductVariantsComponent } from './components/Products/product-variants/product-variants';
+import { ProductModifiersComponent } from './components/Products/product-modifiers/product-modifiers';
 
 
 
@@ -67,7 +68,6 @@ import { InitialStockComponent } from './components/initial-stock/initial-stock.
     CategoryFormComponent,
     UnitFormComponent,
     ProductsComponent,
-    ProductFormComponent,
     SubCategoryComponent,
     SubCategoryFormComponent,
     UserDevicesComponent,
@@ -84,7 +84,15 @@ import { InitialStockComponent } from './components/initial-stock/initial-stock.
     ToastrModule,
     MySharedModule,
     ReactiveFormsModule,
-    FormsModule
+    FormsModule,
+    ProductVariantsComponent,
+    ProductModifiersComponent
+  ],
+  providers: [
+    CurrencyPipe,
+    DatePipe,
+    DecimalPipe,
+    SlicePipe
   ]
 })
 export class AdminModule { }

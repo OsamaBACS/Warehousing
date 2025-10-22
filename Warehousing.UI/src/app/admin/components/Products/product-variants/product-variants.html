@@ -1,0 +1,157 @@
+<div class="product-variants-container">
+  <div class="header">
+    <h3>Product Variants</h3>
+    <button class="btn btn-primary" (click)="resetForm()" *ngIf="!isEditing">
+      ➕ Add Variant
+    </button>
+  </div>
+
+  <!-- Variant Form -->
+  <div class="variant-form" *ngIf="isEditing || variants.length === 0 || showAddForm">
+    <form [formGroup]="variantForm" (ngSubmit)="onSubmit()">
+      <div class="row">
+        <div class="col-md-6">
+          <div class="form-group">
+            <label for="name">Variant Name *</label>
+            <input type="text" id="name" formControlName="name" class="form-control" placeholder="e.g., Large, Red, Premium">
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="form-group">
+            <label for="code">Variant Code</label>
+            <input type="text" id="code" formControlName="code" class="form-control" placeholder="e.g., LARGE, RED, PREM">
+          </div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-md-12">
+          <div class="form-group">
+            <label for="description">Description</label>
+            <textarea id="description" formControlName="description" class="form-control" rows="2" placeholder="Optional description"></textarea>
+          </div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-md-3">
+          <div class="form-group">
+            <label for="priceAdjustment">Price Adjustment</label>
+            <input type="number" id="priceAdjustment" formControlName="priceAdjustment" class="form-control" step="0.01">
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="form-group">
+            <label for="costAdjustment">Cost Adjustment</label>
+            <input type="number" id="costAdjustment" formControlName="costAdjustment" class="form-control" step="0.01">
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="form-group">
+            <label for="stockQuantity">Stock Quantity</label>
+            <input type="number" id="stockQuantity" formControlName="stockQuantity" class="form-control" step="0.01">
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="form-group">
+            <label for="reorderLevel">Reorder Level</label>
+            <input type="number" id="reorderLevel" formControlName="reorderLevel" class="form-control" step="0.01">
+          </div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-md-3">
+          <div class="form-group">
+            <label for="displayOrder">Display Order</label>
+            <input type="number" id="displayOrder" formControlName="displayOrder" class="form-control">
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="form-group">
+            <div class="form-check">
+              <input type="checkbox" id="isActive" formControlName="isActive" class="form-check-input">
+              <label for="isActive" class="form-check-label">Active</label>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="form-group">
+            <div class="form-check">
+              <input type="checkbox" id="isDefault" formControlName="isDefault" class="form-check-input">
+              <label for="isDefault" class="form-check-label">Default</label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button type="submit" class="btn btn-success" [disabled]="variantForm.invalid">
+          💾 {{ isEditing ? 'Update' : 'Create' }} Variant
+        </button>
+        <button type="button" class="btn btn-secondary" (click)="cancelEdit()">
+          ❌ Cancel
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Variants List -->
+  <div class="variants-list" *ngIf="variants.length > 0">
+    <div class="table-responsive">
+      <table class="table table-striped">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Code</th>
+            <th>Price Adjustment</th>
+            <th>Stock Quantity</th>
+            <th>Status</th>
+            <th>Default</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let variant of variants">
+            <td>{{ variant.name }}</td>
+            <td>{{ variant.code || '-' }}</td>
+            <td>{{ variant.priceAdjustment || 0 | currency }}</td>
+            <td>{{ variant.stockQuantity || 0 }}</td>
+            <td>
+              <span class="badge" [class.badge-success]="variant.isActive" [class.badge-danger]="!variant.isActive">
+                {{ variant.isActive ? 'Active' : 'Inactive' }}
+              </span>
+            </td>
+            <td>
+              <span class="badge badge-info" *ngIf="variant.isDefault">Default</span>
+            </td>
+            <td>
+              <button class="btn btn-sm btn-primary me-2" (click)="editVariant(variant)" title="Edit">
+                ✏️
+              </button>
+              <button class="btn btn-sm btn-danger" (click)="deleteVariant(variant)" title="Delete">
+                🗑️
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div class="loading" *ngIf="loading">
+    <div class="spinner-border" role="status">
+      <span class="sr-only">Loading...</span>
+    </div>
+  </div>
+
+  <!-- Empty State -->
+  <div class="empty-state" *ngIf="!loading && variants.length === 0 && !isEditing">
+    <div class="text-center">
+      📦
+      <h4>No Variants Found</h4>
+      <p>This product doesn't have any variants yet. Click "Add Variant" to create the first one.</p>
+    </div>
+  </div>
+</div>

@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
+import { FormBuilder, FormControl, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { CommonModule } from '@angular/common';
 import { ProductsService } from '../../../services/products.service';
 import { CategoriesService } from '../../../services/categories.service';
 import { UnitsService } from '../../../services/units.service';
@@ -10,10 +11,16 @@ import { environment } from '../../../../../environments/environment';
 import { Product } from '../../../models/product';
 import { Store } from '../../../models/store';
 import { SubCategory } from '../../../models/SubCategory';
+import { ProductVariant } from '../../../models/ProductVariant';
+import { ProductModifierGroup } from '../../../models/ProductModifier';
+import { ProductVariantsComponent } from '../product-variants/product-variants';
+import { ProductModifiersComponent } from '../product-modifiers/product-modifiers';
+import { ImageUploader } from '../../../../shared/components/image-uploader/image-uploader';
 
 @Component({
   selector: 'app-product-form',
-  standalone: false,
+  standalone: true,
+  imports: [CommonModule, ReactiveFormsModule, ProductVariantsComponent, ProductModifiersComponent, ImageUploader],
   templateUrl: './product-form.component.html',
   styleUrl: './product-form.component.scss'
 })
@@ -207,5 +214,16 @@ export class ProductFormComponent implements OnInit {
   }
   get storeId(): FormControl {
     return this.productForm.get('storeId') as FormControl;
+  }
+
+  // Handle variants and modifiers updates
+  onVariantsUpdated(variants: ProductVariant[]): void {
+    console.log('Variants updated:', variants);
+    // You can add additional logic here if needed
+  }
+
+  onModifiersUpdated(modifiers: ProductModifierGroup[]): void {
+    console.log('Modifiers updated:', modifiers);
+    // You can add additional logic here if needed
   }
 }

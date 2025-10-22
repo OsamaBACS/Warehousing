@@ -29,7 +29,7 @@ namespace Warehousing.Api.Controllers
             {
                 var list = await _unitOfWork.CategoryRepo
                     .GetAll()
-                    .ProjectTo<CategoryDto>(_mapper.ConfigurationProvider)
+                    .ProjectTo<CategorySimpleDto>(_mapper.ConfigurationProvider)
                     .ToListAsync();
                 return Ok(list);
             }
@@ -47,7 +47,7 @@ namespace Warehousing.Api.Controllers
             {
                 var list = await _unitOfWork.CategoryRepo
                     .GetByCondition(c => c.IsActive)
-                    .ProjectTo<CategoryDto>(_mapper.ConfigurationProvider)
+                    .ProjectTo<CategorySimpleDto>(_mapper.ConfigurationProvider)
                     .ToListAsync();
                 return Ok(list);
             }

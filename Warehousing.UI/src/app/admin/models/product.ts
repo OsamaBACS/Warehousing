@@ -29,6 +29,7 @@ export interface Product {
     inventories: Inventory[];
     transactions: InventoryTransaction[];
     orderItems: OrderItemDto[];
+    totalQuantity?: number; // Total quantity across all stores
 }
 export interface ProductDto {
     id: number | null;

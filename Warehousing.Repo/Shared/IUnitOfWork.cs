@@ -30,6 +30,13 @@ namespace Warehousing.Repo.Shared
         IInventoryRepo InventoryRepo { get; }
         IStoreTransferRepo StoreTransferRepo { get; }
         IProductRecipeRepo ProductRecipeRepo { get; }
+        
+        // Variants and Modifiers
+        IProductVariantRepo ProductVariantRepo { get; }
+        IProductModifierRepo ProductModifierRepo { get; }
+        IProductModifierOptionRepo ProductModifierOptionRepo { get; }
+        IProductModifierGroupRepo ProductModifierGroupRepo { get; }
+        IOrderItemModifierRepo OrderItemModifierRepo { get; }
 
         Task SaveAsync();
         Task<IDbContextTransaction> BeginTransactionAsync();

@@ -27,5 +27,9 @@ namespace Warehousing.Data.Entities
         public ICollection<ProductRecipe> RecipeAsParent { get; set; } = new List<ProductRecipe>();
         public ICollection<ProductRecipe> RecipeAsComponent { get; set; } = new List<ProductRecipe>();
         public ICollection<StoreTransferItem> TransferItems { get; set; } = new List<StoreTransferItem>();
+        
+        // Variants and Modifiers support
+        public ICollection<ProductVariant> Variants { get; set; } = new List<ProductVariant>();
+        public ICollection<ProductModifierGroup> ModifierGroups { get; set; } = new List<ProductModifierGroup>();
     }
 }

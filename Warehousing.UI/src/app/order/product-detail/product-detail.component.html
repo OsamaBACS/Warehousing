@@ -1,0 +1,159 @@
+<div class="container py-4" dir="rtl" *ngIf="!isLoading">
+  <!-- Back Button -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <button class="btn btn-outline-secondary" (click)="goBack()">
+        <i class="fas fa-arrow-right me-2"></i>
+        العودة إلى المنتجات
+      </button>
+    </div>
+  </div>
+
+  <div class="row" *ngIf="product">
+    <!-- Product Image -->
+    <div class="col-md-6 mb-4">
+      <div class="card border-0 shadow-sm">
+        <div class="card-body p-4">
+          <div class="text-center">
+            <app-image-uploader [initialImageUrl]="serverUrl + product.imagePath" [readonly]="true">
+            </app-image-uploader>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Product Details -->
+    <div class="col-md-6">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body p-4">
+          <!-- Product Name -->
+          <h2 class="card-title text-primary mb-3">{{ product.nameAr }}</h2>
+          
+          <!-- Description -->
+          <p class="card-text text-muted mb-4">{{ product.description }}</p>
+
+          <!-- Base Price -->
+          <div class="mb-4">
+            <div class="d-flex justify-content-between align-items-center">
+              <span class="fw-semibold">السعر الأساسي:</span>
+              <span class="text-success fs-5">{{ product.sellingPrice | currency }}</span>
+            </div>
+          </div>
+
+          <!-- Store Selection -->
+          <div class="mb-4">
+            <label class="form-label fw-semibold">اختر المستودع <span class="text-danger">*</span></label>
+            <select class="form-select" 
+                    [ngModel]="selectedStoreId" 
+                    (ngModelChange)="onStoreChange($event)">
+              <option value="">-- اختر المستودع --</option>
+              <option *ngFor="let store of allStores" [value]="store.id">
+                {{ store.name }}
+                <span *ngIf="orderTypeId === 2"> (الكمية: {{ getStoreQuantity(store.id) }})</span>
+                <span *ngIf="orderTypeId === 1"> (مستودع وجهة)</span>
+              </option>
+            </select>
+          </div>
+
+          <!-- Product Variants -->
+          <div class="mb-4" *ngIf="productVariants.length > 0">
+            <label class="form-label fw-semibold">الخيارات</label>
+            <div class="row">
+              <div class="col-md-6" *ngFor="let variant of productVariants">
+                <div class="form-check mb-2">
+                  <input class="form-check-input" 
+                         type="radio" 
+                         [id]="'variant_' + variant.id"
+                         [value]="variant.id"
+                         [ngModel]="selectedVariantId"
+                         (ngModelChange)="onVariantChange($event)">
+                  <label class="form-check-label" [for]="'variant_' + variant.id">
+                    {{ variant.name }}
+                    <span *ngIf="variant.priceAdjustment" class="text-success">
+                      (+{{ variant.priceAdjustment | currency }})
+                    </span>
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Product Modifiers -->
+          <div class="mb-4" *ngFor="let modifier of productModifiers">
+            <label class="form-label fw-semibold">
+              {{ modifier.modifierName || modifier.modifier?.name }}
+              <span *ngIf="modifier.isRequired" class="text-danger">*</span>
+            </label>
+            <div class="row">
+              <div class="col-md-6" *ngFor="let option of modifier.modifier?.options || []">
+                <div class="form-check mb-2">
+                  <input class="form-check-input" 
+                         type="checkbox" 
+                         [id]="'modifier_' + modifier.modifierId + '_' + option.id"
+                         [checked]="isModifierOptionSelected(modifier.modifierId, option.id)"
+                         (change)="onModifierChange(modifier.modifierId, option.id, $event.target.checked)">
+                  <label class="form-check-label" [for]="'modifier_' + modifier.modifierId + '_' + option.id">
+                    {{ option.name }}
+                    <span *ngIf="option.priceAdjustment" class="text-success">
+                      (+{{ option.priceAdjustment | currency }})
+                    </span>
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Quantity Selection -->
+          <div class="mb-4">
+            <label class="form-label fw-semibold">الكمية</label>
+            <div class="d-flex align-items-center">
+              <button class="btn btn-outline-danger" (click)="onQuantityChange(quantity - 1)">−</button>
+              <input type="number" 
+                     class="form-control text-center mx-2" 
+                     style="width: 80px;" 
+                     [ngModel]="quantity"
+                     (ngModelChange)="onQuantityChange($event)">
+              <button class="btn btn-outline-success" (click)="onQuantityChange(quantity + 1)">+</button>
+            </div>
+          </div>
+
+          <!-- Total Price -->
+          <div class="mb-4">
+            <div class="card bg-light">
+              <div class="card-body text-center">
+                <h4 class="text-primary mb-0">
+                  الإجمالي: {{ (getProductPrice() * quantity) | currency }}
+                </h4>
+                <small class="text-muted">للكمية المحددة</small>
+              </div>
+            </div>
+          </div>
+
+          <!-- Add to Cart Button -->
+          <div class="d-grid">
+            <button class="btn btn-primary btn-lg" 
+                    (click)="addToCart()"
+                    [disabled]="!selectedStoreId || isAddingToCart">
+              <span *ngIf="isAddingToCart" class="spinner-border spinner-border-sm me-2"></span>
+              {{ isAddingToCart ? 'جاري الإضافة...' : 'إضافة إلى السلة' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Loading State -->
+<div class="container py-4" *ngIf="isLoading">
+  <div class="row justify-content-center">
+    <div class="col-md-6">
+      <div class="card border-0 shadow-sm">
+        <div class="card-body text-center p-5">
+          <div class="spinner-border text-primary mb-3"></div>
+          <h5>جاري تحميل المنتج...</h5>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

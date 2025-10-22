@@ -495,6 +495,68 @@ namespace Warehousing.Data.Context
                 .WithMany(p => p.TransferItems)
                 .HasForeignKey(sti => sti.ProductId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            // Product Variants Configuration
+            modelBuilder.Entity<ProductVariant>()
+                .HasOne(pv => pv.Product)
+                .WithMany(p => p.Variants)
+                .HasForeignKey(pv => pv.ProductId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Product Modifiers Configuration
+            modelBuilder.Entity<ProductModifierOption>()
+                .HasOne(pmo => pmo.Modifier)
+                .WithMany(pm => pm.Options)
+                .HasForeignKey(pmo => pmo.ModifierId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<ProductModifierGroup>()
+                .HasOne(pmg => pmg.Product)
+                .WithMany(p => p.ModifierGroups)
+                .HasForeignKey(pmg => pmg.ProductId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<ProductModifierGroup>()
+                .HasOne(pmg => pmg.Modifier)
+                .WithMany(pm => pm.Groups)
+                .HasForeignKey(pmg => pmg.ModifierId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Order Item Modifiers Configuration
+            modelBuilder.Entity<OrderItemModifier>()
+                .HasOne(oim => oim.OrderItem)
+                .WithMany(oi => oi.Modifiers)
+                .HasForeignKey(oim => oim.OrderItemId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<OrderItemModifier>()
+                .HasOne(oim => oim.ModifierOption)
+                .WithMany(pmo => pmo.OrderItemModifiers)
+                .HasForeignKey(oim => oim.ModifierOptionId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Order Item Variants Configuration
+            modelBuilder.Entity<OrderItem>()
+                .HasOne(oi => oi.Variant)
+                .WithMany(pv => pv.OrderItems)
+                .HasForeignKey(oi => oi.VariantId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Inventory Variants Configuration
+            modelBuilder.Entity<Inventory>()
+                .HasOne(i => i.Variant)
+                .WithMany(pv => pv.Inventories)
+                .HasForeignKey(i => i.VariantId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Unique constraints
+            modelBuilder.Entity<ProductVariant>()
+                .HasIndex(pv => new { pv.ProductId, pv.Name })
+                .IsUnique();
+
+            modelBuilder.Entity<ProductModifierGroup>()
+                .HasIndex(pmg => new { pmg.ProductId, pmg.ModifierId })
+                .IsUnique();
         }
 
 
@@ -524,6 +586,13 @@ namespace Warehousing.Data.Context
         public DbSet<Company> Companies { get; set; }
         public DbSet<RoleCategory> RoleCategories { get; set; }
         public DbSet<RoleProduct> RoleProducts { get; set; }
+        
+        // Variants and Modifiers
+        public DbSet<ProductVariant> ProductVariants { get; set; }
+        public DbSet<ProductModifier> ProductModifiers { get; set; }
+        public DbSet<ProductModifierOption> ProductModifierOptions { get; set; }
+        public DbSet<ProductModifierGroup> ProductModifierGroups { get; set; }
+        public DbSet<OrderItemModifier> OrderItemModifiers { get; set; }
 
 
         private string HashPassword(string password)

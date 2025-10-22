@@ -1,7 +1,23 @@
 <div class="container py-4" dir="rtl">
+  <!-- Header -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="d-flex justify-content-between align-items-center">
+        <h2 class="text-primary mb-0">{{ selectedSubCategory?.nameAr || 'المنتجات' }}</h2>
+        <div class="text-muted">
+          <i class="fas fa-shopping-cart me-2"></i>
+          {{ orderTypeId === 1 ? 'طلب شراء' : 'طلب بيع' }}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Products Grid -->
   <div class="row g-4">
     <div class="col-sm-6 col-md-4 col-lg-3" *ngFor="let product of (products$ | async)">
-      <div class="card h-100 border-0 shadow-sm rounded">
+      <div class="card h-100 border-0 shadow-sm rounded product-card" 
+           (click)="viewProductDetail(product)"
+           style="cursor: pointer; transition: transform 0.3s ease, box-shadow 0.3s ease;">
         
         <!-- Product Image -->
         <div class="card-img-top bg-light d-flex justify-content-center align-items-center p-3">
@@ -28,38 +44,35 @@
           </div>
 
           <!-- Total Quantity Across All Stores -->
-          <div class="mb-2">
+          <div class="mb-3">
             <div class="d-flex justify-content-between small">
               <span class="text-muted">إجمالي الكمية:</span>
-              <strong class="text-primary">{{ getTotalQuantity(product) }}</strong>
+              <strong class="text-primary">{{ product.totalQuantity || 0 }}</strong>
             </div>
           </div>
 
-          <!-- Store Selection -->
-          <div class="mb-2" *ngIf="isStoreSelectionRequired()">
-            <label class="form-label small">{{ getStoreSelectionLabel() }}</label>
-            <select class="form-select form-select-sm" 
-                    [ngModel]="selectedStores[product.id]" 
-                    (ngModelChange)="onStoreChange(product.id, $event)">
-              <option value="">-- اختر المستودع --</option>
-              <option *ngFor="let store of getAvailableStores(product)" [value]="store.storeId">
-                {{ store.store?.nameAr || 'مستودع ' + store.storeId }}
-                <span *ngIf="orderTypeId === 2">({{ store.quantity }})</span>
-              </option>
-            </select>
-          </div>
-
-          <!-- Quantity Controls -->
+          <!-- Quick Actions -->
           <div class="mt-auto">
-            <div class="d-flex justify-content-between align-items-center">
-              <button class="btn btn-outline-danger btn-sm" (click)="removeFromCart(product)">−</button>
-              <input type="number" [value]="getQuantity(product.id)" [attr.data-product-id]="product.id" 
-                     class="form-control text-center" style="width: 60px;" 
-                     (input)="onQuantityChangeInOrderProducts(product.id, $event)" />
-              <button class="btn btn-outline-success btn-sm" (click)="addToCart(product)">+</button>
+            <div class="d-flex gap-2">
+              <button class="btn btn-outline-primary btn-sm flex-fill" 
+                      (click)="viewProductDetail(product); $event.stopPropagation()">
+                <i class="fas fa-eye me-1"></i>
+                عرض التفاصيل
+              </button>
             </div>
           </div>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Empty State -->
+  <div class="row" *ngIf="(products$ | async)?.length === 0">
+    <div class="col-12">
+      <div class="text-center py-5">
+        <i class="fas fa-box-open fa-3x text-muted mb-3"></i>
+        <h4 class="text-muted">لا توجد منتجات في هذا التصنيف</h4>
+        <p class="text-muted">يرجى اختيار تصنيف آخر أو إضافة منتجات جديدة</p>
       </div>
     </div>
   </div>

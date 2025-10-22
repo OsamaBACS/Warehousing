@@ -111,13 +111,13 @@ namespace Warehousing.Api.Controllers
         }
 
         [HttpGet("active")]
-        public async Task<ActionResult<IEnumerable<StoreDto>>> GetActiveStores()
+        public async Task<ActionResult<IEnumerable<StoreSimpleDto>>> GetActiveStores()
         {
             try
             {
                 var stores = await _unitOfWork.StoreRepo
                     .GetByCondition(s => s.IsActive)
-                    .ProjectTo<StoreDto>(_mapper.ConfigurationProvider)
+                    .ProjectTo<StoreSimpleDto>(_mapper.ConfigurationProvider)
                     .ToListAsync();
 
                 return Ok(stores);

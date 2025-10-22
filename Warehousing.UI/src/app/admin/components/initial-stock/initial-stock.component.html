@@ -104,7 +104,7 @@
                           [class.is-invalid]="item.get('storeId')?.invalid && item.get('storeId')?.touched">
                           <option value="">اختر المستودع</option>
                           <option *ngFor="let store of stores" [value]="store.id">
-                            {{ store.nameAr }}
+                            {{ store.name }}
                           </option>
                         </select>
                         <div *ngIf="item.get('storeId')?.invalid && item.get('storeId')?.touched" class="invalid-feedback">

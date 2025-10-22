@@ -21,7 +21,6 @@ import { OrderPendingListComponent } from './components/order-pending-list/order
 @NgModule({
   declarations: [
     Spinner,
-    ImageUploader,
     ConfirmModalComponent,
     CompanyHeaderComponent,
     CompanyFooterComponent,
@@ -39,7 +38,8 @@ import { OrderPendingListComponent } from './components/order-pending-list/order
     MatLabel,
     MatListOption,
     MatOption,
-    TranslateModule
+    TranslateModule,
+    ImageUploader
   ],
   exports: [
     Spinner,
