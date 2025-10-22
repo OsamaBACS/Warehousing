@@ -51,19 +51,15 @@ export class TransactionsComponent implements OnInit {
         this.totalPages = Math.ceil(res.totals / this.pageSize);
         this.totalPagesArray = Array.from({ length: this.totalPages }, (_, i) => i + 1);
 
-        // Get opening balance from the first transaction's product
-        const openingBalance = res.transactions.length > 0 ? res.transactions[0].product.openingBalance : 0;
-
-        // Calculate total quantity change
-        const totalChange = res.transactions.reduce((acc, curr) => acc + curr.quantityChanged, 0);
-
-        // Final balance = Opening + Total Change
-        this.finalBalance = openingBalance! + totalChange;
+        // Calculate final balance from transactions
+        if (res.transactions.length > 0) {
+          // Get the quantity after from the last transaction
+          this.finalBalance = res.transactions[res.transactions.length - 1].quantityAfter;
+        } else {
+          this.finalBalance = 0;
+        }
       })
     );
-    this.inventoryTransactionService.GetTransactionByProductId(this.pageIndex, this.pageSize, this.productId, this.storeId).subscribe(
-      data => { console.log(data) }
-    )
   }
 
   changePage(page: number): void {

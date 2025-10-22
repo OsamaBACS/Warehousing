@@ -1,6 +1,114 @@
-.card {
-  transition: transform 0.2s ease;
-  &:hover {
-    transform: scale(1.02);
+// Dashboard specific styles
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
   }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+// Dark mode support
+.dark-mode-bg {
+  background-color: var(--bs-body-bg);
+  color: var(--bs-body-color);
+}
+
+.dark-mode-text {
+  color: var(--bs-body-color);
+}
+
+// Card hover effects
+.card {
+  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1) !important;
+}
+
+// Custom badge styles
+.badge {
+  font-size: 0.75rem;
+}
+
+// List group customizations
+.list-group-item {
+  border-radius: 0.375rem;
+  margin-bottom: 0.5rem;
+  transition: background-color 0.2s ease-in-out;
+}
+
+.list-group-item:hover {
+  background-color: var(--bs-gray-100);
+}
+
+// Table customizations
+.table {
+  margin-bottom: 0;
+}
+
+.table th {
+  border-top: none;
+  font-weight: 600;
+  color: var(--bs-gray-700);
+}
+
+// Loading spinner customizations
+.spinner-border {
+  border-width: 0.2em;
+}
+
+// Responsive adjustments
+@media (max-width: 768px) {
+  .card-body {
+    padding: 1rem;
+  }
+  
+  .fs-1 {
+    font-size: 2rem !important;
+  }
+  
+  .table-responsive {
+    font-size: 0.875rem;
+  }
+}
+
+// Alert severity colors
+.text-danger {
+  color: #dc3545 !important;
+}
+
+.text-warning {
+  color: #fd7e14 !important;
+}
+
+.text-info {
+  color: #0dcaf0 !important;
+}
+
+.text-success {
+  color: #198754 !important;
+}
+
+// Custom button styles
+.btn-outline-primary {
+  border-color: var(--bs-primary);
+  color: var(--bs-primary);
+}
+
+.btn-outline-primary:hover {
+  background-color: var(--bs-primary);
+  border-color: var(--bs-primary);
+  color: white;
+}
+
+// Empty state styles
+.text-muted {
+  color: var(--bs-gray-500) !important;
 }

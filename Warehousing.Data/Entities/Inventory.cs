@@ -8,6 +8,10 @@ namespace Warehousing.Data.Entities
 
         public int StoreId { get; set; }
         public Store? Store { get; set; }
+        
+        // Variant support
+        public ProductVariant? Variant { get; set; }
+        public int? VariantId { get; set; }
 
         public decimal Quantity { get; set; }   // total stock in that store
     }

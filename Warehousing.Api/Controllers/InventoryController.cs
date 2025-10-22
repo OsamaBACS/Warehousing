@@ -241,6 +241,120 @@ namespace Warehousing.Api.Controllers
                 return BadRequest(ex.Message);
             }
         }
+
+        [HttpPost("initial-stock-setup")]
+        public async Task<ActionResult<object>> InitialStockSetup([FromBody] InitialStockSetupRequest request)
+        {
+            try
+            {
+                var results = new List<object>();
+                var transactionType = await _unitOfWork.TransactionTypeRepo
+                    .GetByCondition(t => t.NameEn == "Initial Stock" || t.NameAr == "رصيد ابتدائي")
+                    .FirstOrDefaultAsync();
+
+                if (transactionType == null)
+                {
+                    // Create initial stock transaction type if it doesn't exist
+                    transactionType = new TransactionType
+                    {
+                        NameEn = "Initial Stock",
+                        NameAr = "رصيد ابتدائي",
+                        Description = "Initial stock setup for new system implementation"
+                    };
+                    await _unitOfWork.TransactionTypeRepo.CreateAsync(transactionType);
+                }
+
+                foreach (var item in request.Items)
+                {
+                    // Check if inventory already exists
+                    var existingInventory = await _unitOfWork.InventoryRepo
+                        .GetByCondition(i => i.ProductId == item.ProductId && i.StoreId == item.StoreId)
+                        .FirstOrDefaultAsync();
+
+                    if (existingInventory != null)
+                    {
+                        // Update existing inventory
+                        var quantityBefore = existingInventory.Quantity;
+                        existingInventory.Quantity = item.Quantity;
+                        existingInventory.UpdatedAt = DateTime.UtcNow;
+                        existingInventory.UpdatedBy = "System";
+
+                        await _unitOfWork.InventoryRepo.UpdateAsync(existingInventory);
+
+                        // Create transaction record
+                        var transaction = new InventoryTransaction
+                        {
+                            ProductId = item.ProductId,
+                            StoreId = item.StoreId,
+                            QuantityChanged = item.Quantity - quantityBefore,
+                            QuantityBefore = quantityBefore,
+                            QuantityAfter = item.Quantity,
+                            TransactionDate = DateTime.UtcNow,
+                            Notes = $"Initial stock setup: {request.Notes}",
+                            TransactionTypeId = transactionType.Id
+                        };
+
+                        await _unitOfWork.InventoryTransactionRepo.CreateAsync(transaction);
+
+                        results.Add(new
+                        {
+                            ProductId = item.ProductId,
+                            StoreId = item.StoreId,
+                            Quantity = item.Quantity,
+                            Action = "Updated",
+                            Success = true
+                        });
+                    }
+                    else
+                    {
+                        // Create new inventory
+                        var newInventory = new Inventory
+                        {
+                            ProductId = item.ProductId,
+                            StoreId = item.StoreId,
+                            Quantity = item.Quantity,
+                            CreatedAt = DateTime.UtcNow,
+                            CreatedBy = "System",
+                            UpdatedAt = DateTime.UtcNow,
+                            UpdatedBy = "System"
+                        };
+
+                        await _unitOfWork.InventoryRepo.CreateAsync(newInventory);
+
+                        // Create transaction record
+                        var transaction = new InventoryTransaction
+                        {
+                            ProductId = item.ProductId,
+                            StoreId = item.StoreId,
+                            QuantityChanged = item.Quantity,
+                            QuantityBefore = 0,
+                            QuantityAfter = item.Quantity,
+                            TransactionDate = DateTime.UtcNow,
+                            Notes = $"Initial stock setup: {request.Notes}",
+                            TransactionTypeId = transactionType.Id
+                        };
+
+                        await _unitOfWork.InventoryTransactionRepo.CreateAsync(transaction);
+
+                        results.Add(new
+                        {
+                            ProductId = item.ProductId,
+                            StoreId = item.StoreId,
+                            Quantity = item.Quantity,
+                            Action = "Created",
+                            Success = true
+                        });
+                    }
+                }
+
+                await _unitOfWork.SaveAsync();
+                return Ok(new { success = true, results = results, message = "Initial stock setup completed successfully" });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = ex.Message });
+            }
+        }
     }
 
     public class InventoryAdjustmentRequest
@@ -250,5 +364,18 @@ namespace Warehousing.Api.Controllers
         public decimal AdjustmentQuantity { get; set; } // Positive for increase, negative for decrease
         public decimal UnitCost { get; set; }
         public string? Notes { get; set; }
+    }
+
+    public class InitialStockSetupRequest
+    {
+        public List<InitialStockItem> Items { get; set; } = new List<InitialStockItem>();
+        public string? Notes { get; set; }
+    }
+
+    public class InitialStockItem
+    {
+        public int ProductId { get; set; }
+        public int StoreId { get; set; }
+        public decimal Quantity { get; set; }
     }
 }

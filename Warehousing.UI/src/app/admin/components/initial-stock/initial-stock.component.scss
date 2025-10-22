@@ -1,0 +1,136 @@
+.container-fluid {
+  padding: 1.5rem;
+}
+
+.card {
+  border: 1px solid #e3e6f0;
+  border-radius: 0.5rem;
+  box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+}
+
+.card-header {
+  background-color: #f8f9fc;
+  border-bottom: 1px solid #e3e6f0;
+  font-weight: 600;
+}
+
+.table {
+  margin-bottom: 0;
+}
+
+.table th {
+  border-top: none;
+  font-weight: 600;
+  color: #5a5c69;
+  background-color: #f8f9fc;
+}
+
+.btn {
+  border-radius: 0.35rem;
+  font-weight: 500;
+}
+
+.btn-primary {
+  background-color: #4e73df;
+  border-color: #4e73df;
+}
+
+.btn-primary:hover {
+  background-color: #2e59d9;
+  border-color: #2e59d9;
+}
+
+.btn-outline-primary {
+  color: #4e73df;
+  border-color: #4e73df;
+}
+
+.btn-outline-primary:hover {
+  background-color: #4e73df;
+  border-color: #4e73df;
+}
+
+.btn-outline-danger {
+  color: #e74a3b;
+  border-color: #e74a3b;
+}
+
+.btn-outline-danger:hover {
+  background-color: #e74a3b;
+  border-color: #e74a3b;
+}
+
+.form-control, .form-select {
+  border-radius: 0.35rem;
+  border: 1px solid #d1d3e2;
+}
+
+.form-control:focus, .form-select:focus {
+  border-color: #4e73df;
+  box-shadow: 0 0 0 0.2rem rgba(78, 115, 223, 0.25);
+}
+
+.invalid-feedback {
+  display: block;
+  font-size: 0.875rem;
+}
+
+.spinner-border-sm {
+  width: 1rem;
+  height: 1rem;
+}
+
+.badge {
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.text-muted {
+  color: #858796 !important;
+}
+
+.text-primary {
+  color: #4e73df !important;
+}
+
+.text-success {
+  color: #1cc88a !important;
+}
+
+.fs-1 {
+  font-size: 3rem !important;
+}
+
+.fs-5 {
+  font-size: 1.25rem !important;
+}
+
+// Dark mode support
+@media (prefers-color-scheme: dark) {
+  .card {
+    background-color: #2d3748;
+    border-color: #4a5568;
+  }
+
+  .card-header {
+    background-color: #1a202c;
+    border-bottom-color: #4a5568;
+  }
+
+  .table th {
+    background-color: #1a202c;
+    color: #e2e8f0;
+  }
+
+  .form-control, .form-select {
+    background-color: #2d3748;
+    border-color: #4a5568;
+    color: #e2e8f0;
+  }
+
+  .form-control:focus, .form-select:focus {
+    background-color: #2d3748;
+    border-color: #4e73df;
+    color: #e2e8f0;
+  }
+}

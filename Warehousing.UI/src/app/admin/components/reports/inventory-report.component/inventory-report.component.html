@@ -1,10 +1,9 @@
 <div class="container-fluid">
   <!-- Header -->
   <div class="d-flex justify-content-between align-items-center mb-4">
-    <!-- <h4>{{ 'REPORTS.INVENTORYREPORT' | translate }}</h4> -->
-    <h4>تقرير الجرد</h4>
+    <h4>التقارير والتحليلات</h4>
     <div class="p-2">
-      <select class="form-select" [(ngModel)]="storeId" (change)="loadProducts()">
+      <select class="form-select" [(ngModel)]="storeId" (change)="onFilterChange()">
         <option [ngValue]="0">جميع الفروع</option>
         <option *ngFor="let store of stores" [ngValue]="store.id">
           {{ lang.currentLang === 'ar' ? store.nameAr : store.nameEn }}
@@ -13,18 +12,102 @@
     </div>
     <div class="mt-3 d-flex justify-content-center gap-2">
       <button class="btn btn-outline-primary btn-sm" (click)="printCurrentPage()">
-        <i class="bi bi-printer me-1"></i> الصفحة الخالية
-        <!-- {{ 'SHARED.BUTTONS.PRINT.CURRENTPAGE' | translate }} -->
+        <i class="bi bi-printer me-1"></i> الصفحة الحالية
       </button>
       <button class="btn btn-primary btn-sm" (click)="printAllPages()">
-        <i class="bi bi-printer-fill me-1"></i> الكل
-        <!-- {{ 'SHARED.BUTTONS.PRINT.ALLPAGES' | translate }} -->
+        <i class="bi bi-printer-fill me-1"></i> طباعة الكل
       </button>
     </div>
   </div>
 
-  <!-- Table -->
-  <div class="table-responsive shadow-sm rounded">
+  <!-- Report Tabs -->
+  <ul class="nav nav-tabs mb-4" role="tablist">
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" [class.active]="activeTab === 'inventory'" 
+              (click)="setActiveTab('inventory')">
+        <i class="bi bi-box-seam me-1"></i>
+        تقرير الجرد
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" [class.active]="activeTab === 'stock-movement'" 
+              (click)="setActiveTab('stock-movement')">
+        <i class="bi bi-arrow-left-right me-1"></i>
+        حركة المخزون
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" [class.active]="activeTab === 'valuation'" 
+              (click)="setActiveTab('valuation')">
+        <i class="bi bi-currency-dollar me-1"></i>
+        تقييم المخزون
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" [class.active]="activeTab === 'low-stock'" 
+              (click)="setActiveTab('low-stock')">
+        <i class="bi bi-exclamation-triangle me-1"></i>
+        المخزون المنخفض
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" [class.active]="activeTab === 'trends'" 
+              (click)="setActiveTab('trends')">
+        <i class="bi bi-graph-up me-1"></i>
+        الاتجاهات
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" [class.active]="activeTab === 'top-products'" 
+              (click)="setActiveTab('top-products')">
+        <i class="bi bi-trophy me-1"></i>
+        أكثر المنتجات حركة
+      </button>
+    </li>
+  </ul>
+
+  <!-- Additional Filters for Comprehensive Reports -->
+  <div class="card mb-4" *ngIf="activeTab !== 'inventory'">
+    <div class="card-header">
+      <h6 class="mb-0">
+        <i class="bi bi-funnel me-2"></i>
+        فلاتر إضافية
+      </h6>
+    </div>
+    <div class="card-body">
+      <div class="row g-3">
+        <div class="col-md-3" *ngIf="activeTab === 'stock-movement' || activeTab === 'top-products'">
+          <label class="form-label">من تاريخ</label>
+          <input type="date" class="form-control" [ngModel]="fromDate | date:'yyyy-MM-dd'" (ngModelChange)="onFromDateChange($event)" />
+        </div>
+        
+        <div class="col-md-3" *ngIf="activeTab === 'stock-movement' || activeTab === 'top-products'">
+          <label class="form-label">إلى تاريخ</label>
+          <input type="date" class="form-control" [ngModel]="toDate | date:'yyyy-MM-dd'" (ngModelChange)="onToDateChange($event)" />
+        </div>
+        
+        <div class="col-md-3" *ngIf="activeTab === 'low-stock'">
+          <label class="form-label">حد المخزون المنخفض</label>
+          <input type="number" class="form-control" [(ngModel)]="threshold" (change)="onFilterChange()" min="0" />
+        </div>
+        
+        <div class="col-md-3" *ngIf="activeTab === 'trends'">
+          <label class="form-label">عدد الأشهر</label>
+          <input type="number" class="form-control" [(ngModel)]="months" (change)="onFilterChange()" min="1" max="12" />
+        </div>
+        
+        <div class="col-md-3" *ngIf="activeTab === 'top-products'">
+          <label class="form-label">عدد المنتجات</label>
+          <input type="number" class="form-control" [(ngModel)]="topCount" (change)="onFilterChange()" min="1" max="50" />
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Inventory Report Tab -->
+  <div *ngIf="activeTab === 'inventory'">
+    <!-- Table -->
+    <div class="table-responsive shadow-sm rounded">
     <table class="table table-striped table-hover align-middle mb-0">
       <thead class="table-light dark-mode-bg">
         <tr>
@@ -64,19 +147,12 @@
           <td>{{ lang.currentLang === 'ar' ? item.unit?.nameAr : item.unit?.nameEn }}</td>
           <td class="text-end">{{ item.costPrice | currency }}</td>
           <td class="text-end">{{ item.sellingPrice | currency }}</td>
-          <!-- [class.text-danger]="item.productStores.quantityInStock < item.reorderLevel" -->
           <td class="text-center">
-            <div *ngIf="item" class="d-flex justify-content-between mt-1">
-              <span class="text-muted">{{ 'PRODUCTS.QUANTITYINSTOCK' | translate }}</span>
-              <div class="d-flex justify-content-between mt-1">
-                <span class="text-muted">{{ 'PRODUCTS.QUANTITYINSTOCK' | translate }}</span>
-                <strong *ngFor="let inv of item.inventories">
-                  {{ inv.quantity }}
-                  <small class="text-muted ms-1">
-                    {{ lang.currentLang === 'ar' ? item?.unit?.nameAr : item?.unit?.nameEn }}
-                  </small>
-                </strong>
-              </div>
+            <div *ngFor="let inv of item.inventories" class="mb-1">
+              <strong>{{ inv.quantity }}</strong>
+              <small class="text-muted ms-1">
+                {{ lang.currentLang === 'ar' ? item?.unit?.nameAr : item?.unit?.nameEn }}
+              </small>
             </div>
           </td>
           <td class="text-center">
@@ -137,10 +213,10 @@
 
       <!-- Title -->
       <!-- <h4 class="text-center my-3">
-        {{ 'REPORTS.INVENTORYREPORT' | translate }} — {{ today | date }}
+        {{ 'REPORTS.INVENTORYREPORT' | translate }} — {{ today | date:'short' }}
       </h4> -->
       <h4 class="text-center my-3">
-        تقرير الجرد — {{ today | date }}
+        تقرير الجرد — {{ today | date:'short' }}
       </h4>
 
       <!-- Inventory Table -->
@@ -177,19 +253,14 @@
             <td>{{ lang.currentLang === 'ar' ? item.unit?.nameAr : item.unit?.nameEn }}</td>
             <td class="text-end">{{ item.costPrice| currency }}</td>
             <td class="text-end">{{ item.sellingPrice | currency }}</td>
-            <!-- [class.text-danger]="item.productStores.quantityInStock < item.reorderLevel" -->
-            <div *ngIf="item" class="d-flex justify-content-between mt-1">
-              <span class="text-muted">{{ 'PRODUCTS.QUANTITYINSTOCK' | translate }}</span>
-              <div class="d-flex justify-content-between mt-1">
-                <span class="text-muted">{{ 'PRODUCTS.QUANTITYINSTOCK' | translate }}</span>
-                <strong *ngFor="let inv of item.inventories">
-                  {{ inv.quantity }}
-                  <small class="text-muted ms-1">
-                    {{ lang.currentLang === 'ar' ? item?.unit?.nameAr : item?.unit?.nameEn }}
-                  </small>
-                </strong>
+            <td class="text-center">
+              <div *ngFor="let inv of item.inventories" class="mb-1">
+                <strong>{{ inv.quantity }}</strong>
+                <small class="text-muted ms-1">
+                  {{ lang.currentLang === 'ar' ? item?.unit?.nameAr : item?.unit?.nameEn }}
+                </small>
               </div>
-            </div>
+            </td>
             <td class="text-center">
               <span class="badge" [class.bg-success]="item.isActive" [class.bg-secondary]="!item.isActive">
                 {{ item.isActive ? 'Active' : 'Inactive' }}
@@ -201,7 +272,7 @@
 
       <!-- Summary Footer -->
       <div class="mt-5 text-center small">
-        <p class="mb-1">Printed on: {{ today | date }}</p>
+        <p class="mb-1">Printed on: {{ today | date:'short' }}</p>
         <p class="mb-0">Powered by LsVision Accounting System</p>
       </div>
 
@@ -223,7 +294,7 @@
 
     <!-- Report Title -->
     <h4 class="text-center my-3">
-      {{ 'REPORTS.INVENTORYREPORT' | translate }} — Printed on: {{ today | date }}
+      {{ 'REPORTS.INVENTORYREPORT' | translate }} — Printed on: {{ today | date:'short' }}
     </h4>
 
     <!-- Table -->
@@ -275,7 +346,7 @@
         <tr>
           <td colspan="7" class="text-end"><strong>Total Items:</strong></td>
           <td class="text-center"><strong>{{ currentPrintData.length }}</strong></td>
-          <td colspan="2"></td>
+          <td></td>
         </tr>
       </tbody>
     </table>
@@ -297,7 +368,7 @@
 
     <!-- Report Title -->
     <h4 class="text-center my-3">
-      {{ 'REPORTS.INVENTORYREPORT' | translate }} — Printed on: {{ today | date }}
+      {{ 'REPORTS.INVENTORYREPORT' | translate }} — Printed on: {{ today | date:'short' }}
     </h4>
 
     <!-- Table -->
@@ -338,6 +409,11 @@
             {{ item.quantityInStock }}
           </td>
           <td class="text-center">{{ item.reorderLevel }}</td>
+          <td class="text-center">
+            <span class="badge" [class.bg-success]="item.isActive" [class.bg-secondary]="!item.isActive">
+              {{ item.isActive ? 'Active' : 'Inactive' }}
+            </span>
+          </td>
         </tr>
       </tbody>
     </table>
@@ -348,3 +424,344 @@
     </ng-container>
   </div>
 </div>
+  </div>
+
+  <!-- Stock Movement Report Tab -->
+  <div *ngIf="activeTab === 'stock-movement'">
+    <div class="card">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">تقرير حركة المخزون</h5>
+        <div *ngIf="isLoadingStockMovement" class="spinner-border spinner-border-sm text-primary"></div>
+      </div>
+      <div class="card-body">
+        <div *ngIf="!isLoadingStockMovement && stockMovementReport.length === 0" class="text-center py-4 text-muted">
+          <i class="bi bi-inbox fs-1 mb-3"></i>
+          <p>لا توجد بيانات حركة مخزون</p>
+        </div>
+        
+        <div *ngIf="!isLoadingStockMovement && stockMovementReport.length > 0" class="table-responsive">
+          <table class="table table-hover">
+            <thead class="table-light">
+              <tr>
+                <th>المنتج</th>
+                <th>الكود</th>
+                <th>إجمالي الداخل</th>
+                <th>إجمالي الخارج</th>
+                <th>صافي الحركة</th>
+                <th>عدد المعاملات</th>
+                <th>آخر معاملة</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let item of stockMovementReport">
+                <td>
+                  <strong>{{ item.productNameAr }}</strong>
+                  <br>
+                  <small class="text-muted">{{ item.productNameEn }}</small>
+                </td>
+                <td>{{ item.productCode }}</td>
+                <td class="text-success">{{ formatNumber(item.totalIn) }}</td>
+                <td class="text-danger">{{ formatNumber(item.totalOut) }}</td>
+                <td [ngClass]="getMovementClass(item.netMovement)">
+                  <i [class]="getMovementIcon(item.netMovement)"></i>
+                  {{ formatNumber(item.netMovement) }}
+                </td>
+                <td>{{ formatNumber(item.transactionCount) }}</td>
+                <td>{{ formatDate(item.lastTransactionDate) }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Inventory Valuation Report Tab -->
+  <div *ngIf="activeTab === 'valuation'">
+    <div class="card">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">تقرير تقييم المخزون</h5>
+        <div *ngIf="isLoadingValuation" class="spinner-border spinner-border-sm text-primary"></div>
+      </div>
+      <div class="card-body">
+        <div *ngIf="!isLoadingValuation && inventoryValuationReport" class="row">
+          <!-- Summary Cards -->
+          <div class="col-md-3 mb-3">
+            <div class="card bg-primary text-white">
+              <div class="card-body text-center">
+                <i class="bi bi-box-seam fs-1 mb-2"></i>
+                <h4>{{ formatNumber(inventoryValuationReport.summary?.totalItems || 0) }}</h4>
+                <p class="mb-0">إجمالي الأصناف</p>
+              </div>
+            </div>
+          </div>
+          
+          <div class="col-md-3 mb-3">
+            <div class="card bg-success text-white">
+              <div class="card-body text-center">
+                <i class="bi bi-clipboard-data fs-1 mb-2"></i>
+                <h4>{{ formatNumber(inventoryValuationReport.summary?.totalQuantity || 0) }}</h4>
+                <p class="mb-0">إجمالي الكمية</p>
+              </div>
+            </div>
+          </div>
+          
+          <div class="col-md-3 mb-3">
+            <div class="card bg-info text-white">
+              <div class="card-body text-center">
+                <i class="bi bi-currency-dollar fs-1 mb-2"></i>
+                <h4>{{ formatCurrency(inventoryValuationReport.summary?.totalCostValue || 0) }}</h4>
+                <p class="mb-0">القيمة التكلفة</p>
+              </div>
+            </div>
+          </div>
+          
+          <div class="col-md-3 mb-3">
+            <div class="card bg-warning text-white">
+              <div class="card-body text-center">
+                <i class="bi bi-graph-up fs-1 mb-2"></i>
+                <h4>{{ formatCurrency(inventoryValuationReport.summary?.totalSellingValue || 0) }}</h4>
+                <p class="mb-0">القيمة البيعية</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Detailed Table -->
+          <div class="col-12">
+            <div class="table-responsive">
+              <table class="table table-hover">
+                <thead class="table-light">
+                  <tr>
+                    <th>المنتج</th>
+                    <th>المستودع</th>
+                    <th>الكمية</th>
+                    <th>سعر التكلفة</th>
+                    <th>القيمة التكلفة</th>
+                    <th>سعر البيع</th>
+                    <th>القيمة البيعية</th>
+                    <th>آخر تحديث</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let item of inventoryValuationReport.valuations">
+                    <td>
+                      <strong>{{ item.productNameAr }}</strong>
+                      <br>
+                      <small class="text-muted">{{ item.productCode }}</small>
+                    </td>
+                    <td>{{ item.storeNameAr }}</td>
+                    <td>{{ formatNumber(item.quantity) }}</td>
+                    <td>{{ formatCurrency(item.unitCost) }}</td>
+                    <td class="text-info">{{ formatCurrency(item.totalCost) }}</td>
+                    <td>{{ formatCurrency(item.unitSellingPrice) }}</td>
+                    <td class="text-warning">{{ formatCurrency(item.totalValue) }}</td>
+                    <td>{{ formatDate(item.lastUpdated) }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Low Stock Report Tab -->
+  <div *ngIf="activeTab === 'low-stock'">
+    <div class="card">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">تقرير المخزون المنخفض</h5>
+        <div *ngIf="isLoadingLowStock" class="spinner-border spinner-border-sm text-primary"></div>
+      </div>
+      <div class="card-body">
+        <div *ngIf="!isLoadingLowStock && lowStockReport" class="row">
+          <!-- Summary Cards -->
+          <div class="col-md-3 mb-3">
+            <div class="card bg-danger text-white">
+              <div class="card-body text-center">
+                <i class="bi bi-exclamation-triangle fs-1 mb-2"></i>
+                <h4>{{ formatNumber(lowStockReport.summary?.totalLowStockItems || 0) }}</h4>
+                <p class="mb-0">إجمالي الأصناف المنخفضة</p>
+              </div>
+            </div>
+          </div>
+          
+          <div class="col-md-3 mb-3">
+            <div class="card bg-warning text-white">
+              <div class="card-body text-center">
+                <i class="bi bi-arrow-down fs-1 mb-2"></i>
+                <h4>{{ formatNumber(lowStockReport.summary?.belowReorderLevel || 0) }}</h4>
+                <p class="mb-0">أدنى من مستوى إعادة الطلب</p>
+              </div>
+            </div>
+          </div>
+          
+          <div class="col-md-3 mb-3">
+            <div class="card bg-dark text-white">
+              <div class="card-body text-center">
+                <i class="bi bi-x-circle fs-1 mb-2"></i>
+                <h4>{{ formatNumber(lowStockReport.summary?.zeroStockItems || 0) }}</h4>
+                <p class="mb-0">نافد المخزون</p>
+              </div>
+            </div>
+          </div>
+          
+          <div class="col-md-3 mb-3">
+            <div class="card bg-info text-white">
+              <div class="card-body text-center">
+                <i class="bi bi-currency-dollar fs-1 mb-2"></i>
+                <h4>{{ formatCurrency(lowStockReport.summary?.totalEstimatedValue || 0) }}</h4>
+                <p class="mb-0">القيمة المقدرة</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Detailed Table -->
+          <div class="col-12">
+            <div class="table-responsive">
+              <table class="table table-hover">
+                <thead class="table-light">
+                  <tr>
+                    <th>المنتج</th>
+                    <th>المستودع</th>
+                    <th>الكمية الحالية</th>
+                    <th>مستوى إعادة الطلب</th>
+                    <th>الحالة</th>
+                    <th>سعر التكلفة</th>
+                    <th>سعر البيع</th>
+                    <th>آخر تحديث</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let item of lowStockReport.lowStockItems">
+                    <td>
+                      <strong>{{ item.productNameAr }}</strong>
+                      <br>
+                      <small class="text-muted">{{ item.productCode }}</small>
+                    </td>
+                    <td>{{ item.storeNameAr }}</td>
+                    <td [ngClass]="getSeverityClass(item.currentQuantity, threshold)">
+                      {{ formatNumber(item.currentQuantity) }}
+                    </td>
+                    <td>{{ formatNumber(item.reorderLevel) }}</td>
+                    <td>
+                      <span *ngIf="item.isBelowReorderLevel" class="badge bg-warning">أدنى من مستوى إعادة الطلب</span>
+                      <span *ngIf="!item.isBelowReorderLevel" class="badge bg-danger">مخزون منخفض</span>
+                    </td>
+                    <td>{{ formatCurrency(item.unitCost) }}</td>
+                    <td>{{ formatCurrency(item.unitSellingPrice) }}</td>
+                    <td>{{ formatDate(item.lastUpdated) }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Transaction Trends Report Tab -->
+  <div *ngIf="activeTab === 'trends'">
+    <div class="card">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">تقرير اتجاهات المعاملات</h5>
+        <div *ngIf="isLoadingTrends" class="spinner-border spinner-border-sm text-primary"></div>
+      </div>
+      <div class="card-body">
+        <div *ngIf="!isLoadingTrends && transactionTrends.length === 0" class="text-center py-4 text-muted">
+          <i class="bi bi-graph-up fs-1 mb-3"></i>
+          <p>لا توجد بيانات اتجاهات</p>
+        </div>
+        
+        <div *ngIf="!isLoadingTrends && transactionTrends.length > 0" class="table-responsive">
+          <table class="table table-hover">
+            <thead class="table-light">
+              <tr>
+                <th>الشهر</th>
+                <th>السنة</th>
+                <th>إجمالي المعاملات</th>
+                <th>إجمالي الكمية</th>
+                <th>إجمالي القيمة</th>
+                <th>أنواع المعاملات</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let trend of transactionTrends">
+                <td>{{ trend.month }}</td>
+                <td>{{ trend.year }}</td>
+                <td>{{ formatNumber(trend.totalTransactions) }}</td>
+                <td>{{ formatNumber(trend.totalQuantity) }}</td>
+                <td>{{ formatCurrency(trend.totalValue) }}</td>
+                <td>
+                  <div *ngFor="let type of trend.transactionTypes" class="mb-1">
+                    <small class="badge bg-secondary">
+                      {{ type.transactionType }}: {{ type.transactionCount }} معاملة
+                    </small>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Top Moving Products Report Tab -->
+  <div *ngIf="activeTab === 'top-products'">
+    <div class="card">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">تقرير أكثر المنتجات حركة</h5>
+        <div *ngIf="isLoadingTopProducts" class="spinner-border spinner-border-sm text-primary"></div>
+      </div>
+      <div class="card-body">
+        <div *ngIf="!isLoadingTopProducts && topMovingProducts.length === 0" class="text-center py-4 text-muted">
+          <i class="bi bi-trophy fs-1 mb-3"></i>
+          <p>لا توجد بيانات منتجات</p>
+        </div>
+        
+        <div *ngIf="!isLoadingTopProducts && topMovingProducts.length > 0" class="table-responsive">
+          <table class="table table-hover">
+            <thead class="table-light">
+              <tr>
+                <th>الترتيب</th>
+                <th>المنتج</th>
+                <th>الكود</th>
+                <th>إجمالي المعاملات</th>
+                <th>إجمالي الكمية المتحركة</th>
+                <th>إجمالي الداخل</th>
+                <th>إجمالي الخارج</th>
+                <th>صافي الحركة</th>
+                <th>إجمالي القيمة</th>
+                <th>آخر معاملة</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let product of topMovingProducts; let i = index">
+                <td>
+                  <span class="badge bg-primary fs-6">{{ i + 1 }}</span>
+                </td>
+                <td>
+                  <strong>{{ product.productNameAr }}</strong>
+                  <br>
+                  <small class="text-muted">{{ product.productNameEn }}</small>
+                </td>
+                <td>{{ product.productCode }}</td>
+                <td>{{ formatNumber(product.totalTransactions) }}</td>
+                <td class="fw-bold">{{ formatNumber(product.totalQuantityMoved) }}</td>
+                <td class="text-success">{{ formatNumber(product.totalIn) }}</td>
+                <td class="text-danger">{{ formatNumber(product.totalOut) }}</td>
+                <td [ngClass]="getMovementClass(product.netMovement)">
+                  <i [class]="getMovementIcon(product.netMovement)"></i>
+                  {{ formatNumber(product.netMovement) }}
+                </td>
+                <td class="text-info">{{ formatCurrency(product.totalValue) }}</td>
+                <td>{{ formatDate(product.lastTransactionDate) }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>

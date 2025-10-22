@@ -44,6 +44,7 @@ import { OrderListComponent } from "./components/Orders/order-list/order-list.co
 import { OrderItemsListComponent } from "./components/Orders/order-items-list/order-items-list.component";
 import { StoreTransferFormComponent } from "./components/StoreTransfers/store-transfer-form/store-transfer-form.component";
 import { InventoryManagementComponent } from "./components/Inventory/inventory-management/inventory-management.component";
+import { InitialStockComponent } from "./components/initial-stock/initial-stock.component";
 
 
 const routes: Routes = [
@@ -279,6 +280,12 @@ const routes: Routes = [
           StoresResolver: StoresResolver,
           productsResolver: ProductsResolver
         }
+      },
+      {
+        path: 'initial-stock',
+        component: InitialStockComponent,
+        canActivate: [PermissionGuard],
+        data: { permission: [PermissionsEnum.MANAGE_INVENTORY] }
       },
       { path: '**', redirectTo: 'dashboard' }
     ]

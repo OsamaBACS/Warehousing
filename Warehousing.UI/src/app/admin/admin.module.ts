@@ -37,6 +37,7 @@ import { OrderListComponent } from './components/Orders/order-list/order-list.co
 import { OrderItemsListComponent } from './components/Orders/order-items-list/order-items-list.component';
 import { StoreTransferFormComponent } from './components/StoreTransfers/store-transfer-form/store-transfer-form.component';
 import { InventoryManagementComponent } from './components/Inventory/inventory-management/inventory-management.component';
+import { InitialStockComponent } from './components/initial-stock/initial-stock.component';
 
 
 
@@ -73,7 +74,8 @@ import { InventoryManagementComponent } from './components/Inventory/inventory-m
     OrderListComponent,
     OrderItemsListComponent,
     StoreTransferFormComponent,
-    InventoryManagementComponent
+    InventoryManagementComponent,
+    InitialStockComponent
   ],
   imports: [
     CommonModule,

@@ -28,9 +28,14 @@ export interface OrderPagination {
 export interface OrderFilters {
     pageIndex: number;
     pageSize: number;
+    searchTerm: string | null;
     orderDate: string | null;
     orderTypeId: number | null;
     customerId: number | null;
     supplierId: number | null;
     statusId: number | null;
+    dateFrom: string | null;
+    dateTo: string | null;
+    minAmount: number | null;
+    maxAmount: number | null;
 }

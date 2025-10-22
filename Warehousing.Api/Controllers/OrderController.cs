@@ -168,14 +168,54 @@ namespace Warehousing.Api.Controllers
 
                 var result = (IQueryable<Order>)order;
 
-                // Note: UserId filtering removed as UserId was removed from BaseClass
-                // If user-specific filtering is needed, implement based on CreatedBy field
-
-                if (filter.OrderDate != null)
+                // Filter by user: Admin can see all orders, regular users can only see their own orders
+                if (!isAdmin)
                 {
-                    result = result.Where(o => o.OrderDate == filter.OrderDate);
+                    // For non-admin users, only show orders they created
+                    result = result.Where(o => o.CreatedBy == user.Username);
                 }
 
+                // Search functionality
+                if (!string.IsNullOrEmpty(filter.SearchTerm))
+                {
+                    var searchTerm = filter.SearchTerm.ToLower();
+                    result = result.Where(o => 
+                        o.Id.ToString().Contains(searchTerm) ||
+                        (o.Customer != null && o.Customer.NameAr.ToLower().Contains(searchTerm)) ||
+                        (o.Supplier != null && o.Supplier.Name.ToLower().Contains(searchTerm)) ||
+                        (o.Items.Any(i => i.Product.NameAr.ToLower().Contains(searchTerm))) ||
+                        o.TotalAmount.ToString().Contains(searchTerm)
+                    );
+                }
+
+                // Date filtering
+                if (filter.OrderDate != null)
+                {
+                    result = result.Where(o => o.OrderDate.Date == filter.OrderDate.Value.Date);
+                }
+
+                if (filter.DateFrom != null)
+                {
+                    result = result.Where(o => o.OrderDate >= filter.DateFrom.Value);
+                }
+
+                if (filter.DateTo != null)
+                {
+                    result = result.Where(o => o.OrderDate <= filter.DateTo.Value);
+                }
+
+                // Amount filtering
+                if (filter.MinAmount != null)
+                {
+                    result = result.Where(o => o.TotalAmount >= filter.MinAmount.Value);
+                }
+
+                if (filter.MaxAmount != null)
+                {
+                    result = result.Where(o => o.TotalAmount <= filter.MaxAmount.Value);
+                }
+
+                // Other filters
                 if (filter.OrderTypeId != null)
                 {
                     result = result.Where(o => o.OrderTypeId == filter.OrderTypeId);

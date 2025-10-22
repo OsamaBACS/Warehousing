@@ -1,5 +1,146 @@
 <div class="container mt-3">
-  <div class="row g-3" *ngIf="(orders$ | async) as data">
+  <!-- Header Section -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="d-flex justify-content-between align-items-center">
+        <h3 class="mb-0 fw-bold">طلباتي المعلقة</h3>
+        <div class="d-flex gap-2">
+          <button class="btn btn-outline-secondary" (click)="toggleFilterPanel()">
+            <i class="bi bi-funnel" [class.bi-funnel-fill]="isFilterExpanded"></i>
+            {{ isFilterExpanded ? 'إخفاء الفلاتر' : 'إظهار الفلاتر' }}
+          </button>
+          <button class="btn btn-outline-warning" (click)="clearFilters()">
+            <i class="bi bi-arrow-clockwise"></i>
+            مسح الفلاتر
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Search and Filter Section -->
+  <div class="row mb-4" [formGroup]="filterForm">
+    <!-- Search Bar -->
+    <div class="col-12 mb-3">
+      <div class="input-group">
+        <span class="input-group-text">
+          <i class="bi bi-search"></i>
+        </span>
+        <input 
+          type="text" 
+          class="form-control" 
+          formControlName="searchTerm"
+          placeholder="البحث في رقم الطلب، العميل، المورد، المنتج، أو المبلغ..."
+          (keyup.enter)="onSearch()"
+        />
+        <button class="btn btn-primary" type="button" (click)="onSearch()">
+          <i class="bi bi-search"></i>
+          بحث
+        </button>
+      </div>
+    </div>
+
+    <!-- Advanced Filters -->
+    <div class="col-12" *ngIf="isFilterExpanded">
+      <div class="card">
+        <div class="card-header">
+          <h6 class="mb-0">فلاتر متقدمة</h6>
+        </div>
+        <div class="card-body">
+          <div class="row g-3">
+            <!-- Date Range -->
+            <div class="col-md-3">
+              <label class="form-label">من تاريخ</label>
+              <input type="date" class="form-control" formControlName="dateFrom" (change)="onFilterChange()" />
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">إلى تاريخ</label>
+              <input type="date" class="form-control" formControlName="dateTo" (change)="onFilterChange()" />
+            </div>
+
+            <!-- Amount Range -->
+            <div class="col-md-3">
+              <label class="form-label">الحد الأدنى للمبلغ</label>
+              <input type="number" class="form-control" formControlName="minAmount" (change)="onFilterChange()" />
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">الحد الأقصى للمبلغ</label>
+              <input type="number" class="form-control" formControlName="maxAmount" (change)="onFilterChange()" />
+            </div>
+
+            <!-- Order Type -->
+            <div class="col-md-3">
+              <label class="form-label">نوع الطلب</label>
+              <select class="form-select" formControlName="orderTypeId" (change)="onFilterChange()">
+                <option value="">جميع الأنواع</option>
+                <option *ngFor="let type of orderTypes" [value]="type.id">
+                  {{ type.nameAr }}
+                </option>
+              </select>
+            </div>
+
+            <!-- Status -->
+            <div class="col-md-3">
+              <label class="form-label">الحالة</label>
+              <select class="form-select" formControlName="statusId" (change)="onFilterChange()">
+                <option value="">جميع الحالات</option>
+                <option *ngFor="let status of statuses" [value]="status.id">
+                  {{ status.nameAr }}
+                </option>
+              </select>
+            </div>
+
+            <!-- Customer -->
+            <div class="col-md-3">
+              <label class="form-label">العميل</label>
+              <select class="form-select" formControlName="customerId" (change)="onFilterChange()">
+                <option value="">جميع العملاء</option>
+                <option *ngFor="let customer of customers" [value]="customer.id">
+                  {{ customer.nameAr }}
+                </option>
+              </select>
+            </div>
+
+            <!-- Supplier -->
+            <div class="col-md-3">
+              <label class="form-label">المورد</label>
+              <select class="form-select" formControlName="supplierId" (change)="onFilterChange()">
+                <option value="">جميع الموردين</option>
+                <option *ngFor="let supplier of suppliers" [value]="supplier.id">
+                  {{ supplier.name }}
+                </option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading Indicator -->
+  <div *ngIf="isLoading" class="text-center py-5">
+    <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+      <span class="visually-hidden">جاري التحميل...</span>
+    </div>
+    <p class="mt-3 text-muted">جاري تحميل الطلبات...</p>
+  </div>
+
+  <!-- Orders Grid -->
+  <div class="row g-3" *ngIf="!isLoading && (orders$ | async) as data">
+    <!-- Empty State -->
+    <div class="col-12" *ngIf="data.orders.length === 0">
+      <div class="text-center py-5">
+        <i class="bi bi-inbox fs-1 text-muted mb-3"></i>
+        <h5 class="text-muted">لا توجد طلبات</h5>
+        <p class="text-muted">لم يتم العثور على أي طلبات تطابق المعايير المحددة</p>
+        <button class="btn btn-primary" (click)="clearFilters()">
+          <i class="bi bi-arrow-clockwise"></i>
+          مسح الفلاتر
+        </button>
+      </div>
+    </div>
+
+    <!-- Order Cards -->
     <div class="col-md-6 col-lg-4" *ngFor="let order of data.orders">
       <div class="card shadow-sm border-0 h-100">
         <!-- Card Header -->
@@ -20,23 +161,24 @@
 
           <p class="mb-1">
             <i class="bi bi-cash-coin me-1 text-muted ms-2"></i>
-            <strong>{{ order.totalAmount | number:'1.2-2' }}</strong>
+            <strong>{{ order.totalAmount | number:'1.2-2' }} د.أ</strong>
           </p>
 
-          <!-- Items (first product preview) -->
+          <!-- Customer/Supplier Info -->
+          <div class="mb-2" *ngIf="order.customer">
+            <i class="bi bi-person me-1 text-muted ms-2"></i>
+            <small class="text-muted">{{ order.customer.nameAr }}</small>
+          </div>
+          <div class="mb-2" *ngIf="order.supplier">
+            <i class="bi bi-truck me-1 text-muted ms-2"></i>
+            <small class="text-muted">{{ order.supplier.name }}</small>
+          </div>
+
+          <!-- Items Count -->
           <div *ngIf="order.items?.length! > 0" class="mt-2 d-flex align-items-center">
             <div class="fw-semibold">عدد المواد في الطلب : {{ order.items?.length }}</div>
-            <!-- <img [src]="resourcesUrl + order.items[0].product?.imagePath"
-                 class="rounded me-2 ms-2"
-                 style="width: 50px; height: 50px; object-fit: cover;"
-                 alt="product image" />
-            <div>
-              <div class="fw-semibold">{{ order.items[0].product?.nameAr || order.items[0].product?.nameEn }}</div>
-              <small class="text-muted">
-                الكمية: {{ order.items[0].quantity }} × {{ order.items[0].product?.unit?.nameAr }}
-              </small>
-            </div> -->
           </div>
+
         </div>
 
         <!-- Card Footer -->

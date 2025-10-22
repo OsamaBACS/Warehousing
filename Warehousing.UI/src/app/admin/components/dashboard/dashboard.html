@@ -1,54 +1,220 @@
 <div class="container-fluid">
-  <h3 class="mb-4 fw-bold dark-mode-text">Admin Dashboard</h3>
+  <!-- Header -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h3 class="mb-0 fw-bold dark-mode-text">لوحة التحكم</h3>
+    <button class="btn btn-outline-primary" (click)="loadDashboardData()" [disabled]="isLoading">
+      <i class="bi bi-arrow-clockwise me-2" [class.spin]="isLoading"></i>
+      تحديث
+    </button>
+  </div>
 
-  <div class="row g-4">
-    <!-- Total Products -->
-    <div class="col-md-6 col-xl-3">
-      <div class="card shadow-sm border-0 dark-mode-bg">
-        <div class="card-body d-flex align-items-center">
-          <i class="bi bi-box-seam fs-1 text-primary me-3"></i>
-          <div>
-            <h6 class="mb-0 dark-mode-text">Total Products</h6>
-            <h4 class="fw-bold">312</h4>
+  <!-- Loading Indicator -->
+  <div *ngIf="isLoading" class="text-center py-5">
+    <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+      <span class="visually-hidden">جاري التحميل...</span>
+    </div>
+    <p class="mt-3 text-muted">جاري تحميل بيانات لوحة التحكم...</p>
+  </div>
+
+  <!-- Dashboard Content -->
+  <div *ngIf="!isLoading">
+    <!-- Key Metrics Cards -->
+    <div class="row g-4 mb-4">
+      <div class="col-md-6 col-xl-4" *ngFor="let card of dashboardCards">
+        <div class="card shadow-sm border-0 dark-mode-bg h-100">
+          <div class="card-body d-flex align-items-center">
+            <div class="flex-shrink-0">
+              <i class="{{ card.icon }} fs-1 {{ card.color }}"></i>
+            </div>
+            <div class="flex-grow-1 ms-3">
+              <h6 class="mb-1 dark-mode-text">{{ card.title }}</h6>
+              <h4 class="fw-bold mb-0">{{ formatNumber(card.value) }}</h4>
+              <small class="text-muted">{{ card.subtitle }}</small>
+            </div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Total Users -->
-    <div class="col-md-6 col-xl-3">
-      <div class="card shadow-sm border-0 dark-mode-bg">
-        <div class="card-body d-flex align-items-center">
-          <i class="bi bi-people fs-1 text-success me-3"></i>
-          <div>
-            <h6 class="mb-0 dark-mode-text">Total Users</h6>
-            <h4 class="fw-bold">58</h4>
+    <!-- Main Content Row -->
+    <div class="row g-4">
+      <!-- Recent Transactions -->
+      <div class="col-lg-6">
+        <div class="card shadow-sm border-0 dark-mode-bg h-100">
+          <div class="card-header bg-transparent border-0">
+            <h5 class="card-title mb-0 dark-mode-text">
+              <i class="bi bi-clock-history me-2"></i>
+              المعاملات الأخيرة
+            </h5>
+          </div>
+          <div class="card-body">
+            <div *ngIf="isLoadingTransactions" class="text-center py-3">
+              <div class="spinner-border spinner-border-sm text-primary" role="status">
+                <span class="visually-hidden">جاري التحميل...</span>
+              </div>
+            </div>
+            <div *ngIf="!isLoadingTransactions && recentTransactions.length === 0" class="text-center py-4 text-muted">
+              <i class="bi bi-inbox fs-1 mb-3"></i>
+              <p>لا توجد معاملات حديثة</p>
+            </div>
+            <div *ngIf="!isLoadingTransactions && recentTransactions.length > 0" class="list-group list-group-flush">
+              <div *ngFor="let transaction of recentTransactions" class="list-group-item border-0 px-0">
+                <div class="d-flex justify-content-between align-items-start">
+                  <div class="flex-grow-1">
+                    <h6 class="mb-1">{{ transaction.productNameAr }}</h6>
+                    <p class="mb-1 text-muted small">
+                      {{ transaction.storeNameAr }} - {{ transaction.transactionTypeNameAr }}
+                    </p>
+                    <small class="text-muted">{{ formatDate(transaction.transactionDate) }}</small>
+                  </div>
+                  <div class="text-end">
+                    <span class="badge" [ngClass]="transaction.quantityChanged > 0 ? 'bg-success' : 'bg-danger'">
+                      {{ transaction.quantityChanged > 0 ? '+' : '' }}{{ transaction.quantityChanged }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Top Products -->
+      <div class="col-lg-6">
+        <div class="card shadow-sm border-0 dark-mode-bg h-100">
+          <div class="card-header bg-transparent border-0">
+            <h5 class="card-title mb-0 dark-mode-text">
+              <i class="bi bi-trophy me-2"></i>
+              أكثر المنتجات في المخزون
+            </h5>
+          </div>
+          <div class="card-body">
+            <div *ngIf="isLoadingTopProducts" class="text-center py-3">
+              <div class="spinner-border spinner-border-sm text-primary" role="status">
+                <span class="visually-hidden">جاري التحميل...</span>
+              </div>
+            </div>
+            <div *ngIf="!isLoadingTopProducts && topProducts.length === 0" class="text-center py-4 text-muted">
+              <i class="bi bi-box-seam fs-1 mb-3"></i>
+              <p>لا توجد منتجات في المخزون</p>
+            </div>
+            <div *ngIf="!isLoadingTopProducts && topProducts.length > 0" class="list-group list-group-flush">
+              <div *ngFor="let product of topProducts; let i = index" class="list-group-item border-0 px-0">
+                <div class="d-flex justify-content-between align-items-center">
+                  <div class="d-flex align-items-center">
+                    <span class="badge bg-primary me-2">{{ i + 1 }}</span>
+                    <div>
+                      <h6 class="mb-1">{{ product.productNameAr }}</h6>
+                      <small class="text-muted">{{ product.productCode }}</small>
+                    </div>
+                  </div>
+                  <div class="text-end">
+                    <span class="fw-bold">{{ formatNumber(product.totalQuantity) }}</span>
+                    <small class="text-muted d-block">{{ product.storeCount }} مستودع</small>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Roles -->
-    <div class="col-md-6 col-xl-3">
-      <div class="card shadow-sm border-0 dark-mode-bg">
-        <div class="card-body d-flex align-items-center">
-          <i class="bi bi-person-badge fs-1 text-warning me-3"></i>
-          <div>
-            <h6 class="mb-0 dark-mode-text">Roles</h6>
-            <h4 class="fw-bold">4</h4>
+    <!-- Store Performance & Alerts Row -->
+    <div class="row g-4 mt-4">
+      <!-- Store Performance -->
+      <div class="col-lg-8">
+        <div class="card shadow-sm border-0 dark-mode-bg h-100">
+          <div class="card-header bg-transparent border-0">
+            <h5 class="card-title mb-0 dark-mode-text">
+              <i class="bi bi-building me-2"></i>
+              أداء المستودعات
+            </h5>
+          </div>
+          <div class="card-body">
+            <div *ngIf="isLoadingStorePerformance" class="text-center py-3">
+              <div class="spinner-border spinner-border-sm text-primary" role="status">
+                <span class="visually-hidden">جاري التحميل...</span>
+              </div>
+            </div>
+            <div *ngIf="!isLoadingStorePerformance && storePerformance.length === 0" class="text-center py-4 text-muted">
+              <i class="bi bi-building fs-1 mb-3"></i>
+              <p>لا توجد مستودعات</p>
+            </div>
+            <div *ngIf="!isLoadingStorePerformance && storePerformance.length > 0" class="table-responsive">
+              <table class="table table-hover">
+                <thead>
+                  <tr>
+                    <th>المستودع</th>
+                    <th>إجمالي المنتجات</th>
+                    <th>إجمالي الكمية</th>
+                    <th>قليل المخزون</th>
+                    <th>نافد المخزون</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let store of storePerformance">
+                    <td>
+                      <div>
+                        <strong>{{ store.storeNameAr }}</strong>
+                        <br>
+                        <small class="text-muted">{{ store.storeCode }}</small>
+                        <span *ngIf="store.isMainWarehouse" class="badge bg-primary ms-2">رئيسي</span>
+                      </div>
+                    </td>
+                    <td>{{ formatNumber(store.totalProducts) }}</td>
+                    <td>{{ formatNumber(store.totalQuantity) }}</td>
+                    <td>
+                      <span class="badge bg-warning" *ngIf="store.lowStockProducts > 0">
+                        {{ store.lowStockProducts }}
+                      </span>
+                      <span *ngIf="store.lowStockProducts === 0" class="text-success">-</span>
+                    </td>
+                    <td>
+                      <span class="badge bg-danger" *ngIf="store.zeroStockProducts > 0">
+                        {{ store.zeroStockProducts }}
+                      </span>
+                      <span *ngIf="store.zeroStockProducts === 0" class="text-success">-</span>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       </div>
-    </div>
 
-    <!-- Permissions -->
-    <div class="col-md-6 col-xl-3">
-      <div class="card shadow-sm border-0 dark-mode-bg">
-        <div class="card-body d-flex align-items-center">
-          <i class="bi bi-shield-lock fs-1 text-danger me-3"></i>
-          <div>
-            <h6 class="mb-0 dark-mode-text">Permissions</h6>
-            <h4 class="fw-bold">20</h4>
+      <!-- Alerts -->
+      <div class="col-lg-4">
+        <div class="card shadow-sm border-0 dark-mode-bg h-100">
+          <div class="card-header bg-transparent border-0">
+            <h5 class="card-title mb-0 dark-mode-text">
+              <i class="bi bi-bell me-2"></i>
+              التنبيهات
+            </h5>
+          </div>
+          <div class="card-body">
+            <div *ngIf="isLoadingAlerts" class="text-center py-3">
+              <div class="spinner-border spinner-border-sm text-primary" role="status">
+                <span class="visually-hidden">جاري التحميل...</span>
+              </div>
+            </div>
+            <div *ngIf="!isLoadingAlerts && alerts.length === 0" class="text-center py-4 text-muted">
+              <i class="bi bi-check-circle fs-1 mb-3"></i>
+              <p>لا توجد تنبيهات</p>
+            </div>
+            <div *ngIf="!isLoadingAlerts && alerts.length > 0" class="list-group list-group-flush">
+              <div *ngFor="let alert of alerts" class="list-group-item border-0 px-0">
+                <div class="d-flex align-items-start">
+                  <i class="{{ getSeverityIcon(alert.severity) }} {{ getSeverityClass(alert.severity) }} me-2 mt-1"></i>
+                  <div class="flex-grow-1">
+                    <h6 class="mb-1">{{ alert.type }}</h6>
+                    <p class="mb-1 small">{{ alert.message }}</p>
+                    <small class="text-muted">خطورة: {{ alert.severity }}</small>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
