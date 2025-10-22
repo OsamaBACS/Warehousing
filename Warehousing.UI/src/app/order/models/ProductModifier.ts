@@ -37,3 +37,4 @@ export interface ProductModifierGroup {
   displayOrder: number;
   isActive: boolean;
 }
+

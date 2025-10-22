@@ -36,3 +36,4 @@ namespace Warehousing.Data.Entities
         public ICollection<OrderItemModifier> OrderItemModifiers { get; set; } = new List<OrderItemModifier>();
     }
 }
+

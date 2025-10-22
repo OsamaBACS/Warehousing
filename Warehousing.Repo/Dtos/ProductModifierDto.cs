@@ -19,3 +19,4 @@ namespace Warehousing.Repo.Dtos
         public ICollection<ProductModifierGroupDto> Groups { get; set; } = new List<ProductModifierGroupDto>();
     }
 }
+

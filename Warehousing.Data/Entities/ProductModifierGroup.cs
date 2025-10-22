@@ -26,3 +26,4 @@ namespace Warehousing.Data.Entities
         public bool IsActive { get; set; } = true;
     }
 }
+

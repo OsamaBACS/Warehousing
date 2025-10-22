@@ -37,3 +37,4 @@ namespace Warehousing.Data.Entities
         public ICollection<ProductModifierGroup> Groups { get; set; } = new List<ProductModifierGroup>();
     }
 }
+

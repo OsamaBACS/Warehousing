@@ -15,3 +15,4 @@ namespace Warehousing.Repo.Dtos
         public int DisplayOrder { get; set; } = 0;
     }
 }
+

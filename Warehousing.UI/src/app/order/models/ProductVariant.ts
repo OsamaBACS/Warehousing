@@ -12,3 +12,4 @@ export interface ProductVariant {
   isDefault: boolean;
   displayOrder: number;
 }
+

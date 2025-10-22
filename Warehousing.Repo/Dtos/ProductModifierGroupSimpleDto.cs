@@ -12,3 +12,4 @@ namespace Warehousing.Repo.Dtos
         public bool IsActive { get; set; } = true;
     }
 }
+

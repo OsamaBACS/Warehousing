@@ -17,3 +17,4 @@ namespace Warehousing.Repo.Dtos
         public string? UpdatedBy { get; set; } = string.Empty;
     }
 }
+

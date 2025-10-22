@@ -38,3 +38,4 @@ export class InitialStockService {
     return this.http.post<InitialStockSetupResponse>(`${this.url}initial-stock-setup`, request);
   }
 }
+

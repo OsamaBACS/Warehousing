@@ -21,3 +21,4 @@ namespace Warehousing.Repo.Dtos
         public ICollection<OrderItemDto> OrderItems { get; set; } = new List<OrderItemDto>();
     }
 }
+

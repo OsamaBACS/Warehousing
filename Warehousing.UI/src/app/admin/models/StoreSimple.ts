@@ -11,3 +11,4 @@ export interface StoreSimple {
   updatedAt?: Date;
   updatedBy?: string;
 }
+

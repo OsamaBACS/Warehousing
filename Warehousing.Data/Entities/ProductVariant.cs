@@ -41,3 +41,4 @@ namespace Warehousing.Data.Entities
         public ICollection<OrderItem> OrderItems { get; set; } = new List<OrderItem>();
     }
 }
+

@@ -77,3 +77,4 @@ export interface DashboardCard {
   trend?: 'up' | 'down' | 'stable';
   trendValue?: number;
 }
+

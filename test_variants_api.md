@@ -96,3 +96,4 @@ POST /api/ProductModifiers/1/options
 ```
 
 All endpoints are now ready for use with proper authentication!
+

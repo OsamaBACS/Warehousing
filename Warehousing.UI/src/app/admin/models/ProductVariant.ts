@@ -34,3 +34,4 @@ export interface ProductVariantCreateRequest {
 export interface ProductVariantUpdateRequest extends ProductVariantCreateRequest {
   id: number;
 }
+

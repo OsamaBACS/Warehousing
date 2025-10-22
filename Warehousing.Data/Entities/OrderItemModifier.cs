@@ -27,3 +27,4 @@ namespace Warehousing.Data.Entities
         public string? Notes { get; set; }
     }
 }
+
