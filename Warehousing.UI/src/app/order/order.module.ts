@@ -1,5 +1,6 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { TranslateModule } from '@ngx-translate/core';
 
 import { OrderRoutingModule } from './order-routing.module';
 import { OrderComponent } from './order.component';
@@ -21,7 +22,8 @@ import { MySharedModule } from '../shared/my-shared-module';
   imports: [
     CommonModule,
     OrderRoutingModule,
-    MySharedModule
+    MySharedModule,
+    TranslateModule
   ]
 })
 export class OrderModule { }

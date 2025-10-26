@@ -4,9 +4,9 @@
   <!-- Loading Indicator -->
   <div *ngIf="isLoading" class="text-center py-5">
     <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
-      <span class="visually-hidden">جاري التحميل...</span>
+      <span class="visually-hidden">{{ 'MESSAGES.LOADING' | translate }}</span>
     </div>
-    <p class="mt-3 text-muted">جاري تحميل سلة التسوق...</p>
+    <p class="mt-3 text-muted">{{ 'MESSAGES.LOADING' | translate }} {{ 'CART.TITLE' | translate }}...</p>
   </div>
 
   <div [formGroup]="cartService.cartForm" *ngIf="!isLoading">
@@ -15,19 +15,19 @@
       <div class="p-1 flex-fill" *ngIf="cartService.orderTypeId == 1">
         <div class="floating-label-select">
           <select class="form-select" id="supplierId" formControlName="supplierId">
-            <option value="">اختر المورد</option>
+            <option value="">{{ 'SHARED.BUTTONS.SELECT' | translate }} {{ 'SUPPLIERS.TITLE' | translate }}</option>
             <option *ngFor="let supplier of suppliers" [value]="supplier.id">{{ supplier.name }}</option>
           </select>
-          <label>المورد</label>
+          <label>{{ 'SUPPLIERS.TITLE' | translate }}</label>
         </div>
       </div>
       <div class="p-1 flex-fill" *ngIf="cartService.orderTypeId == 2">
         <div class="floating-label-select">
           <select class="form-select" id="customerId" formControlName="customerId">
-            <option value="">اختر الزبون</option>
+            <option value="">{{ 'SHARED.BUTTONS.SELECT' | translate }} {{ 'CUSTOMERS.TITLE' | translate }}</option>
             <option *ngFor="let customer of customers" [value]="customer.id">{{ customer.nameAr }}</option>
           </select>
-          <label>الزبون</label>
+          <label>{{ 'CUSTOMERS.TITLE' | translate }}</label>
         </div>
       </div>
     </div>
@@ -42,12 +42,29 @@
           <div class="flex-shrink-0">
             <img
               [src]="resourceUrl + getProductInfo(item.get('productId')?.value)?.imagePath || 'https://via.placeholder.com/60'"
-              alt="صورة المنتج" class="product-thumb" style="width: 60px; height: auto;" />
+              alt="{{ 'CART_DETAILS.PRODUCT_IMAGE' | translate }}" class="product-thumb" style="width: 60px; height: auto;" />
           </div>
 
           <!-- Product Name (left with more space) -->
           <div class="flex-grow-1 text-center border">
             <h5 class="fw-bold mb-2 p-2">{{ getProductInfo(item.get('productId')?.value)?.nameAr }}</h5>
+            <!-- Variant Information -->
+            <div *ngIf="item.get('variantId')?.value" class="small text-info mb-1">
+              <i class="bi bi-tag me-1"></i>
+              {{ getVariantName(item.get('productId')?.value, item.get('variantId')?.value) }}
+            </div>
+            <!-- Store Information -->
+            <div *ngIf="item.get('storeId')?.value" class="small text-muted">
+              <i class="bi bi-building me-1"></i>
+              {{ getStoreName(item.get('storeId')?.value) }}
+            </div>
+            <!-- Modifiers Information -->
+            <div *ngIf="item.get('selectedModifiers')?.value && getSelectedModifiers(item.get('productId')?.value, item.get('selectedModifiers')?.value).length > 0" class="small text-warning">
+              <i class="bi bi-gear me-1"></i>
+              <span *ngFor="let modifier of getSelectedModifiers(item.get('productId')?.value, item.get('selectedModifiers')?.value); let last = last">
+                {{ modifier }}<span *ngIf="!last">, </span>
+              </span>
+            </div>
           </div>
         </div>
 
@@ -55,7 +72,12 @@
         <div class="d-flex justify-content-between align-items-center mt-3">
           <!-- Quantity Input (right, more space) -->
           <div class="flex-grow-1 text-end ms-1">
-            <input type="number" formControlName="quantity" class="form-control text-center w-100 d-inline-block" />
+            <input type="number" 
+                   formControlName="quantity" 
+                   class="form-control text-center w-100 d-inline-block" 
+                   [max]="getMaxQuantityForItem(item)"
+                   min="0"
+                   (change)="onQuantityChange(item)" />
           </div>
 
           <!-- + / - Buttons (left) -->
@@ -72,7 +94,7 @@
           <div class="flex-grow-1 text-end ms-1">
             JD {{ item.get('quantity')?.value * (cartService.orderTypeId == 1 ? item.get('costPrice')?.value :
             item.get('sellingPrice')?.value) | number }} :
-            <strong>الإجمالي</strong>
+            <strong>{{ 'CART_DETAILS.TOTAL' | translate }}</strong>
           </div>
           <div class="d-flex" *ngIf="hasAnyPermission(permissionsEnum.EDIT_APPROVED_INVOICE)">
             <button class="btn btn-danger" (click)="onDelete(i)"><i class="bi bi-trash"></i></button>
@@ -84,13 +106,13 @@
     <!-- Empty Cart -->
     <div *ngIf="cartService.cartItems.length === 0"
       class="alert alert-info text-center mt-4">
-      السلة فارغة
+      {{ 'CART_DETAILS.EMPTY_CART' | translate }}
     </div>
 
     <!-- Total -->
     <div class="card mt-4 shadow-sm total-section">
       <div class="card-body text-end">
-        <h5 class="card-title">المجموع الكلي</h5>
+        <h5 class="card-title">{{ 'CART_DETAILS.GRAND_TOTAL' | translate }}</h5>
         <p class="card-text fs-4 fw-bold">
           {{ cartService.cartForm.get('totalAmount')?.value }} JD
         </p>
@@ -109,12 +131,12 @@
    
            <div class="p-2 w-100" *ngIf="cartService.cartForm.get('statusId')?.value != '11'">
              <button class="btn btn-secondary btn-lg w-100 text-center" (click)="onSave()">
-               حفظ
+               {{ 'SHARED.BUTTONS.SAVE' | translate }}
              </button>
            </div>
            <div class="p-2 w-100">
              <button class="btn btn-danger btn-lg w-100 text-center" (click)="onCancel()">
-               إلغاء
+               {{ 'SHARED.BUTTONS.CANCEL' | translate }}
              </button>
            </div>
            <div class="p-2 w-100">
@@ -142,7 +164,7 @@
            ">
            <div class="p-2 w-100">
              <button class="btn btn-danger btn-lg w-100 text-center" (click)="onCancel()">
-               إلغاء
+               {{ 'SHARED.BUTTONS.CANCEL' | translate }}
              </button>
            </div>
            <div class="p-2 w-100">
@@ -158,10 +180,10 @@
              <button class="btn btn-secondary btn-lg w-100 text-center" (click)="cartService.clearCart()">إفراغ السلة</button>
            </div>
            <div class="p-2 w-100" *ngIf="hasAnyPermission(permissionsEnum.EDIT_APPROVED_INVOICE)">
-             <button class="btn btn-primary btn-lg w-100 text-center" (click)="onEdit(cartService.cartForm.get('id')?.value)">تعديل الطلب</button>
+             <button class="btn btn-primary btn-lg w-100 text-center" (click)="onEdit(cartService.cartForm.get('id')?.value)">{{ 'CART_DETAILS.EDIT_ORDER' | translate }}</button>
            </div>
            <div class="p-2 w-100" *ngIf="hasAnyPermission(permissionsEnum.EDIT_APPROVED_INVOICE)">
-             <button class="btn btn-danger btn-lg w-100 text-center" (click)="onEdit(cartService.cartForm.get('id')?.value)">إلغاء الطلب</button>
+             <button class="btn btn-danger btn-lg w-100 text-center" (click)="onEdit(cartService.cartForm.get('id')?.value)">{{ 'CART_DETAILS.CANCEL_ORDER' | translate }}</button>
            </div>
            <div class="p-2 w-100">
              <button class="btn btn-info btn-lg w-100 text-center" (click)="printOrder()">طباعه</button>
@@ -193,8 +215,8 @@
     <h4 class="text-center my-3"> 
       {{ 
         cartService.orderTypeId === 1 ? 
-                  'سند شراء' :
-                  'سند بيع'
+                  ('CART_DETAILS.PURCHASE_DOCUMENT' | translate) :
+                  ('CART_DETAILS.SALE_DOCUMENT' | translate)
        }}
       <!-- {{ 'SALESORDERITEMS.TITLE' | translate }} -->
     </h4>
@@ -206,7 +228,7 @@
         <div class="col-12 col-md-6">
           <div class="p-2 border rounded bg-light d-block">
             <!-- <strong>{{ 'SALESORDERITEMS.ORDERDATE' | translate }}:</strong> -->
-             <strong>التاريخ: </strong>
+             <strong>{{ 'CART_DETAILS.DATE' | translate }}: </strong>
             {{ cartService.cartForm.get('orderDate')?.value | date }}
           </div>
         </div>
@@ -218,8 +240,8 @@
             <strong>
               {{
                 cartService.orderTypeId === 1 ? 
-                  'المورد: ' :
-                  'الزبون: '
+                  ('CART_DETAILS.SUPPLIER' | translate) + ': ' :
+                  ('CART_DETAILS.CUSTOMER' | translate) + ': '
               }}
             </strong>
               {{ 
@@ -246,11 +268,11 @@
 
           <th>الصنيف</th>
           <th>رقم البيان</th>
-          <th>المنتج</th>
-          <th>الوحدة</th>
-          <th>الكمية</th>
-          <th>السعر</th>
-          <th>المجموع</th>
+          <th>{{ 'CART_DETAILS.PRODUCT' | translate }}</th>
+          <th>{{ 'CART_DETAILS.UNIT' | translate }}</th>
+          <th>{{ 'CART_DETAILS.QUANTITY' | translate }}</th>
+          <th>{{ 'CART_DETAILS.PRICE' | translate }}</th>
+          <th>{{ 'CART_DETAILS.TOTAL_AMOUNT' | translate }}</th>
         </tr>
       </thead>
       <tbody formArrayName="items" *ngIf="cartService.cartItems && cartService.orderObject">
@@ -258,7 +280,21 @@
           <td class="text-center">{{ i + 1 }}</td>
           <td>{{ cartService.orderObject.items[i]?.product?.subCategory?.nameAr }}</td>
           <td>{{ getProductDescription(item.get('productId')?.value) }}</td>
-          <td>{{ getProductName(item.get('productId')?.value) }}</td>
+          <td>
+            {{ getProductName(item.get('productId')?.value) }}
+            <div *ngIf="item.get('variantId')?.value" class="small text-info">
+              <i class="bi bi-tag me-1"></i>{{ getVariantName(item.get('productId')?.value, item.get('variantId')?.value) }}
+            </div>
+            <div *ngIf="item.get('storeId')?.value" class="small text-muted">
+              <i class="bi bi-building me-1"></i>{{ getStoreName(item.get('storeId')?.value) }}
+            </div>
+            <div *ngIf="item.get('selectedModifiers')?.value && getSelectedModifiers(item.get('productId')?.value, item.get('selectedModifiers')?.value).length > 0" class="small text-warning">
+              <i class="bi bi-gear me-1"></i>
+              <span *ngFor="let modifier of getSelectedModifiers(item.get('productId')?.value, item.get('selectedModifiers')?.value); let last = last">
+                {{ modifier }}<span *ngIf="!last">, </span>
+              </span>
+            </div>
+          </td>
           <td>{{ cartService.orderObject.items[i].product?.unit?.nameAr }}</td>
           <td>{{ item.get('quantity')?.value }}</td>
           <td>
@@ -281,7 +317,7 @@
         <!-- Total Row -->
         <tr>
           <!-- <td colspan="6" class="text-end"><strong>{{ 'SALESORDERITEMS.TOTALAMOUNT' | translate }}</strong></td> -->
-          <td colspan="6" class="text-end"><strong>الاجمالي</strong></td>
+          <td colspan="6" class="text-end"><strong>{{ 'CART_DETAILS.TOTAL' | translate }}</strong></td>
           <td class="text-center"><strong>{{ cartService.cartForm.get('totalAmount')?.value | currency }}</strong></td>
         </tr>
       </tbody>

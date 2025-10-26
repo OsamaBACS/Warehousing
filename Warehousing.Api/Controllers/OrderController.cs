@@ -293,22 +293,24 @@ namespace Warehousing.Api.Controllers
                             var item = order.Items.First(i => i.Id == itemDto.Id);
                             item.StoreId = itemDto.StoreId;
                             item.ProductId = itemDto.ProductId;
+                            item.VariantId = itemDto.VariantId; // Add variant support
                             item.Quantity = itemDto.Quantity;
                             item.UnitCost = itemDto.UnitCost;
                             item.UnitPrice = itemDto.UnitPrice;
                         }
                         else
                         {
-                            // Add new item
-                            order.Items.Add(new OrderItem
-                            {
-                                StoreId = itemDto.StoreId,
-                                ProductId = itemDto.ProductId,
-                                Quantity = itemDto.Quantity,
-                                UnitCost = itemDto.UnitCost,
-                                UnitPrice = itemDto.UnitPrice,
-                                OrderId = dto.Id ?? 0
-                            });
+                        // Add new item
+                        order.Items.Add(new OrderItem
+                        {
+                            StoreId = itemDto.StoreId,
+                            ProductId = itemDto.ProductId,
+                            VariantId = itemDto.VariantId, // Add variant support
+                            Quantity = itemDto.Quantity,
+                            UnitCost = itemDto.UnitCost,
+                            UnitPrice = itemDto.UnitPrice,
+                            OrderId = dto.Id ?? 0
+                        });
                         }
                     }
 
@@ -339,6 +341,7 @@ namespace Warehousing.Api.Controllers
                             OrderId = result.Id,
                             StoreId = itemDto.StoreId,
                             ProductId = itemDto.ProductId,
+                            VariantId = itemDto.VariantId, // Add variant support
                             Quantity = itemDto.Quantity,
                             UnitCost = itemDto.UnitCost,
                             UnitPrice = itemDto.UnitPrice,
@@ -347,6 +350,12 @@ namespace Warehousing.Api.Controllers
                         };
                         
                         await _unitOfWork.OrderItemRepo.CreateAsync(orderItem);
+                        
+                        // Handle modifiers if any
+                        if (itemDto.SelectedModifiers != null && itemDto.SelectedModifiers.Count > 0)
+                        {
+                            await ProcessOrderItemModifiers(orderItem.Id, itemDto.SelectedModifiers);
+                        }
                     }
                     
                     return Ok(result);
@@ -355,6 +364,29 @@ namespace Warehousing.Api.Controllers
             catch (Exception ex)
             {
                 return StatusCode(500, ex.Message);
+            }
+        }
+
+        private async Task ProcessOrderItemModifiers(int orderItemId, Dictionary<string, object> selectedModifiers)
+        {
+            foreach (var modifierEntry in selectedModifiers)
+            {
+                var modifierId = int.Parse(modifierEntry.Key);
+                var optionIds = (List<int>)modifierEntry.Value;
+                
+                foreach (var optionId in optionIds)
+                {
+                    var orderItemModifier = new OrderItemModifier
+                    {
+                        OrderItemId = orderItemId,
+                        ModifierOptionId = optionId,
+                        Quantity = 1,
+                        PriceAdjustment = 0,
+                        CostAdjustment = 0
+                    };
+                    
+                    await _unitOfWork.OrderItemModifierRepo.CreateAsync(orderItemModifier);
+                }
             }
         }
 
@@ -433,7 +465,6 @@ namespace Warehousing.Api.Controllers
                         var order = await _unitOfWork.OrderRepo
                             .GetAll()
                             .Include(o => o.Items)
-                                .ThenInclude(i => i.Product)
                             .FirstOrDefaultAsync(o => o.Id == id);
 
                         if (order == null)
@@ -480,18 +511,25 @@ namespace Warehousing.Api.Controllers
 
                         foreach (var item in order.Items)
                         {
-                            if (item.Product == null)
+                            // Load product separately to avoid tracking conflicts
+                            var product = await _unitOfWork.ProductRepo
+                                .GetByCondition(p => p.Id == item.ProductId)
+                                .FirstOrDefaultAsync();
+                            
+                            if (product == null)
                                 return BadRequest(new { success = false, message = $"Product not found for order item {item.Id}" });
 
                             // Only validate for sales (OrderTypeId != 1)
-                            var inventory = item.VariantId.HasValue 
-                                ? item.Product.Inventories.Where(s => s.StoreId == item.StoreId && s.VariantId == item.VariantId).FirstOrDefault()
-                                : item.Product.Inventories.Where(s => s.StoreId == item.StoreId && s.VariantId == null).FirstOrDefault();
+                            var inventory = await _unitOfWork.InventoryRepo
+                                .GetByCondition(i => i.ProductId == item.ProductId && 
+                                                   i.StoreId == item.StoreId && 
+                                                   i.VariantId == item.VariantId)
+                                .FirstOrDefaultAsync();
                             
                             if (order.OrderTypeId != 1 && inventory != null && inventory.Quantity < item.Quantity)
                             {
                                 var variantInfo = item.VariantId.HasValue ? $" (Variant ID: {item.VariantId})" : "";
-                                insufficientItems.Add($"{item.Product.NameAr}{variantInfo} (Available: {inventory.Quantity}, Requested: {item.Quantity})");
+                                insufficientItems.Add($"{product.NameAr}{variantInfo} (Available: {inventory.Quantity}, Requested: {item.Quantity})");
                             }
                         }
 
@@ -509,10 +547,12 @@ namespace Warehousing.Api.Controllers
 
                         foreach (var item in order.Items)
                         {
-                            // Handle inventory for variants or base product
-                            var inventory = item.VariantId.HasValue 
-                                ? item.Product.Inventories.Where(s => s.StoreId == item.StoreId && s.VariantId == item.VariantId).FirstOrDefault()
-                                : item.Product.Inventories.Where(s => s.StoreId == item.StoreId && s.VariantId == null).FirstOrDefault();
+                            // Load inventory separately to avoid tracking conflicts
+                            var inventory = await _unitOfWork.InventoryRepo
+                                .GetByCondition(i => i.ProductId == item.ProductId && 
+                                                   i.StoreId == item.StoreId && 
+                                                   i.VariantId == item.VariantId)
+                                .FirstOrDefaultAsync();
                             
                             // Store quantities before change
                             var quantityBefore = 0m;
@@ -563,7 +603,8 @@ namespace Warehousing.Api.Controllers
                                     inventory.Quantity = quantityAfter;
                                 }
 
-                                await _unitOfWork.ProductRepo.UpdateAsync(item.Product);
+                                // Update the inventory entity directly
+                                await _unitOfWork.InventoryRepo.UpdateAsync(inventory);
                             }
 
                             var transactionEntity = new InventoryTransaction
@@ -709,7 +750,8 @@ namespace Warehousing.Api.Controllers
                                     inventory.Quantity -= updatedItem.Quantity;
                                 }
 
-                                await _unitOfWork.ProductRepo.UpdateAsync(updatedItem.Product);
+                                // Update the inventory entity directly
+                                await _unitOfWork.InventoryRepo.UpdateAsync(inventory);
 
                                 var newTransaction = new InventoryTransaction
                                 {
@@ -739,7 +781,8 @@ namespace Warehousing.Api.Controllers
                                         inventoryOld.Quantity -= diff;
                                     }
 
-                                    await _unitOfWork.ProductRepo.UpdateAsync(oldItem.Product);
+                                    // Update the inventory entity directly
+                                    await _unitOfWork.InventoryRepo.UpdateAsync(inventoryOld);
 
                                     var updateTransaction = new InventoryTransaction
                                     {
@@ -857,7 +900,8 @@ namespace Warehousing.Api.Controllers
                                 inventory.Quantity += item.Quantity;
                             }
 
-                            await _unitOfWork.ProductRepo.UpdateAsync(item.Product);
+                            // Update the inventory entity directly
+                            await _unitOfWork.InventoryRepo.UpdateAsync(inventory);
 
                             // Log reversal transaction
                             var reversalTransaction = new InventoryTransaction

@@ -3,15 +3,15 @@
   <div class="row mb-4">
     <div class="col-12">
       <div class="d-flex justify-content-between align-items-center">
-        <h3 class="mb-0 fw-bold">طلباتي المعلقة</h3>
+        <h3 class="mb-0 fw-bold">{{ 'ORDER_MANAGEMENT.MY_PENDING_ORDERS' | translate }}</h3>
         <div class="d-flex gap-2">
           <button class="btn btn-outline-secondary" (click)="toggleFilterPanel()">
             <i class="bi bi-funnel" [class.bi-funnel-fill]="isFilterExpanded"></i>
-            {{ isFilterExpanded ? 'إخفاء الفلاتر' : 'إظهار الفلاتر' }}
+            {{ isFilterExpanded ? ('ORDER_MANAGEMENT.HIDE_FILTERS' | translate) : ('ORDER_MANAGEMENT.SHOW_FILTERS' | translate) }}
           </button>
           <button class="btn btn-outline-warning" (click)="clearFilters()">
             <i class="bi bi-arrow-clockwise"></i>
-            مسح الفلاتر
+            {{ 'ORDER_MANAGEMENT.CLEAR_FILTERS' | translate }}
           </button>
         </div>
       </div>
@@ -30,12 +30,12 @@
           type="text" 
           class="form-control" 
           formControlName="searchTerm"
-          placeholder="البحث في رقم الطلب، العميل، المورد، المنتج، أو المبلغ..."
+          placeholder="{{ 'ORDER_MANAGEMENT.SEARCH_PLACEHOLDER' | translate }}"
           (keyup.enter)="onSearch()"
         />
         <button class="btn btn-primary" type="button" (click)="onSearch()">
           <i class="bi bi-search"></i>
-          بحث
+          {{ 'ORDER_MANAGEMENT.SEARCH' | translate }}
         </button>
       </div>
     </div>

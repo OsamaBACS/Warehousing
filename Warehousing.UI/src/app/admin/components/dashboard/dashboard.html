@@ -85,7 +85,7 @@
           <div class="card-header bg-transparent border-0">
             <h5 class="card-title mb-0 dark-mode-text">
               <i class="bi bi-trophy me-2"></i>
-              أكثر المنتجات في المخزون
+              {{ 'DASHBOARD.MOST_STOCKED_PRODUCTS' | translate }}
             </h5>
           </div>
           <div class="card-body">
@@ -96,7 +96,7 @@
             </div>
             <div *ngIf="!isLoadingTopProducts && topProducts.length === 0" class="text-center py-4 text-muted">
               <i class="bi bi-box-seam fs-1 mb-3"></i>
-              <p>لا توجد منتجات في المخزون</p>
+              <p>{{ 'REPORTS.NO_PRODUCTS' | translate }}</p>
             </div>
             <div *ngIf="!isLoadingTopProducts && topProducts.length > 0" class="list-group list-group-flush">
               <div *ngFor="let product of topProducts; let i = index" class="list-group-item border-0 px-0">
@@ -128,7 +128,7 @@
           <div class="card-header bg-transparent border-0">
             <h5 class="card-title mb-0 dark-mode-text">
               <i class="bi bi-building me-2"></i>
-              أداء المستودعات
+              {{ 'DASHBOARD.WAREHOUSE_PERFORMANCE' | translate }}
             </h5>
           </div>
           <div class="card-body">
@@ -139,17 +139,17 @@
             </div>
             <div *ngIf="!isLoadingStorePerformance && storePerformance.length === 0" class="text-center py-4 text-muted">
               <i class="bi bi-building fs-1 mb-3"></i>
-              <p>لا توجد مستودعات</p>
+              <p>{{ 'REPORTS.NO_WAREHOUSES' | translate }}</p>
             </div>
             <div *ngIf="!isLoadingStorePerformance && storePerformance.length > 0" class="table-responsive">
               <table class="table table-hover">
                 <thead>
                   <tr>
                     <th>المستودع</th>
-                    <th>إجمالي المنتجات</th>
+                    <th>{{ 'DASHBOARD.TOTAL_PRODUCTS' | translate }}</th>
                     <th>إجمالي الكمية</th>
-                    <th>قليل المخزون</th>
-                    <th>نافد المخزون</th>
+                    <th>{{ 'DASHBOARD.LOW_STOCK' | translate }}</th>
+                    <th>{{ 'DASHBOARD.OUT_OF_STOCK' | translate }}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -201,7 +201,7 @@
             </div>
             <div *ngIf="!isLoadingAlerts && alerts.length === 0" class="text-center py-4 text-muted">
               <i class="bi bi-check-circle fs-1 mb-3"></i>
-              <p>لا توجد تنبيهات</p>
+              <p>{{ 'REPORTS.NO_ALERTS' | translate }}</p>
             </div>
             <div *ngIf="!isLoadingAlerts && alerts.length > 0" class="list-group list-group-flush">
               <div *ngFor="let alert of alerts" class="list-group-item border-0 px-0">

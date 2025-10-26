@@ -7,6 +7,7 @@ export interface Inventory {
     product: Product | null;
     storeId: number;
     store: Store | null;
+    variantId?: number | null; // Added to support variant-specific inventory
     quantity: number;
     createdAt: string | null;
     createdBy: string | null;

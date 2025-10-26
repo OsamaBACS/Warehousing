@@ -1,6 +1,6 @@
 <div class="dialog-container p-3 p-md-4">
   <!-- <h5 class="mb-4 text-center">{{ userForm.get('id')?.value > 0 ? 'Edit User' : 'Add User' }}</h5> -->
-  <h5 class="mb-4 text-center">إضافة / تعديل مستخدم</h5>
+  <h5 class="mb-4 text-center">{{ 'FORMS.ADD_EDIT' | translate }} {{ 'BREADCRUMB.USERS' | translate }}</h5>
 
   <form [formGroup]="userForm" (ngSubmit)="save()">
     <div class="row g-3">

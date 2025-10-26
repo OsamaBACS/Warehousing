@@ -9,16 +9,17 @@ namespace Warehousing.Repo.Dtos
         public string? Description { get; set; }
         public decimal? PriceAdjustment { get; set; } = 0;
         public decimal? CostAdjustment { get; set; } = 0;
-        public decimal? StockQuantity { get; set; }
+        // StockQuantity is calculated from Inventory table per variant per store
         public decimal? ReorderLevel { get; set; }
         public bool IsActive { get; set; } = true;
         public bool IsDefault { get; set; } = false;
         public int DisplayOrder { get; set; } = 0;
         
         // Navigation properties
-        public ProductDto? Product { get; set; }
+        // Removed Product navigation property to prevent circular reference
         public ICollection<InventoryDto> Inventories { get; set; } = new List<InventoryDto>();
         public ICollection<OrderItemDto> OrderItems { get; set; } = new List<OrderItemDto>();
     }
 }
+
 

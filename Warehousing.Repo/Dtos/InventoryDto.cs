@@ -7,6 +7,9 @@ namespace Warehousing.Repo.Dtos
         public int StoreId { get; set; }
         public decimal Quantity { get; set; }   // total stock in that store
         
+        // Store information
+        public StoreDto? Store { get; set; }
+        
         // Variant support
         public ProductVariantDto? Variant { get; set; }
         public int? VariantId { get; set; }

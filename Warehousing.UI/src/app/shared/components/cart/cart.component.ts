@@ -135,44 +135,87 @@ export class CartComponent implements OnInit, OnDestroy {
     const cartItem = this.cartService.cartItems?.controls.find(i => i.get('productId')?.value == productId);
     if (cartItem) {
       const storeId = cartItem.get('storeId')?.value;
-      this.cartService.addToCart({ id: productId } as any, -1, storeId);
-    }
-  }
-
-  async onQuantityChange(productId: number, event: any): Promise<void> {
-    const newQuantity = parseInt(event.target.value) || 0;
-    
-    const cartItem = this.cartService.cartItems?.controls.find(i => i.get('productId')?.value == productId);
-    if (!cartItem) {
-      return;
-    }
-
-    if (newQuantity < 0) {
-      event.target.value = 0;
-      cartItem.get('quantity')?.setValue(0);
-      return;
-    }
-
-    const storeId = cartItem.get('storeId')?.value;
-    
-    // Validate stock before updating quantity
-    const isValid = await this.cartService.validateStockForCartItem(productId, storeId, newQuantity);
-    if (!isValid) {
-      // Clear the input field and revert to previous value if validation fails
+      const variantId = cartItem.get('variantId')?.value;
+      
+      // Check if we can decrease (quantity > 0)
       const currentQuantity = cartItem.get('quantity')?.value || 0;
-      event.target.value = currentQuantity;
-      cartItem.get('quantity')?.setValue(currentQuantity);
+      if (currentQuantity > 0) {
+        this.cartService.addToCart({ id: productId } as any, -1, storeId, variantId);
+      }
+    }
+  }
+
+  // Get maximum quantity available for a cart item
+  getMaxQuantityForItem(item: FormGroup): number {
+    const productId = item.get('productId')?.value;
+    const storeId = item.get('storeId')?.value;
+    const variantId = item.get('variantId')?.value;
+    
+    if (variantId) {
+      // For variants, get variant stock
+      return this.getVariantStockForItem(productId, variantId, storeId);
+    } else {
+      // For main products, get main product stock
+      return this.getProductStockForItem(productId, storeId);
+    }
+  }
+
+  // Get stock for main product
+  getProductStockForItem(productId: number, storeId: number): number {
+    // This would need to be implemented based on your stock data
+    // For now, return a high number to allow any quantity
+    // You should implement this to get actual stock from your inventory
+    return 999999; // Placeholder - implement actual stock check
+  }
+
+  // Get stock for variant
+  getVariantStockForItem(productId: number, variantId: number, storeId: number): number {
+    // This would need to be implemented based on your variant stock data
+    // For now, return a high number to allow any quantity
+    // You should implement this to get actual variant stock from your inventory
+    return 999999; // Placeholder - implement actual variant stock check
+  }
+
+  // Handle manual quantity change with validation
+  onQuantityChange(item: FormGroup): void {
+    const newQuantity = parseInt(item.get('quantity')?.value) || 0;
+    const maxQuantity = this.getMaxQuantityForItem(item);
+    
+    console.log('Cart quantity change:', newQuantity, 'max:', maxQuantity);
+    
+    // Validate quantity
+    if (newQuantity < 0) {
+      item.get('quantity')?.setValue(0);
       return;
     }
     
-    // Update the quantity if validation passes
-    cartItem.get('quantity')?.setValue(newQuantity);
+    if (newQuantity > maxQuantity) {
+      item.get('quantity')?.setValue(maxQuantity);
+      return;
+    }
     
-    // Force update the input value to ensure synchronization
-    setTimeout(() => {
-      event.target.value = newQuantity;
-    }, 0);
+    // Update the cart with the new quantity
+    const productId = item.get('productId')?.value;
+    const storeId = item.get('storeId')?.value;
+    const variantId = item.get('variantId')?.value;
+    const currentQuantity = this.cartService.getCartItemQuantity(productId, storeId, variantId);
+    
+    if (newQuantity === 0) {
+      // Remove from cart if quantity is 0
+      if (currentQuantity > 0) {
+        this.cartService.removeFromCartWithDetails(productId, storeId, currentQuantity, variantId);
+      }
+    } else if (newQuantity !== currentQuantity) {
+      // Update quantity
+      const difference = newQuantity - currentQuantity;
+      if (difference > 0) {
+        this.cartService.addToCart({ id: productId } as any, difference, storeId, variantId);
+      } else {
+        this.cartService.removeFromCartWithDetails(productId, storeId, Math.abs(difference), variantId);
+      }
+    }
   }
+
 
   onUnitCostChange() {
     this.cartService.calculateTotal();
@@ -303,7 +346,8 @@ export class CartComponent implements OnInit, OnDestroy {
       },
       error: (err) => {
         console.error(err);
-        this.toastr.error(err.error, 'Purchase Order');
+        const errorMessage = err.error?.message || err.error || 'حدث خطأ أثناء إتمام الطلب';
+        this.toastr.error(errorMessage, 'خطأ في الطلب');
       }
     });
   }
@@ -342,7 +386,8 @@ export class CartComponent implements OnInit, OnDestroy {
       },
       error: (err) => {
         console.error(err);
-        this.toastr.error(err.error, 'Order');
+        const errorMessage = err.error?.message || err.error || 'حدث خطأ أثناء تعديل الطلب';
+        this.toastr.error(errorMessage, 'خطأ في التعديل');
       }
     });
   }
@@ -381,7 +426,8 @@ export class CartComponent implements OnInit, OnDestroy {
       },
       error: (err) => {
         console.error(err);
-        this.toastr.error(err.error, 'Order');
+        const errorMessage = err.error?.message || err.error || 'حدث خطأ أثناء إلغاء الطلب';
+        this.toastr.error(errorMessage, 'خطأ في الإلغاء');
       }
     });
   }
@@ -420,6 +466,63 @@ export class CartComponent implements OnInit, OnDestroy {
   getUnitName(id: number): string {
     const unit = this.units.find(p => p.id === id);
     return unit ? (this.lang.currentLang === 'ar' ? unit.nameAr : unit.nameEn) : '';
+  }
+
+  getVariantName(productId: number, variantId: number): string {
+    const product = this.products.find(p => p.id === productId);
+    if (product && product.variants) {
+      const variant = product.variants.find(v => v.id === variantId);
+      return variant ? variant.name : '';
+    }
+    return '';
+  }
+
+  getStoreName(storeId: number): string {
+    const store = this.stores.find(s => s.id === storeId);
+    return store ? store.nameAr : '';
+  }
+
+  getModifierName(productId: number, modifierId: number): string {
+    const product = this.products.find(p => p.id === productId);
+    if (product && product.modifierGroups) {
+      const modifierGroup = product.modifierGroups.find((mg: any) => mg.modifierId === modifierId);
+      return modifierGroup ? (modifierGroup.modifierName || modifierGroup.modifier?.name || '') : '';
+    }
+    return '';
+  }
+
+  getModifierOptionName(productId: number, modifierId: number, optionId: number): string {
+    const product = this.products.find(p => p.id === productId);
+    if (product && product.modifierGroups) {
+      const modifierGroup = product.modifierGroups.find((mg: any) => mg.modifierId === modifierId);
+      if (modifierGroup && modifierGroup.modifier?.options) {
+        const option = modifierGroup.modifier.options.find((o: any) => o.id === optionId);
+        return option ? option.name : '';
+      }
+    }
+    return '';
+  }
+
+  getSelectedModifiers(productId: number, selectedModifiers: { [modifierId: number]: number[] }): string[] {
+    const modifierNames: string[] = [];
+    
+    Object.keys(selectedModifiers).forEach(modifierIdStr => {
+      const modifierId = Number(modifierIdStr);
+      const optionIds = selectedModifiers[modifierId];
+      
+      if (optionIds && optionIds.length > 0) {
+        const modifierName = this.getModifierName(productId, modifierId);
+        const optionNames = optionIds.map(optionId => 
+          this.getModifierOptionName(productId, modifierId, optionId)
+        ).filter(name => name);
+        
+        if (modifierName && optionNames.length > 0) {
+          modifierNames.push(`${modifierName}: ${optionNames.join(', ')}`);
+        }
+      }
+    });
+    
+    return modifierNames;
   }
 
   calculateAndSetTotalAmount() {

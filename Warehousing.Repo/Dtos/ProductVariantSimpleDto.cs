@@ -9,11 +9,12 @@ namespace Warehousing.Repo.Dtos
         public string? Description { get; set; }
         public decimal? PriceAdjustment { get; set; } = 0;
         public decimal? CostAdjustment { get; set; } = 0;
-        public decimal? StockQuantity { get; set; }
+        // StockQuantity is calculated from Inventory table per variant per store
         public decimal? ReorderLevel { get; set; }
         public bool IsActive { get; set; } = true;
         public bool IsDefault { get; set; } = false;
         public int DisplayOrder { get; set; } = 0;
     }
 }
+
 

@@ -34,7 +34,7 @@ export function HttpLoaderFactory(http: HttpClient) {
     ModalModule.forRoot(),
     HttpClientModule,
     TranslateModule.forRoot({
-      defaultLanguage: 'en',
+      defaultLanguage: 'ar',
       loader: {
         provide: TranslateLoader,
         useFactory: HttpLoaderFactory,

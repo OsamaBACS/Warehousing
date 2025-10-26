@@ -1,5 +1,4 @@
 import { Category } from "./category";
-import { Product } from "./product";
 
 export interface SubCategory {
     id: number;
@@ -14,5 +13,5 @@ export interface SubCategory {
     createdBy: string | null;
     updatedAt: string | null;
     updatedBy: string | null;
-    products?: Product[];
+    // Removed products collection to match API changes (prevents circular reference)
 }

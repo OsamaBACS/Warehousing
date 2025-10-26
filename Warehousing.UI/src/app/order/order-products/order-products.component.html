@@ -3,10 +3,10 @@
   <div class="row mb-4">
     <div class="col-12">
       <div class="d-flex justify-content-between align-items-center">
-        <h2 class="text-primary mb-0">{{ selectedSubCategory?.nameAr || 'المنتجات' }}</h2>
+        <h2 class="text-primary mb-0">{{ selectedSubCategory?.nameAr || ('ORDER.PRODUCTS' | translate) }}</h2>
         <div class="text-muted">
           <i class="fas fa-shopping-cart me-2"></i>
-          {{ orderTypeId === 1 ? 'طلب شراء' : 'طلب بيع' }}
+          {{ orderTypeId === 1 ? ('PURCHASE.TITLE' | translate) : ('SALE.TITLE' | translate) }}
         </div>
       </div>
     </div>
@@ -43,11 +43,68 @@
             <span class="text-muted small">{{ product.unit?.nameAr }}</span>
           </div>
 
-          <!-- Total Quantity Across All Stores -->
+          <!-- Unified Stock & Variants Display -->
           <div class="mb-3">
-            <div class="d-flex justify-content-between small">
-              <span class="text-muted">إجمالي الكمية:</span>
-              <strong class="text-primary">{{ product.totalQuantity || 0 }}</strong>
+            <!-- Main Product Stock (if no variants or variants have no stock) -->
+            <div *ngIf="!product.variants || product.variants.length === 0 || !hasVariantStock(product)" class="mb-2">
+              <div class="d-flex justify-content-between align-items-center mb-1">
+                <span class="text-muted small fw-semibold">المخزون الرئيسي</span>
+              </div>
+              <div class="compact-stock-list">
+                <div *ngFor="let inventory of getMainProductInventories(product)" 
+                     class="stock-item p-2 rounded mb-2">
+                  <div class="d-flex justify-content-between align-items-center">
+                    <div class="d-flex align-items-center">
+                      <i class="bi bi-building text-primary me-2"></i>
+                      <div>
+                        <div class="small fw-semibold">{{ inventory.store?.nameAr }}</div>
+                        <div class="text-muted small">{{ inventory.store?.code }}</div>
+                      </div>
+                    </div>
+                    <span class="badge bg-success small">{{ inventory.quantity }} {{ product?.unit?.nameAr }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Variants with Store Display (unified) -->
+            <div *ngIf="product.variants && product.variants.length > 0 && hasVariantStock(product)" class="mb-2">
+              <div class="d-flex justify-content-between align-items-center mb-1">
+                <span class="text-muted small fw-semibold">المتغيرات</span>
+                <span class="badge bg-info small">{{ getTotalVariantsWithStock(product) }}</span>
+              </div>
+              <div class="compact-stock-list">
+                <div *ngFor="let variant of product.variants" 
+                     class="variant-stock-item p-2 rounded mb-2">
+                  <div class="d-flex justify-content-between align-items-center mb-1">
+                    <div class="d-flex align-items-center">
+                      <i class="bi bi-tag text-info me-2"></i>
+                      <span class="small fw-semibold">{{ variant.name }}</span>
+                    </div>
+                  </div>
+                  
+                  <!-- Stores for this variant -->
+                  <div class="stores-for-variant">
+                    <div *ngFor="let store of getStoresForVariant(product, variant.id!)" 
+                         class="store-variant-item d-flex justify-content-between align-items-center p-1 rounded mb-1">
+                      <div class="d-flex align-items-center">
+                        <i class="bi bi-building text-primary me-1"></i>
+                        <span class="small">{{ store.name }}</span>
+                      </div>
+                      <span class="badge bg-info small">
+                        {{ getVariantStockForStore(product.id, variant.id!, store.id) }} {{ product?.unit?.nameAr }}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- No Stock Message -->
+            <div *ngIf="(!product.inventories || product.inventories.length === 0) && (!product.variants || product.variants.length === 0)" 
+                 class="text-center p-2 bg-warning bg-opacity-10 rounded">
+              <i class="bi bi-exclamation-triangle text-warning"></i>
+                  <span class="text-warning small ms-1">{{ 'ORDER.NO_STOCK' | translate }}</span>
             </div>
           </div>
 
@@ -71,8 +128,8 @@
     <div class="col-12">
       <div class="text-center py-5">
         <i class="fas fa-box-open fa-3x text-muted mb-3"></i>
-        <h4 class="text-muted">لا توجد منتجات في هذا التصنيف</h4>
-        <p class="text-muted">يرجى اختيار تصنيف آخر أو إضافة منتجات جديدة</p>
+        <h4 class="text-muted">{{ 'ORDER_MANAGEMENT.NO_PRODUCTS_IN_CATEGORY' | translate }}</h4>
+        <p class="text-muted">{{ 'ORDER_MANAGEMENT.CHOOSE_OTHER_CATEGORY' | translate }}</p>
       </div>
     </div>
   </div>

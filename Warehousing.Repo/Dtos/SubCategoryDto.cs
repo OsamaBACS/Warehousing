@@ -14,7 +14,7 @@ namespace Warehousing.Repo.Dtos
 
         public int CategoryId { get; set; }
         public virtual CategoryDto? Category { get; set; } = null!;
-        public virtual ICollection<ProductDto>? Products { get; set; } = new List<ProductDto>();
+        // Removed Products collection to prevent circular reference in API responses
         
         // Audit fields
         public DateTime? CreatedAt { get; set; }

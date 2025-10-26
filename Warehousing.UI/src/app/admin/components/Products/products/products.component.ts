@@ -13,6 +13,7 @@ import { Observable, tap } from 'rxjs';
 import { Product, ProductPagination } from '../../../models/product';
 import { PermissionsEnum } from '../../../constants/enums/permissions.enum';
 import { Store } from '../../../models/store';
+import { AdminBreadcrumbService } from '../../../services/admin-breadcrumb.service';
 
 @Component({
   selector: 'app-products',
@@ -31,7 +32,8 @@ export class ProductsComponent implements OnInit {
     private route: ActivatedRoute,
     public lang: LanguageService,
     private toastr: ToastrService,
-    private authService: AuthService
+    private authService: AuthService,
+    private adminBreadcrumbService: AdminBreadcrumbService
   ) {
     this.stores = this.route.snapshot.data['StoresResolver'];
     this.productForm = this.fb.group({
@@ -44,6 +46,9 @@ export class ProductsComponent implements OnInit {
     });
   }
   ngOnInit(): void {
+    // Set breadcrumbs for products management
+    this.adminBreadcrumbService.setProductsBreadcrumbs();
+    
     // this.products$ = this.productService.GetProductsPagination(this.pageIndex, this.pageSize);
     this.loadProducts();
 
@@ -95,6 +100,110 @@ export class ProductsComponent implements OnInit {
     }
   }
 
+  manageVariantStock(productId: number, variantId: number) {
+    // Navigate to variant stock management or open a modal
+    // For now, we'll navigate to the product form with variant focus
+    this.router.navigate(['../product-form'], { 
+      relativeTo: this.route, 
+      queryParams: { 
+        productId: productId,
+        variantId: variantId,
+        tab: 'variants'
+      } 
+    });
+  }
+
+  getVariantStock(productId: number, variantId: number, storeId: number): number {
+    // This will be populated when we load variant stock data
+    return this.variantStockData[`${productId}-${variantId}-${storeId}`] || 0;
+  }
+
+  getTotalVariantStock(productId: number, variantId: number): number {
+    // Calculate total stock across all stores for this variant
+    let total = 0;
+    this.stores.forEach(store => {
+      total += this.getVariantStock(productId, variantId, store.id);
+    });
+    return total;
+  }
+
+  getVariantStockForStore(productId: number, variantId: number, storeId: number): number {
+    // Alias for getVariantStock to make template more readable
+    return this.getVariantStock(productId, variantId, storeId);
+  }
+
+  // Helper methods for unified display
+  hasVariantStock(product: Product): boolean {
+    if (!product.variants || product.variants.length === 0) return false;
+    
+    return product.variants.some(variant => {
+      // Check if this variant has stock in any store
+      return this.getStoresForVariant(product.id, variant.id!).length > 0;
+    });
+  }
+
+  getMainProductInventories(product: Product): any[] {
+    // Return only main product inventories (not variant-specific)
+    return product.inventories?.filter(inv => !inv.variantId) || [];
+  }
+
+  getTotalVariantsWithStock(product: Product): number {
+    if (!product.variants) return 0;
+    
+    return product.variants.filter(variant => {
+      return this.getStoresForVariant(product.id, variant.id!).length > 0;
+    }).length;
+  }
+
+  getStoresForVariant(productId: number, variantId: number): Store[] {
+    // Get stores that have stock for this specific variant
+    const stores: Store[] = [];
+    
+    // Get all stores from the variant stock data
+    const variantStock = this.variantStockData;
+    
+    // Find all unique store IDs that have stock for this variant
+    const storeIds = new Set<number>();
+    
+    Object.keys(variantStock).forEach(key => {
+      const [pid, vid, sid] = key.split('-').map(Number);
+      if (pid === productId && vid === variantId && variantStock[key] > 0) {
+        storeIds.add(sid);
+      }
+    });
+    
+    // Convert store IDs to store objects using the stores array
+    storeIds.forEach(storeId => {
+      const store = this.stores.find(s => s.id === storeId);
+      if (store) {
+        stores.push(store);
+      }
+    });
+    
+    return stores;
+  }
+
+  variantStockData: { [key: string]: number } = {};
+
+  loadVariantStockData(products: Product[]): void {
+    // Variant stock data is now included in the main API response
+    // No need for separate API calls - data is already available in product.variantStockData
+    products.forEach(product => {
+      if (product.variants && product.variants.length > 0 && product.variantStockData) {
+        // Process the variant stock data that's already included in the API response
+        Object.keys(product.variantStockData).forEach(storeKey => {
+          const stockData = product.variantStockData![storeKey] as any[];
+          const storeId = storeKey.replace('store_', '');
+          
+          stockData.forEach(variantStock => {
+            const key = `${product.id}-${variantStock.variantId}-${storeId}`;
+            this.variantStockData[key] = variantStock.availableQuantity;
+          });
+        });
+      }
+    });
+  }
+
   loadProducts(loadType: string = 'GET'): void {
     if (loadType === 'GET') {
       this.searchForm.reset();
@@ -102,6 +211,9 @@ export class ProductsComponent implements OnInit {
         tap(res => {
           this.totalPages = Math.ceil(res.totals / this.pageSize);
           this.totalPagesArray = Array.from({ length: this.totalPages }, (_, i) => i + 1);
+          
+          // Load variant stock data for all products
+          this.loadVariantStockData(res.products);
         })
       );
     }

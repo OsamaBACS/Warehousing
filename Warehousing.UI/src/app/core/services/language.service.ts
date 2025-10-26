@@ -9,7 +9,13 @@ export class LanguageService {
   private _currentLang = 'ar';
   constructor(
     private translate: TranslateService
-  ) { }
+  ) {
+    // Initialize with Arabic as default
+    this.translate.setDefaultLang('ar');
+    this.translate.use('ar');
+    document.documentElement.setAttribute('lang', 'ar');
+    document.documentElement.setAttribute('dir', 'rtl');
+  }
 
   get currentLang(): string {
     return this._currentLang;

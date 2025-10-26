@@ -52,30 +52,8 @@ namespace Warehousing.Repo.Classes
                 product.CostPrice = dto.CostPrice;
                 product.SellingPrice = dto.SellingPrice;
                 
-                // Handle inventories - if StoreId is provided, create inventory for that store
-                if (dto.StoreId.HasValue && dto.StoreId.Value > 0)
-                {
-                    var inventory = new Inventory
-                    {
-                        ProductId = product.Id, // Will be set after product is created
-                        StoreId = dto.StoreId.Value,
-                        Quantity = 0, // Default quantity
-                    };
-                    product.Inventories.Add(inventory);
-                }
-                
-                // Also handle any existing inventories from DTO
-                foreach (var item in dto.Inventories)
-                {
-                    var inventory = new Inventory
-                    {
-                        Id = item.Id,
-                        ProductId = item.ProductId,
-                        StoreId = item.StoreId,
-                        Quantity = item.Quantity,
-                    };
-                    product.Inventories.Add(inventory);
-                }
+                // Products are global - inventory is managed separately through Inventory table
+                // No need to create inventory records during product creation
 
                 var createdProduct = await CreateAsync(product);
 
@@ -133,35 +111,8 @@ namespace Warehousing.Repo.Classes
                     product.CostPrice = dto.CostPrice;
                     product.SellingPrice = dto.SellingPrice;
                     
-                    // Handle inventories - if StoreId is provided, create inventory for that store
-                    if (dto.StoreId.HasValue && dto.StoreId.Value > 0)
-                    {
-                        // Check if inventory already exists for this store
-                        var existingInventory = product.Inventories.FirstOrDefault(i => i.StoreId == dto.StoreId.Value);
-                        if (existingInventory == null)
-                        {
-                            var inventory = new Inventory
-                            {
-                                ProductId = product.Id,
-                                StoreId = dto.StoreId.Value,
-                                Quantity = 0, // Default quantity
-                            };
-                            product.Inventories.Add(inventory);
-                        }
-                    }
-                    
-                    // Also handle any existing inventories from DTO
-                    foreach (var item in dto.Inventories)
-                    {
-                        var inventory = new Inventory
-                        {
-                            Id = item.Id,
-                            ProductId = item.ProductId,
-                            StoreId = item.StoreId,
-                            Quantity = item.Quantity,
-                        };
-                        product.Inventories.Add(inventory);
-                    }
+                    // Products are global - inventory is managed separately through Inventory table
+                    // No need to handle inventory during product updates
 
                     var updatedProduct = await UpdateAsync(product);
 

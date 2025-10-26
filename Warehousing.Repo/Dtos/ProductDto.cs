@@ -18,9 +18,6 @@ namespace Warehousing.Repo.Dtos
         public UnitDto? Unit { get; set; }
 
         public ICollection<InventoryDto> Inventories { get; set; } = new List<InventoryDto>();
-        
-        // StoreId for frontend compatibility (can be null or set to primary store)
-        public int? StoreId { get; set; }
 
         public IFormFile? Image { get; set; }
         public string? ImagePath { get; set; } = string.Empty;
@@ -28,5 +25,8 @@ namespace Warehousing.Repo.Dtos
         // Variants and Modifiers support
         public ICollection<ProductVariantDto> Variants { get; set; } = new List<ProductVariantDto>();
         public ICollection<ProductModifierGroupDto> ModifierGroups { get; set; } = new List<ProductModifierGroupDto>();
+        
+        // Variant stock information for efficient loading
+        public Dictionary<string, object>? VariantStockData { get; set; }
     }
 }

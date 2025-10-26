@@ -6,6 +6,7 @@ import { StoreService } from '../../admin/services/store.service';
 import { ProductVariantService } from '../services/product-variant.service';
 import { ProductModifierService } from '../services/product-modifier.service';
 import { CartService } from '../../shared/services/cart.service';
+import { OrderBreadcrumbService } from '../services/order-breadcrumb.service';
 import { Product } from '../../admin/models/product';
 import { StoreSimple } from '../../admin/models/StoreSimple';
 import { ProductVariant } from '../models/ProductVariant';
@@ -54,6 +55,7 @@ export class ProductDetailComponent implements OnInit {
     private productVariantService: ProductVariantService,
     private productModifierService: ProductModifierService,
     private cartService: CartService,
+    private orderBreadcrumbService: OrderBreadcrumbService,
     private fb: FormBuilder
   ) {
     this.productForm = this.fb.group({
@@ -70,7 +72,6 @@ export class ProductDetailComponent implements OnInit {
       
       if (this.productId) {
         this.loadProduct();
-        this.loadStores();
         this.loadProductVariants();
         this.loadProductModifiers();
       }
@@ -88,6 +89,30 @@ export class ProductDetailComponent implements OnInit {
     this.productsService.GetProductById(this.productId).subscribe({
       next: (product) => {
         this.product = product;
+        console.log('Loaded product:', product);
+        console.log('Product inventories:', product.inventories);
+        
+        // Log each inventory record
+        if (product.inventories) {
+          product.inventories.forEach((inventory, index) => {
+            console.log(`Inventory ${index}:`, {
+              id: inventory.id,
+              productId: inventory.productId,
+              storeId: inventory.storeId,
+              variantId: inventory.variantId,
+              quantity: inventory.quantity
+            });
+          });
+        }
+        
+        // Load variant stock data
+        this.loadVariantStockData();
+        // Load stores after product is loaded (so we can filter by inventory)
+        this.loadStores();
+        
+        // Set breadcrumbs for product detail
+        this.setProductDetailBreadcrumbs();
+        
         this.isLoading = false;
       },
       error: (err) => {
@@ -98,14 +123,70 @@ export class ProductDetailComponent implements OnInit {
   }
 
   loadStores(): void {
+    console.log('Loading stores...');
     this.storeService.GetActiveStores().subscribe({
       next: (stores) => {
-        this.allStores = stores;
+        console.log('Raw stores loaded:', stores);
+        // Filter stores to only show those that have the product in inventory
+        this.allStores = this.filterStoresWithProductInventory(stores);
+        console.log('Filtered stores:', this.allStores);
       },
       error: (err) => {
         console.error('Error loading stores:', err);
       }
     });
+  }
+
+  // Filter stores to only show those that have the product in inventory
+  private filterStoresWithProductInventory(allStores: StoreSimple[]): StoreSimple[] {
+    console.log('Filtering stores for product:', this.product);
+    console.log('Product inventories:', this.product?.inventories);
+    
+    if (!this.product || !this.product.inventories || this.product.inventories.length === 0) {
+      console.log('No product or no inventories found');
+      return [];
+    }
+
+    // If a variant is selected, filter by variant inventory
+    if (this.selectedVariantId) {
+      console.log('Filtering by variant:', this.selectedVariantId);
+      return this.filterStoresWithVariantInventory(allStores);
+    }
+
+    // Get store IDs that have the product with quantity > 0
+    const validStoreIds = this.product.inventories
+      .filter(inv => inv.quantity > 0)
+      .map(inv => inv.storeId);
+
+    console.log('Valid store IDs:', validStoreIds);
+    console.log('All stores:', allStores);
+
+    // Return only stores that have the product in inventory
+    const filteredStores = allStores.filter(store => validStoreIds.includes(store.id));
+    console.log('Filtered stores:', filteredStores);
+    
+    return filteredStores;
+  }
+
+  // Filter stores to only show those that have the selected variant in inventory
+  private filterStoresWithVariantInventory(allStores: StoreSimple[]): StoreSimple[] {
+    if (!this.product || !this.selectedVariantId) {
+      return [];
+    }
+
+    // Find the selected variant
+    const selectedVariant = this.product.variants?.find(v => v.id === this.selectedVariantId);
+    if (!selectedVariant || !selectedVariant.inventories || selectedVariant.inventories.length === 0) {
+      return [];
+    }
+
+    // Get store IDs that have the variant with quantity > 0
+    const validStoreIds = selectedVariant.inventories
+      .filter((inv: any) => inv.quantity > 0)
+      .map((inv: any) => inv.storeId);
+
+    // Return only stores that have the variant in inventory
+    return allStores.filter(store => validStoreIds.includes(store.id));
   }
 
   loadProductVariants(): void {
@@ -148,6 +229,28 @@ export class ProductDetailComponent implements OnInit {
   onVariantChange(variantId: number | null): void {
     this.selectedVariantId = variantId;
     this.productForm.patchValue({ variantId });
+    
+    // Refresh store list based on variant selection
+    this.refreshStoreList();
+  }
+
+  // Refresh store list based on current variant selection
+  private refreshStoreList(): void {
+    this.storeService.GetActiveStores().subscribe({
+      next: (stores) => {
+        // Filter stores to only show those that have the product/variant in inventory
+        this.allStores = this.filterStoresWithProductInventory(stores);
+        
+        // Clear store selection if current store is no longer valid
+        if (this.selectedStoreId && !this.allStores.find(s => s.id === this.selectedStoreId)) {
+          this.selectedStoreId = null;
+          this.productForm.patchValue({ storeId: null });
+        }
+      },
+      error: (err) => {
+        console.error('Error refreshing stores:', err);
+      }
+    });
   }
 
   onModifierChange(modifierId: number, optionId: number, isChecked: boolean): void {
@@ -207,8 +310,8 @@ export class ProductDetailComponent implements OnInit {
         return;
       }
 
-      // Add to cart
-      this.cartService.addToCart(this.product, this.quantity, this.selectedStoreId);
+      // Add to cart with variant and modifier information
+      this.cartService.addToCart(this.product, this.quantity, this.selectedStoreId, this.selectedVariantId || undefined, this.selectedModifiers);
       
       // Show success message
       alert('تم إضافة المنتج إلى السلة بنجاح');
@@ -224,11 +327,35 @@ export class ProductDetailComponent implements OnInit {
     }
   }
 
+  setProductDetailBreadcrumbs(): void {
+    if (this.product && this.categoryId && this.subCategoryId) {
+      // Get category and subcategory names from the product
+      const categoryName = this.product.subCategory?.category?.nameAr || 'التصنيف';
+      const subCategoryName = this.product.subCategory?.nameAr || 'التصنيف الفرعي';
+      const productName = this.product.nameAr || 'المنتج';
+      
+      this.orderBreadcrumbService.setProductDetailBreadcrumbs(
+        this.orderTypeId,
+        this.categoryId,
+        categoryName,
+        this.subCategoryId,
+        subCategoryName,
+        productName
+      );
+    }
+  }
+
+
   goBack(): void {
-    if (this.categoryId && this.subCategoryId) {
+    // Try to get category and subcategory from product data first
+    if (this.product?.subCategory?.categoryId && this.product?.subCategoryId) {
+      // Navigate back to order products using product data
+      this.router.navigate(['/order', this.orderTypeId, 'categories', this.product.subCategory.categoryId, 'sub-categories', this.product.subCategoryId, 'products']);
+    } else if (this.categoryId && this.subCategoryId) {
+      // Fallback to route parameters
       this.router.navigate(['/order', this.orderTypeId, 'categories', this.categoryId, 'sub-categories', this.subCategoryId, 'products']);
     } else {
-      // Fallback to categories if we can't determine the exact path
+      // Final fallback to categories
       this.router.navigate(['/order', this.orderTypeId, 'categories']);
     }
   }
@@ -269,4 +396,281 @@ export class ProductDetailComponent implements OnInit {
     const inventory = this.product.inventories.find(inv => inv.storeId === storeId);
     return inventory?.quantity || 0;
   }
+
+  // Variant stock data for unified display
+  variantStockData: { [key: string]: number } = {};
+
+  // Load variant stock data when product is loaded
+  loadVariantStockData(): void {
+    console.log('Loading variant stock data...');
+    console.log('Product:', this.product);
+    console.log('Product variants:', this.product?.variants);
+    console.log('Product variantStockData:', this.product?.variantStockData);
+    
+    if (this.product?.variants && this.product.variants.length > 0 && this.product.variantStockData) {
+      // Process the variant stock data that's already included in the API response
+      const variantStockData = this.product.variantStockData;
+      console.log('Variant stock data:', variantStockData);
+      
+      if (variantStockData) {
+        Object.keys(variantStockData).forEach(storeKey => {
+          const stockData = variantStockData[storeKey] as any[];
+          console.log(`Store ${storeKey} stock data:`, stockData);
+          
+          if (stockData) {
+            const storeId = storeKey.replace('store_', '');
+            
+            stockData.forEach(variantStock => {
+              const key = `${this.product!.id}-${variantStock.variantId}-${storeId}`;
+              this.variantStockData[key] = variantStock.availableQuantity;
+              console.log(`Set variant stock: ${key} = ${variantStock.availableQuantity}`);
+            });
+          }
+        });
+      }
+    } else {
+      console.log('No variant stock data available, checking for variant-specific inventory');
+      // Check if inventories have variant information
+      if (this.product?.inventories) {
+        this.product.inventories.forEach(inventory => {
+          console.log('Processing inventory:', inventory);
+          
+          // Check if this inventory record has a variant ID
+          if (inventory.variantId) {
+            const key = `${this.product!.id}-${inventory.variantId}-${inventory.storeId}`;
+            this.variantStockData[key] = inventory.quantity;
+            console.log(`Set variant stock from inventory: ${key} = ${inventory.quantity}`);
+          } else {
+            console.log('Inventory record has no variant ID, skipping');
+          }
+        });
+      }
+    }
+    
+    console.log('Final variant stock data:', this.variantStockData);
+  }
+
+  getVariantStock(productId: number, variantId: number, storeId: number): number {
+    // This will be populated when we load variant stock data
+    return this.variantStockData[`${productId}-${variantId}-${storeId}`] || 0;
+  }
+
+  // Enhanced cart management methods
+  getStoresForVariant(variantId: number): StoreSimple[] {
+    console.log('Getting stores for variant:', variantId);
+    console.log('All stores:', this.allStores);
+    
+    // Filter stores that have this variant in stock
+    const stores = this.allStores.filter(store => {
+      const stock = this.getVariantStock(this.product!.id, variantId, store.id);
+      console.log(`Variant ${variantId} stock in store ${store.id}:`, stock);
+      return stock > 0;
+    });
+    
+    console.log('Filtered stores for variant:', stores);
+    
+    // If no stores have stock, return empty array (don't show variant if no stock)
+    if (stores.length === 0) {
+      console.log('No stores with stock found for variant:', variantId);
+      return [];
+    }
+    
+    return stores;
+  }
+
+  getVariantStockForStore(variantId: number, storeId: number): number {
+    return this.getVariantStock(this.product!.id, variantId, storeId);
+  }
+
+  // Cart quantity management for main product (no variants)
+  getCartQuantityForProductStore(productId: number, storeId: number): number {
+    try {
+      const quantity = this.cartService.getCartItemQuantity(productId, storeId);
+      console.log(`Cart quantity for product ${productId}, store ${storeId}:`, quantity);
+      return quantity;
+    } catch (error) {
+      console.error('Error getting cart quantity:', error);
+      return 0;
+    }
+  }
+
+  increaseQuantity(productId: number, storeId: number): void {
+    console.log('Increase quantity called for product:', productId, 'store:', storeId);
+    if (!this.product) {
+      console.log('No product available');
+      return;
+    }
+    
+    const currentQuantity = this.getCartQuantityForProductStore(productId, storeId);
+    const availableStock = this.getStoreQuantity(storeId);
+    
+    console.log('Current quantity:', currentQuantity, 'Available stock:', availableStock);
+    
+    if (currentQuantity < availableStock) {
+      console.log('Adding to cart...');
+      this.cartService.addToCart(this.product, 1, storeId);
+    } else {
+      console.log('Cannot add more - stock limit reached');
+    }
+  }
+
+  decreaseQuantity(productId: number, storeId: number): void {
+    console.log('Decrease quantity called for product:', productId, 'store:', storeId);
+    if (!this.product) {
+      console.log('No product available');
+      return;
+    }
+    
+    const currentQuantity = this.getCartQuantityForProductStore(productId, storeId);
+    console.log('Current quantity:', currentQuantity);
+    
+    if (currentQuantity > 0) {
+      console.log('Removing from cart...');
+      this.cartService.removeFromCartWithDetails(productId, storeId, 1);
+    } else {
+      console.log('Cannot decrease - quantity is already 0');
+    }
+  }
+
+  // Cart quantity management for variants
+  getCartQuantityForVariantStore(variantId: number, storeId: number): number {
+    const quantity = this.cartService.getCartItemQuantity(this.product!.id, storeId, variantId);
+    console.log(`Cart quantity for variant ${variantId}, store ${storeId}:`, quantity);
+    return quantity;
+  }
+
+  increaseVariantQuantity(variantId: number, storeId: number): void {
+    console.log('Increase variant quantity called for variant:', variantId, 'store:', storeId);
+    if (!this.product) {
+      console.log('No product available');
+      return;
+    }
+    
+    const currentQuantity = this.getCartQuantityForVariantStore(variantId, storeId);
+    const availableStock = this.getVariantStockForStore(variantId, storeId);
+    
+    console.log('Current quantity:', currentQuantity, 'Available stock:', availableStock);
+    
+    if (currentQuantity < availableStock) {
+      console.log('Adding variant to cart...');
+      this.cartService.addToCart(this.product, 1, storeId, variantId);
+    } else {
+      console.log('Cannot add more - stock limit reached');
+    }
+  }
+
+  decreaseVariantQuantity(variantId: number, storeId: number): void {
+    console.log('Decrease variant quantity called for variant:', variantId, 'store:', storeId);
+    if (!this.product) {
+      console.log('No product available');
+      return;
+    }
+    
+    const currentQuantity = this.getCartQuantityForVariantStore(variantId, storeId);
+    console.log('Current quantity:', currentQuantity);
+    
+    if (currentQuantity > 0) {
+      console.log('Removing variant from cart...');
+      this.cartService.removeFromCartWithDetails(this.product.id, storeId, 1, variantId);
+    } else {
+      console.log('Cannot decrease - quantity is already 0');
+    }
+  }
+
+  // Get total quantity in cart for this product
+  getTotalCartQuantity(): number {
+    if (!this.product) return 0;
+    
+    let total = 0;
+    
+    // Add quantities for main product (no variants)
+    if (this.productVariants.length === 0) {
+      this.allStores.forEach(store => {
+        total += this.getCartQuantityForProductStore(this.product!.id, store.id);
+      });
+    } else {
+      // Add quantities for all variants
+      this.productVariants.forEach(variant => {
+        this.getStoresForVariant(variant.id!).forEach(store => {
+          total += this.getCartQuantityForVariantStore(variant.id!, store.id);
+        });
+      });
+    }
+    
+    return total;
+  }
+
+  // Manual quantity setting methods
+  setProductQuantity(productId: number, storeId: number, event: any): void {
+    let newQuantity = parseInt(event.target.value) || 0;
+    const maxQuantity = this.getStoreQuantity(storeId);
+    
+    console.log('Setting product quantity:', productId, storeId, newQuantity, 'max:', maxQuantity);
+    
+    // Validate quantity
+    if (newQuantity < 0) {
+      event.target.value = 0;
+      return;
+    }
+    
+    if (newQuantity > maxQuantity) {
+      event.target.value = maxQuantity;
+      newQuantity = maxQuantity;
+    }
+    
+    // Get current quantity
+    const currentQuantity = this.getCartQuantityForProductStore(productId, storeId);
+    
+    if (newQuantity === 0) {
+      // Remove from cart if quantity is 0
+      if (currentQuantity > 0) {
+        this.cartService.removeFromCartWithDetails(productId, storeId, currentQuantity);
+      }
+    } else if (newQuantity > currentQuantity) {
+      // Add to cart
+      const quantityToAdd = newQuantity - currentQuantity;
+      this.cartService.addToCart(this.product!, quantityToAdd, storeId);
+    } else if (newQuantity < currentQuantity) {
+      // Remove from cart
+      const quantityToRemove = currentQuantity - newQuantity;
+      this.cartService.removeFromCartWithDetails(productId, storeId, quantityToRemove);
+    }
+  }
+
+  setVariantQuantity(variantId: number, storeId: number, event: any): void {
+    let newQuantity = parseInt(event.target.value) || 0;
+    const maxQuantity = this.getVariantStockForStore(variantId, storeId);
+    
+    console.log('Setting variant quantity:', variantId, storeId, newQuantity, 'max:', maxQuantity);
+    
+    // Validate quantity
+    if (newQuantity < 0) {
+      event.target.value = 0;
+      return;
+    }
+    
+    if (newQuantity > maxQuantity) {
+      event.target.value = maxQuantity;
+      newQuantity = maxQuantity;
+    }
+    
+    // Get current quantity
+    const currentQuantity = this.getCartQuantityForVariantStore(variantId, storeId);
+    
+    if (newQuantity === 0) {
+      // Remove from cart if quantity is 0
+      if (currentQuantity > 0) {
+        this.cartService.removeFromCartWithDetails(this.product!.id, storeId, currentQuantity, variantId);
+      }
+    } else if (newQuantity > currentQuantity) {
+      // Add to cart
+      const quantityToAdd = newQuantity - currentQuantity;
+      this.cartService.addToCart(this.product!, quantityToAdd, storeId, variantId);
+    } else if (newQuantity < currentQuantity) {
+      // Remove from cart
+      const quantityToRemove = currentQuantity - newQuantity;
+      this.cartService.removeFromCartWithDetails(this.product!.id, storeId, quantityToRemove, variantId);
+    }
+  }
+
 }

@@ -6,7 +6,7 @@
            [ngClass]="{ 'bg-white text-dark': !isDarkMode, 'bg-dark text-light': isDarkMode }">
         <div class="card-body text-center">
           <i class="{{ card.icon }} fs-3 mb-2"></i>
-          <div class="fs-5">{{ card.label }}</div>
+          <div class="fs-5">{{ card.label | translate }}</div>
         </div>
       </div>
     </a>
@@ -18,7 +18,7 @@
   <div class="col-12">
     <h4 class="mb-4">
       <i class="bi bi-graph-up me-2"></i>
-      التقارير والتحليلات
+      {{ 'REPORTS.TITLE' | translate }}
     </h4>
   </div>
   <div class="col-6 col-md-4 col-lg-3" *ngFor="let card of reportCards">
@@ -27,8 +27,8 @@
            [ngClass]="{ 'bg-white text-dark': !isDarkMode, 'bg-dark text-light': isDarkMode }">
         <div class="card-body text-center">
           <i class="{{ card.icon }} fs-3 mb-2 text-primary"></i>
-          <div class="fs-5">{{ card.label }}</div>
-          <div class="fs-6 text-muted" *ngIf="card.description">{{ card.description }}</div>
+          <div class="fs-5">{{ card.label | translate }}</div>
+          <div class="fs-6 text-muted" *ngIf="card.description">{{ card.description | translate }}</div>
         </div>
       </div>
     </a>

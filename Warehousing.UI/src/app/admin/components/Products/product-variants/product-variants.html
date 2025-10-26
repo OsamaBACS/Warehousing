@@ -46,16 +46,42 @@
             <input type="number" id="costAdjustment" formControlName="costAdjustment" class="form-control" step="0.01">
           </div>
         </div>
-        <div class="col-md-3">
-          <div class="form-group">
-            <label for="stockQuantity">Stock Quantity</label>
-            <input type="number" id="stockQuantity" formControlName="stockQuantity" class="form-control" step="0.01">
-          </div>
-        </div>
+        <!-- Stock quantity is managed through Inventory table per variant per store -->
         <div class="col-md-3">
           <div class="form-group">
             <label for="reorderLevel">Reorder Level</label>
             <input type="number" id="reorderLevel" formControlName="reorderLevel" class="form-control" step="0.01">
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="form-group">
+            <label for="stockQuantity">Stock Quantity</label>
+            <input type="number" id="stockQuantity" formControlName="stockQuantity" class="form-control" step="0.01" min="0">
+          </div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-md-6">
+          <div class="form-group">
+            <label for="storeId">Store *</label>
+            <select id="storeId" formControlName="storeId" class="form-control">
+              <option value="">Select a store</option>
+              <option *ngFor="let store of stores" [value]="store.id">
+                {{ store.nameAr }}
+              </option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stock Information -->
+      <div class="row">
+        <div class="col-md-12">
+          <div class="alert alert-info">
+            <i class="fas fa-info-circle"></i>
+            <strong>Stock Management:</strong> Each variant has its own stock quantity managed through the Inventory table. 
+            Stock is tracked per variant per store for granular control.
           </div>
         </div>
       </div>
@@ -105,7 +131,7 @@
             <th>Name</th>
             <th>Code</th>
             <th>Price Adjustment</th>
-            <th>Stock Quantity</th>
+            <th>Stock Info</th>
             <th>Status</th>
             <th>Default</th>
             <th>Actions</th>
@@ -116,7 +142,14 @@
             <td>{{ variant.name }}</td>
             <td>{{ variant.code || '-' }}</td>
             <td>{{ variant.priceAdjustment || 0 | currency }}</td>
-            <td>{{ variant.stockQuantity || 0 }}</td>
+            <td>
+              <div class="variant-stock-display">
+                <span class="badge badge-info">
+                  {{ getTotalVariantStock(variant.id!) }} {{ getUnitName() }}
+                </span>
+                <small class="text-muted d-block">Total Stock</small>
+              </div>
+            </td>
             <td>
               <span class="badge" [class.badge-success]="variant.isActive" [class.badge-danger]="!variant.isActive">
                 {{ variant.isActive ? 'Active' : 'Inactive' }}

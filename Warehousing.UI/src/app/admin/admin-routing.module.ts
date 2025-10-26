@@ -45,6 +45,7 @@ import { OrderItemsListComponent } from "./components/Orders/order-items-list/or
 import { StoreTransferFormComponent } from "./components/StoreTransfers/store-transfer-form/store-transfer-form.component";
 import { InventoryManagementComponent } from "./components/Inventory/inventory-management/inventory-management.component";
 import { InitialStockComponent } from "./components/initial-stock/initial-stock.component";
+import { ModifierManagementComponent } from "./components/Products/modifier-management/modifier-management.component";
 
 
 const routes: Routes = [
@@ -74,6 +75,12 @@ const routes: Routes = [
           StoresResolver: StoresResolver,
           subCategoriesResolver: SubCategoriesResolver,
         }
+      },
+      {
+        path: 'modifier-management',
+        component: ModifierManagementComponent,
+        canActivate: [PermissionGuard],
+        data: { permission: [PermissionsEnum.VIEW_PRODUCTS, PermissionsEnum.EDIT_PRODUCT] }
       },
       { 
         path: 'users', component: UsersComponent,

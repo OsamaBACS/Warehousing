@@ -5,6 +5,8 @@ import { Product } from '../../admin/models/product';
 import { OrderDto } from '../../admin/models/OrderDto';
 import { ProductsService } from '../../admin/services/products.service';
 import { NotificationService } from '../../core/services/notification.service';
+import { StoreService } from '../../admin/services/store.service';
+import { Store } from '../../admin/models/store';
 
 @Injectable({
   providedIn: 'root'
@@ -14,15 +16,39 @@ export class CartService {
   constructor(
     private fb: FormBuilder,
     private productsService: ProductsService,
-    private notification: NotificationService
+    private notification: NotificationService,
+    private storeService: StoreService
   ) {
     this.loadCartFromLocalStorage();
+    this.loadStores();
   }
 
-  orderTypeId: number = 0;
+  orderTypeId: number = 1; // Default to Purchase (1) instead of 0
   public cartForm!: FormGroup;
   cartCount$ = new BehaviorSubject<number>(0);
   orderObject!: OrderDto;
+  stores: Store[] = [];
+
+  // Method to set orderTypeId and update form
+  setOrderTypeId(orderTypeId: number): void {
+    this.orderTypeId = orderTypeId;
+    if (this.cartForm) {
+      this.cartForm.patchValue({ orderTypeId: orderTypeId });
+      this.saveCartToLocalStorage();
+    }
+  }
+
+  // Load stores from service
+  private loadStores(): void {
+    this.storeService.GetStores().subscribe({
+      next: (stores) => {
+        this.stores = stores;
+      },
+      error: (error) => {
+        console.error('Error loading stores:', error);
+      }
+    });
+  }
 
   // Load both carts from localStorage
   private loadCartFromLocalStorage(): void {
@@ -35,11 +61,12 @@ export class CartService {
     const savedcartForm = localStorage.getItem('cartForm');
     if (savedcartForm) {
       const parsed = JSON.parse(savedcartForm);
+      this.orderTypeId = parsed.orderTypeId || this.orderTypeId; // Update the service property
       this.cartForm = this.fb.group({
         id: [parsed.id || 0],
         orderDate: [parsed.orderDate || this.formatDate(new Date().toString())],
         totalAmount: [parsed.totalAmount || 0],
-        orderTypeId: [this.orderTypeId],
+        orderTypeId: [parsed.orderTypeId || this.orderTypeId],
         customerId: [parsed?.customerId || null],
         supplierId: [parsed?.supplierId || null],
         statusId: [parsed.statusId || null],
@@ -113,14 +140,25 @@ export class CartService {
   }
 
   // Add or update product in cart
-  addToCart(product: Product, quantity: number = 1, storeId?: number): void {
+  addToCart(product: Product, quantity: number = 1, storeId?: number, variantId?: number, selectedModifiers?: { [modifierId: number]: number[] }): void {
     const itemsArray = this.cartItems;
 
-    // Use the provided storeId, fallback to product.storeId, or null
-    const targetStoreId = storeId || product.storeId || null;
+    // Validate required fields
+    if (!storeId) {
+      this.notification.warning('يجب اختيار المستودع', 'تحذير');
+      return;
+    }
+
+    // Check if product has variants and variant is required
+    if (product.variants && product.variants.length > 0 && !variantId) {
+      this.notification.warning('يجب اختيار متغير للمنتج', 'تحذير');
+      return;
+    }
 
     const index = itemsArray.controls.findIndex(
-      ctrl => ctrl.value.productId === product.id && ctrl.value.storeId === targetStoreId
+      ctrl => ctrl.value.productId === product.id && 
+               ctrl.value.storeId === storeId && 
+               ctrl.value.variantId === variantId
     );
 
     if (index > -1) {
@@ -136,14 +174,16 @@ export class CartService {
         this.saveCartToLocalStorage();
       }
     } else {
-      // Validate stock before adding to cart
-      this.validateStockBeforeAdd(product, targetStoreId, quantity).then(isValid => {
+      // Validate store has product inventory and variant if applicable
+      this.validateStoreAndVariantInventory(product, storeId, quantity, variantId).then(isValid => {
         if (isValid) {
           const itemGroup = this.createCartItemGroup({
             productId: product.id,
+            variantId: variantId || null, // Include variant ID
+            selectedModifiers: selectedModifiers || {}, // Include modifiers
             unitCost: product.costPrice || 0,
             unitPrice: product.sellingPrice || 0,
-            storeId: targetStoreId,
+            storeId: storeId,
             quantity: quantity
           });
 
@@ -187,6 +227,95 @@ export class CartService {
       this.notification.error('خطأ في التحقق من المخزون', 'خطأ');
       return false;
     }
+  }
+
+  // Validate store has product inventory and variant if applicable
+  private async validateStoreAndVariantInventory(product: Product, storeId: number, quantity: number, variantId?: number): Promise<boolean> {
+    if (this.orderTypeId === 1) { // Purchase order - no stock validation needed
+      return true;
+    }
+
+    try {
+      // First check if the store has the product in inventory
+      const storeHasProduct = product.inventories?.some(inv => inv.storeId === storeId && inv.quantity > 0);
+      
+      if (!storeHasProduct) {
+        this.notification.error(`المنتج غير متوفر في المستودع المحدد`, 'خطأ في المخزون');
+        return false;
+      }
+
+      // If product has variants, check variant-specific inventory
+      if (product.variants && product.variants.length > 0 && variantId) {
+        const variant = product.variants.find(v => v.id === variantId);
+        if (!variant) {
+          this.notification.error(`المتغير المحدد غير موجود`, 'خطأ في المتغير');
+          return false;
+        }
+
+        // Check if variant has inventory in the selected store
+        const variantHasInventory = variant.inventories?.some((inv: any) => inv.storeId === storeId && inv.quantity > 0);
+        
+        if (!variantHasInventory) {
+          this.notification.error(`المتغير غير متوفر في المستودع المحدد`, 'خطأ في المخزون');
+          return false;
+        }
+
+        // Validate variant stock quantity
+        const variantInventory = variant.inventories?.find((inv: any) => inv.storeId === storeId);
+        if (variantInventory && variantInventory.quantity < quantity) {
+          this.notification.error(`الكمية المطلوبة (${quantity}) تتجاوز المخزون المتاح (${variantInventory.quantity}) للمتغير`, 'خطأ في المخزون');
+          return false;
+        }
+      } else if (product.variants && product.variants.length > 0 && !variantId) {
+        // Product has variants but no variant selected
+        this.notification.error(`يجب اختيار متغير للمنتج`, 'خطأ في الاختيار');
+        return false;
+      } else {
+        // No variants - validate main product stock
+        const productInventory = product.inventories?.find(inv => inv.storeId === storeId);
+        if (productInventory && productInventory.quantity < quantity) {
+          this.notification.error(`الكمية المطلوبة (${quantity}) تتجاوز المخزون المتاح (${productInventory.quantity})`, 'خطأ في المخزون');
+          return false;
+        }
+      }
+
+      return true;
+    } catch (error) {
+      console.error('Store and variant validation error:', error);
+      this.notification.error('خطأ في التحقق من المخزون', 'خطأ');
+      return false;
+    }
+  }
+
+  // Get valid stores for a product (stores that have the product in inventory)
+  getValidStoresForProduct(product: Product): Store[] {
+    if (!product.inventories || product.inventories.length === 0) {
+      return [];
+    }
+
+    // Get stores that have the product with quantity > 0
+    const validStoreIds = product.inventories
+      .filter(inv => inv.quantity > 0)
+      .map(inv => inv.storeId);
+
+    // Return stores that have the product in inventory
+    return this.stores.filter(store => validStoreIds.includes(store.id));
+  }
+
+  // Get valid stores for a product variant
+  getValidStoresForVariant(product: Product, variantId: number): Store[] {
+    const variant = product.variants?.find(v => v.id === variantId);
+    if (!variant || !variant.inventories || variant.inventories.length === 0) {
+      return [];
+    }
+
+    // Get stores that have the variant with quantity > 0
+    const validStoreIds = variant.inventories
+      .filter((inv: any) => inv.quantity > 0)
+      .map((inv: any) => inv.storeId);
+
+    // Return stores that have the variant in inventory
+    return this.stores.filter(store => validStoreIds.includes(store.id));
   }
 
   // Get cart item by product ID
@@ -259,6 +388,8 @@ export class CartService {
       id: [item?.id || null],
       storeId: [item?.storeId || null],
       productId: [item?.productId || null],
+      variantId: [item?.variantId || null], // Added variant support
+      selectedModifiers: [item?.selectedModifiers || {}], // Added modifier support
       quantity: [item?.quantity || 0],
       unitCost: [item?.unitCost || item?.costPrice || null],
       unitPrice: [item?.unitPrice || item?.sellingPrice || null],
@@ -267,7 +398,7 @@ export class CartService {
     });
   }
 
-  // Remove item
+  // Remove item (legacy method - kept for backward compatibility)
   removeFromCart(productId: number): void {
     const itemsArray = this.cartItems;
     const index = itemsArray.controls.findIndex(
@@ -338,5 +469,49 @@ export class CartService {
     const month = ('0' + (date.getMonth() + 1)).slice(-2); // Months are zero-based
     const day = ('0' + date.getDate()).slice(-2);
     return `${year}-${month}-${day}`;
+  }
+
+  // Enhanced cart management methods for direct quantity control
+  getCartItemQuantity(productId: number, storeId: number, variantId?: number): number {
+    const itemsArray = this.cartItems;
+    const item = itemsArray.controls.find(ctrl => {
+      const value = ctrl.value;
+      return value.productId === productId && 
+             value.storeId === storeId && 
+             (variantId === undefined ? !value.variantId : value.variantId === variantId);
+    });
+    
+    return item ? item.value.quantity : 0;
+  }
+
+  removeFromCartWithDetails(productId: number, storeId: number, quantity: number = 1, variantId?: number): void {
+    const itemsArray = this.cartItems;
+    const index = itemsArray.controls.findIndex(ctrl => {
+      const value = ctrl.value;
+      return value.productId === productId && 
+             value.storeId === storeId && 
+             (variantId === undefined ? !value.variantId : value.variantId === variantId);
+    });
+    
+    if (index > -1) {
+      const item = itemsArray.at(index);
+      const currentQuantity = item.value.quantity;
+      
+      if (currentQuantity <= quantity) {
+        // Remove the entire item
+        itemsArray.removeAt(index);
+      } else {
+        // Decrease quantity
+        item.patchValue({ quantity: currentQuantity - quantity });
+      }
+      
+      this.calculateTotal();
+      this.saveCartToLocalStorage();
+      
+      if (itemsArray.length <= 0) {
+        this.cartCount$.next(0);
+        this.orderTypeId = 0;
+      }
+    }
   }
 }

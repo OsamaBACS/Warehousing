@@ -39,6 +39,8 @@ import { InventoryManagementComponent } from './components/Inventory/inventory-m
 import { InitialStockComponent } from './components/initial-stock/initial-stock.component';
 import { ProductVariantsComponent } from './components/Products/product-variants/product-variants';
 import { ProductModifiersComponent } from './components/Products/product-modifiers/product-modifiers';
+import { ProductFormComponent } from './components/Products/product-form/product-form.component';
+import { ModifierManagementComponent } from './components/Products/modifier-management/modifier-management.component';
 
 
 
@@ -86,7 +88,9 @@ import { ProductModifiersComponent } from './components/Products/product-modifie
     ReactiveFormsModule,
     FormsModule,
     ProductVariantsComponent,
-    ProductModifiersComponent
+    ProductModifiersComponent,
+    ProductFormComponent,
+    ModifierManagementComponent
   ],
   providers: [
     CurrencyPipe,

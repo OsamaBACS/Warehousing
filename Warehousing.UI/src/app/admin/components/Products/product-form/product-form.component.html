@@ -1,5 +1,5 @@
 <div class="dialog-container p-3 p-md-4">
-  <h5 class="mb-4 text-center">إضافة / تعديل منتج</h5>
+  <h5 class="mb-4 text-center">{{ 'FORMS.ADD_EDIT' | translate }} {{ 'PRODUCTS.TITLE' | translate }}</h5>
 
   <form [formGroup]="productForm">
 
@@ -8,7 +8,7 @@
       <div class="col-12 col-sm-6 col-md-3">
         <div class="floating-label-input">
           <input class="form-control" formControlName="nameEn" placeholder=" " />
-          <label>الاسم بالانجليزي</label>
+          <label>{{ 'FORMS.NAME_ENGLISH' | translate }}</label>
         </div>
       </div>
 
@@ -16,7 +16,7 @@
       <div class="col-12 col-sm-6 col-md-3">
         <div class="floating-label-input">
           <input class="form-control" formControlName="nameAr" placeholder=" " />
-          <label>الاسم بالعربي</label>
+          <label>{{ 'FORMS.NAME_ARABIC' | translate }}</label>
         </div>
       </div>
 
@@ -96,7 +96,7 @@
       <div class="col-12">
         <div class="card">
           <div class="card-header">
-            <h5 class="mb-0">إدارة المتغيرات والتعديلات</h5>
+            <h5 class="mb-0">{{ 'PRODUCT_MANAGEMENT.VARIANT_MODIFIER_MANAGEMENT' | translate }}</h5>
           </div>
           <div class="card-body">
             <!-- Product Variants -->
@@ -110,7 +110,7 @@
 
             <!-- Product Modifiers -->
             <div>
-              <h6>تعديلات المنتج</h6>
+              <h6>{{ 'PRODUCT_MANAGEMENT.PRODUCT_MODIFIERS' | translate }}</h6>
               <app-product-modifiers 
                 [productId]="productForm.get('id')?.value" 
                 (modifiersUpdated)="onModifiersUpdated($event)">
@@ -123,8 +123,8 @@
 
     <!-- Actions -->
     <div class="col-12 mt-4 d-flex justify-content-end gap-2 flex-wrap">
-      <button class="btn btn-secondary flex-fill" (click)="cancel()">إلغاء</button>
-      <button class="btn btn-primary flex-fill" (click)="save()" [disabled]="productForm.invalid">حفظ</button>
+      <button class="btn btn-secondary flex-fill" (click)="cancel()">{{ 'SHARED.BUTTONS.CANCEL' | translate }}</button>
+      <button class="btn btn-primary flex-fill" (click)="save()" [disabled]="productForm.invalid">{{ 'SHARED.BUTTONS.SAVE' | translate }}</button>
     </div>
 
   </form>

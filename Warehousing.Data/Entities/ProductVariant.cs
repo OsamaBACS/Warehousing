@@ -25,8 +25,8 @@ namespace Warehousing.Data.Entities
         public decimal? PriceAdjustment { get; set; } = 0; // Can be positive or negative
         public decimal? CostAdjustment { get; set; } = 0;
         
-        // Inventory
-        public decimal? StockQuantity { get; set; }
+        // Inventory - Stock managed through Inventory table per variant per store
+        // StockQuantity is calculated from Inventory table
         public decimal? ReorderLevel { get; set; }
         
         // Status
@@ -41,4 +41,5 @@ namespace Warehousing.Data.Entities
         public ICollection<OrderItem> OrderItems { get; set; } = new List<OrderItem>();
     }
 }
+
 

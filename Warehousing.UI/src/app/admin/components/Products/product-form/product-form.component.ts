@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormControl, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
+import { TranslateModule } from '@ngx-translate/core';
 import { ProductsService } from '../../../services/products.service';
 import { CategoriesService } from '../../../services/categories.service';
 import { UnitsService } from '../../../services/units.service';
@@ -20,7 +21,7 @@ import { ImageUploader } from '../../../../shared/components/image-uploader/imag
 @Component({
   selector: 'app-product-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, ProductVariantsComponent, ProductModifiersComponent, ImageUploader],
+  imports: [CommonModule, ReactiveFormsModule, TranslateModule, ProductVariantsComponent, ProductModifiersComponent, ImageUploader],
   templateUrl: './product-form.component.html',
   styleUrl: './product-form.component.scss'
 })

@@ -5,6 +5,7 @@ import { SubCategory } from "./SubCategory";
 import { Unit } from "./unit";
 import { InventoryTransaction } from "./inventoryTransaction";
 import { OrderItemDto } from "./OrderItemDto";
+import { ProductVariant } from "./ProductVariant";
 
 export interface Product {
     id: number;
@@ -29,7 +30,10 @@ export interface Product {
     inventories: Inventory[];
     transactions: InventoryTransaction[];
     orderItems: OrderItemDto[];
+    variants: ProductVariant[]; // Product variants
+    modifierGroups?: any[]; // Product modifier groups
     totalQuantity?: number; // Total quantity across all stores
+    variantStockData?: { [key: string]: any }; // Variant stock data from API
 }
 export interface ProductDto {
     id: number | null;

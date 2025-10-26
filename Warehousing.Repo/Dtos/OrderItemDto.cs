@@ -25,6 +25,9 @@ namespace Warehousing.Repo.Dtos
         // Variant support
         public ProductVariantDto? Variant { get; set; }
         public int? VariantId { get; set; }
+        
+        // Modifier support
+        public Dictionary<string, object>? SelectedModifiers { get; set; }
 
         // Computed properties
         public decimal TotalCost => Quantity * UnitCost;

@@ -69,4 +69,16 @@ export class ProductsService {
   GetTotalCount() {
     return this.http.get<number>(`${this.url}GetTotalCount`)
   }
+
+  GetProductVariantsStock(productId: number, storeId: number) {
+    return this.http.get<any[]>(`${this.url}${productId}/variants-stock?storeId=${storeId}`);
+  }
+
+  DistributeStockToVariants(productId: number, request: any) {
+    return this.http.post<any>(`${this.url}${productId}/distribute-stock-to-variants`, request);
+  }
+
+  SetVariantStock(productId: number, request: any) {
+    return this.http.post<any>(`${this.url}${productId}/set-variant-stock`, request);
+  }
 }

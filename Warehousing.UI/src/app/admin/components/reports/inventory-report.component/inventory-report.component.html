@@ -1,7 +1,7 @@
 <div class="container-fluid">
   <!-- Header -->
   <div class="d-flex justify-content-between align-items-center mb-4">
-    <h4>التقارير والتحليلات</h4>
+    <h4>{{ 'REPORTS.TITLE' | translate }}</h4>
     <div class="p-2">
       <select class="form-select" [(ngModel)]="storeId" (change)="onFilterChange()">
         <option [ngValue]="0">جميع الفروع</option>
