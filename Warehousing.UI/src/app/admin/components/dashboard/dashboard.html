@@ -1,74 +1,86 @@
-<div class="container-fluid">
-  <!-- Header -->
-  <div class="d-flex justify-content-between align-items-center mb-4">
-    <h3 class="mb-0 fw-bold dark-mode-text">لوحة التحكم</h3>
-    <button class="btn btn-outline-primary" (click)="loadDashboardData()" [disabled]="isLoading">
-      <i class="bi bi-arrow-clockwise me-2" [class.spin]="isLoading"></i>
-      تحديث
-    </button>
-  </div>
-
-  <!-- Loading Indicator -->
-  <div *ngIf="isLoading" class="text-center py-5">
-    <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
-      <span class="visually-hidden">جاري التحميل...</span>
+<div class="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-100 py-8" dir="rtl">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8">
+      <div>
+        <h1 class="text-3xl font-bold text-gray-900 mb-2">لوحة التحكم</h1>
+        <p class="text-gray-600">نظرة عامة على أداء النظام والمخزون</p>
+      </div>
+      <button class="mt-4 sm:mt-0 inline-flex items-center px-6 py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200 transform hover:scale-105" 
+              (click)="loadDashboardData()" [disabled]="isLoading">
+        <i class="bi bi-arrow-clockwise mr-2" [class.animate-spin]="isLoading"></i>
+        تحديث البيانات
+      </button>
     </div>
-    <p class="mt-3 text-muted">جاري تحميل بيانات لوحة التحكم...</p>
-  </div>
 
-  <!-- Dashboard Content -->
-  <div *ngIf="!isLoading">
-    <!-- Key Metrics Cards -->
-    <div class="row g-4 mb-4">
-      <div class="col-md-6 col-xl-4" *ngFor="let card of dashboardCards">
-        <div class="card shadow-sm border-0 dark-mode-bg h-100">
-          <div class="card-body d-flex align-items-center">
-            <div class="flex-shrink-0">
-              <i class="{{ card.icon }} fs-1 {{ card.color }}"></i>
-            </div>
-            <div class="flex-grow-1 ms-3">
-              <h6 class="mb-1 dark-mode-text">{{ card.title }}</h6>
-              <h4 class="fw-bold mb-0">{{ formatNumber(card.value) }}</h4>
-              <small class="text-muted">{{ card.subtitle }}</small>
+    <!-- Loading Indicator -->
+    <div *ngIf="isLoading" class="text-center py-16">
+      <div class="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+      <h3 class="text-xl font-semibold text-gray-900 mb-2">جاري التحميل...</h3>
+      <p class="text-gray-600">جاري تحميل بيانات لوحة التحكم</p>
+    </div>
+
+    <!-- Dashboard Content -->
+    <div *ngIf="!isLoading">
+      <!-- Key Metrics Cards -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
+        <div *ngFor="let card of dashboardCards" class="group">
+          <div class="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 overflow-hidden border border-gray-100">
+            <!-- Gradient Header -->
+            <div class="h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500"></div>
+            
+            <div class="p-6">
+              <div class="flex items-center justify-between">
+                <div class="flex-1">
+                  <h6 class="text-sm font-medium text-gray-600 mb-1">{{ card.title }}</h6>
+                  <h3 class="text-3xl font-bold text-gray-900 mb-2">{{ formatNumber(card.value) }}</h3>
+                  <p class="text-xs text-gray-500">{{ card.subtitle }}</p>
+                </div>
+                <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                  <i class="{{ card.icon }} text-white text-xl"></i>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
 
-    <!-- Main Content Row -->
-    <div class="row g-4">
-      <!-- Recent Transactions -->
-      <div class="col-lg-6">
-        <div class="card shadow-sm border-0 dark-mode-bg h-100">
-          <div class="card-header bg-transparent border-0">
-            <h5 class="card-title mb-0 dark-mode-text">
-              <i class="bi bi-clock-history me-2"></i>
+      <!-- Main Content Row -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+        <!-- Recent Transactions -->
+        <div class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+          <div class="bg-gradient-to-r from-blue-500 to-indigo-600 px-6 py-4">
+            <h5 class="text-lg font-semibold text-white flex items-center">
+              <i class="bi bi-clock-history mr-3"></i>
               المعاملات الأخيرة
             </h5>
           </div>
-          <div class="card-body">
-            <div *ngIf="isLoadingTransactions" class="text-center py-3">
-              <div class="spinner-border spinner-border-sm text-primary" role="status">
-                <span class="visually-hidden">جاري التحميل...</span>
+          <div class="p-6">
+            <div *ngIf="isLoadingTransactions" class="text-center py-8">
+              <div class="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
+              <p class="text-gray-600">جاري التحميل...</p>
+            </div>
+            <div *ngIf="!isLoadingTransactions && recentTransactions.length === 0" class="text-center py-8">
+              <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i class="bi bi-inbox text-gray-400 text-2xl"></i>
               </div>
+              <h4 class="text-lg font-semibold text-gray-900 mb-2">لا توجد معاملات حديثة</h4>
+              <p class="text-gray-500">لم يتم العثور على أي معاملات حديثة</p>
             </div>
-            <div *ngIf="!isLoadingTransactions && recentTransactions.length === 0" class="text-center py-4 text-muted">
-              <i class="bi bi-inbox fs-1 mb-3"></i>
-              <p>لا توجد معاملات حديثة</p>
-            </div>
-            <div *ngIf="!isLoadingTransactions && recentTransactions.length > 0" class="list-group list-group-flush">
-              <div *ngFor="let transaction of recentTransactions" class="list-group-item border-0 px-0">
-                <div class="d-flex justify-content-between align-items-start">
-                  <div class="flex-grow-1">
-                    <h6 class="mb-1">{{ transaction.productNameAr }}</h6>
-                    <p class="mb-1 text-muted small">
+            <div *ngIf="!isLoadingTransactions && recentTransactions.length > 0" class="space-y-4">
+              <div *ngFor="let transaction of recentTransactions" class="bg-gray-50 rounded-xl p-4 hover:bg-gray-100 transition-colors">
+                <div class="flex justify-between items-start">
+                  <div class="flex-1">
+                    <h6 class="font-semibold text-gray-900 mb-1">{{ transaction.productNameAr }}</h6>
+                    <p class="text-sm text-gray-600 mb-2">
                       {{ transaction.storeNameAr }} - {{ transaction.transactionTypeNameAr }}
                     </p>
-                    <small class="text-muted">{{ formatDate(transaction.transactionDate) }}</small>
+                    <p class="text-xs text-gray-500">{{ formatDate(transaction.transactionDate) }}</p>
                   </div>
-                  <div class="text-end">
-                    <span class="badge" [ngClass]="transaction.quantityChanged > 0 ? 'bg-success' : 'bg-danger'">
+                  <div class="text-right">
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium"
+                          [ngClass]="transaction.quantityChanged > 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'">
+                      <i class="bi mr-1" [ngClass]="transaction.quantityChanged > 0 ? 'bi-arrow-up' : 'bi-arrow-down'"></i>
                       {{ transaction.quantityChanged > 0 ? '+' : '' }}{{ transaction.quantityChanged }}
                     </span>
                   </div>
@@ -77,40 +89,42 @@
             </div>
           </div>
         </div>
-      </div>
 
-      <!-- Top Products -->
-      <div class="col-lg-6">
-        <div class="card shadow-sm border-0 dark-mode-bg h-100">
-          <div class="card-header bg-transparent border-0">
-            <h5 class="card-title mb-0 dark-mode-text">
-              <i class="bi bi-trophy me-2"></i>
+        <!-- Top Products -->
+        <div class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+          <div class="bg-gradient-to-r from-green-500 to-emerald-600 px-6 py-4">
+            <h5 class="text-lg font-semibold text-white flex items-center">
+              <i class="bi bi-trophy mr-3"></i>
               {{ 'DASHBOARD.MOST_STOCKED_PRODUCTS' | translate }}
             </h5>
           </div>
-          <div class="card-body">
-            <div *ngIf="isLoadingTopProducts" class="text-center py-3">
-              <div class="spinner-border spinner-border-sm text-primary" role="status">
-                <span class="visually-hidden">جاري التحميل...</span>
+          <div class="p-6">
+            <div *ngIf="isLoadingTopProducts" class="text-center py-8">
+              <div class="w-8 h-8 border-2 border-green-600 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
+              <p class="text-gray-600">جاري التحميل...</p>
+            </div>
+            <div *ngIf="!isLoadingTopProducts && topProducts.length === 0" class="text-center py-8">
+              <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i class="bi bi-box-seam text-gray-400 text-2xl"></i>
               </div>
+              <h4 class="text-lg font-semibold text-gray-900 mb-2">{{ 'REPORTS.NO_PRODUCTS' | translate }}</h4>
+              <p class="text-gray-500">لم يتم العثور على أي منتجات</p>
             </div>
-            <div *ngIf="!isLoadingTopProducts && topProducts.length === 0" class="text-center py-4 text-muted">
-              <i class="bi bi-box-seam fs-1 mb-3"></i>
-              <p>{{ 'REPORTS.NO_PRODUCTS' | translate }}</p>
-            </div>
-            <div *ngIf="!isLoadingTopProducts && topProducts.length > 0" class="list-group list-group-flush">
-              <div *ngFor="let product of topProducts; let i = index" class="list-group-item border-0 px-0">
-                <div class="d-flex justify-content-between align-items-center">
-                  <div class="d-flex align-items-center">
-                    <span class="badge bg-primary me-2">{{ i + 1 }}</span>
+            <div *ngIf="!isLoadingTopProducts && topProducts.length > 0" class="space-y-4">
+              <div *ngFor="let product of topProducts; let i = index" class="bg-gray-50 rounded-xl p-4 hover:bg-gray-100 transition-colors">
+                <div class="flex justify-between items-center">
+                  <div class="flex items-center">
+                    <div class="w-8 h-8 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full flex items-center justify-center text-white font-bold text-sm mr-3">
+                      {{ i + 1 }}
+                    </div>
                     <div>
-                      <h6 class="mb-1">{{ product.productNameAr }}</h6>
-                      <small class="text-muted">{{ product.productCode }}</small>
+                      <h6 class="font-semibold text-gray-900 mb-1">{{ product.productNameAr }}</h6>
+                      <p class="text-sm text-gray-600">{{ product.productCode }}</p>
                     </div>
                   </div>
-                  <div class="text-end">
-                    <span class="fw-bold">{{ formatNumber(product.totalQuantity) }}</span>
-                    <small class="text-muted d-block">{{ product.storeCount }} مستودع</small>
+                  <div class="text-right">
+                    <div class="text-2xl font-bold text-green-600">{{ formatNumber(product.totalQuantity) }}</div>
+                    <p class="text-xs text-gray-500">{{ product.storeCount }} مستودع</p>
                   </div>
                 </div>
               </div>
@@ -118,99 +132,98 @@
           </div>
         </div>
       </div>
-    </div>
 
-    <!-- Store Performance & Alerts Row -->
-    <div class="row g-4 mt-4">
-      <!-- Store Performance -->
-      <div class="col-lg-8">
-        <div class="card shadow-sm border-0 dark-mode-bg h-100">
-          <div class="card-header bg-transparent border-0">
-            <h5 class="card-title mb-0 dark-mode-text">
-              <i class="bi bi-building me-2"></i>
+      <!-- Store Performance & Alerts Row -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Store Performance -->
+        <div class="lg:col-span-2 bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+          <div class="bg-gradient-to-r from-purple-500 to-pink-600 px-6 py-4">
+            <h5 class="text-lg font-semibold text-white flex items-center">
+              <i class="bi bi-building mr-3"></i>
               {{ 'DASHBOARD.WAREHOUSE_PERFORMANCE' | translate }}
             </h5>
           </div>
-          <div class="card-body">
-            <div *ngIf="isLoadingStorePerformance" class="text-center py-3">
-              <div class="spinner-border spinner-border-sm text-primary" role="status">
-                <span class="visually-hidden">جاري التحميل...</span>
+          <div class="p-6">
+            <div *ngIf="isLoadingStorePerformance" class="text-center py-8">
+              <div class="w-8 h-8 border-2 border-purple-600 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
+              <p class="text-gray-600">جاري التحميل...</p>
+            </div>
+            <div *ngIf="!isLoadingStorePerformance && storePerformance.length === 0" class="text-center py-8">
+              <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i class="bi bi-building text-gray-400 text-2xl"></i>
               </div>
+              <h4 class="text-lg font-semibold text-gray-900 mb-2">{{ 'REPORTS.NO_WAREHOUSES' | translate }}</h4>
+              <p class="text-gray-500">لم يتم العثور على أي مستودعات</p>
             </div>
-            <div *ngIf="!isLoadingStorePerformance && storePerformance.length === 0" class="text-center py-4 text-muted">
-              <i class="bi bi-building fs-1 mb-3"></i>
-              <p>{{ 'REPORTS.NO_WAREHOUSES' | translate }}</p>
-            </div>
-            <div *ngIf="!isLoadingStorePerformance && storePerformance.length > 0" class="table-responsive">
-              <table class="table table-hover">
-                <thead>
-                  <tr>
-                    <th>المستودع</th>
-                    <th>{{ 'DASHBOARD.TOTAL_PRODUCTS' | translate }}</th>
-                    <th>إجمالي الكمية</th>
-                    <th>{{ 'DASHBOARD.LOW_STOCK' | translate }}</th>
-                    <th>{{ 'DASHBOARD.OUT_OF_STOCK' | translate }}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr *ngFor="let store of storePerformance">
-                    <td>
-                      <div>
-                        <strong>{{ store.storeNameAr }}</strong>
-                        <br>
-                        <small class="text-muted">{{ store.storeCode }}</small>
-                        <span *ngIf="store.isMainWarehouse" class="badge bg-primary ms-2">رئيسي</span>
-                      </div>
-                    </td>
-                    <td>{{ formatNumber(store.totalProducts) }}</td>
-                    <td>{{ formatNumber(store.totalQuantity) }}</td>
-                    <td>
-                      <span class="badge bg-warning" *ngIf="store.lowStockProducts > 0">
-                        {{ store.lowStockProducts }}
-                      </span>
-                      <span *ngIf="store.lowStockProducts === 0" class="text-success">-</span>
-                    </td>
-                    <td>
-                      <span class="badge bg-danger" *ngIf="store.zeroStockProducts > 0">
-                        {{ store.zeroStockProducts }}
-                      </span>
-                      <span *ngIf="store.zeroStockProducts === 0" class="text-success">-</span>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
+            <div *ngIf="!isLoadingStorePerformance && storePerformance.length > 0" class="space-y-4">
+              <div *ngFor="let store of storePerformance" class="bg-gray-50 rounded-xl p-4 hover:bg-gray-100 transition-colors">
+                <div class="flex justify-between items-start mb-3">
+                  <div class="flex-1">
+                    <div class="flex items-center mb-2">
+                      <h6 class="font-semibold text-gray-900 text-lg">{{ store.storeNameAr }}</h6>
+                      <span *ngIf="store.isMainWarehouse" class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full mr-2">رئيسي</span>
+                    </div>
+                    <p class="text-sm text-gray-600">{{ store.storeCode }}</p>
+                  </div>
+                </div>
+                
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div class="text-center">
+                    <div class="text-2xl font-bold text-blue-600">{{ formatNumber(store.totalProducts) }}</div>
+                    <p class="text-xs text-gray-500">{{ 'DASHBOARD.TOTAL_PRODUCTS' | translate }}</p>
+                  </div>
+                  <div class="text-center">
+                    <div class="text-2xl font-bold text-green-600">{{ formatNumber(store.totalQuantity) }}</div>
+                    <p class="text-xs text-gray-500">إجمالي الكمية</p>
+                  </div>
+                  <div class="text-center">
+                    <div class="text-2xl font-bold text-yellow-600">{{ store.lowStockProducts }}</div>
+                    <p class="text-xs text-gray-500">{{ 'DASHBOARD.LOW_STOCK' | translate }}</p>
+                  </div>
+                  <div class="text-center">
+                    <div class="text-2xl font-bold text-red-600">{{ store.zeroStockProducts }}</div>
+                    <p class="text-xs text-gray-500">{{ 'DASHBOARD.OUT_OF_STOCK' | translate }}</p>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      <!-- Alerts -->
-      <div class="col-lg-4">
-        <div class="card shadow-sm border-0 dark-mode-bg h-100">
-          <div class="card-header bg-transparent border-0">
-            <h5 class="card-title mb-0 dark-mode-text">
-              <i class="bi bi-bell me-2"></i>
+        <!-- Alerts -->
+        <div class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+          <div class="bg-gradient-to-r from-red-500 to-pink-600 px-6 py-4">
+            <h5 class="text-lg font-semibold text-white flex items-center">
+              <i class="bi bi-bell mr-3"></i>
               التنبيهات
             </h5>
           </div>
-          <div class="card-body">
-            <div *ngIf="isLoadingAlerts" class="text-center py-3">
-              <div class="spinner-border spinner-border-sm text-primary" role="status">
-                <span class="visually-hidden">جاري التحميل...</span>
+          <div class="p-6">
+            <div *ngIf="isLoadingAlerts" class="text-center py-8">
+              <div class="w-8 h-8 border-2 border-red-600 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
+              <p class="text-gray-600">جاري التحميل...</p>
+            </div>
+            <div *ngIf="!isLoadingAlerts && alerts.length === 0" class="text-center py-8">
+              <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i class="bi bi-check-circle text-gray-400 text-2xl"></i>
               </div>
+              <h4 class="text-lg font-semibold text-gray-900 mb-2">{{ 'REPORTS.NO_ALERTS' | translate }}</h4>
+              <p class="text-gray-500">لا توجد تنبيهات حالياً</p>
             </div>
-            <div *ngIf="!isLoadingAlerts && alerts.length === 0" class="text-center py-4 text-muted">
-              <i class="bi bi-check-circle fs-1 mb-3"></i>
-              <p>{{ 'REPORTS.NO_ALERTS' | translate }}</p>
-            </div>
-            <div *ngIf="!isLoadingAlerts && alerts.length > 0" class="list-group list-group-flush">
-              <div *ngFor="let alert of alerts" class="list-group-item border-0 px-0">
-                <div class="d-flex align-items-start">
-                  <i class="{{ getSeverityIcon(alert.severity) }} {{ getSeverityClass(alert.severity) }} me-2 mt-1"></i>
-                  <div class="flex-grow-1">
-                    <h6 class="mb-1">{{ alert.type }}</h6>
-                    <p class="mb-1 small">{{ alert.message }}</p>
-                    <small class="text-muted">خطورة: {{ alert.severity }}</small>
+            <div *ngIf="!isLoadingAlerts && alerts.length > 0" class="space-y-4">
+              <div *ngFor="let alert of alerts" class="bg-gray-50 rounded-xl p-4 hover:bg-gray-100 transition-colors">
+                <div class="flex items-start">
+                  <div class="w-8 h-8 rounded-full flex items-center justify-center mr-3 mt-1"
+                       [ngClass]="getSeverityClass(alert.severity)">
+                    <i class="{{ getSeverityIcon(alert.severity) }} text-white text-sm"></i>
+                  </div>
+                  <div class="flex-1">
+                    <h6 class="font-semibold text-gray-900 mb-1">{{ alert.type }}</h6>
+                    <p class="text-sm text-gray-600 mb-2">{{ alert.message }}</p>
+                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium"
+                          [ngClass]="getSeverityBadgeClass(alert.severity)">
+                      خطورة: {{ alert.severity }}
+                    </span>
                   </div>
                 </div>
               </div>

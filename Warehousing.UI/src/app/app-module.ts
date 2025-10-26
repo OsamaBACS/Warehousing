@@ -1,4 +1,4 @@
-import { NgModule, provideBrowserGlobalErrorListeners } from '@angular/core';
+import { NgModule, provideBrowserGlobalErrorListeners, LOCALE_ID } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { AppRoutingModule } from './app-routing-module';
 import { App } from './app';
@@ -13,7 +13,7 @@ import { HttpClientModule, HttpClient } from '@angular/common/http';
 import { TranslateHttpLoader } from '@ngx-translate/http-loader';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { ToastrModule } from 'ngx-toastr';
-import { ModalModule, BsModalService } from 'ngx-bootstrap/modal';
+// Removed ngx-bootstrap modal - using Angular Material instead
 import { HomeComponent } from './home/home.component';
 
 export function HttpLoaderFactory(http: HttpClient) {
@@ -31,7 +31,7 @@ export function HttpLoaderFactory(http: HttpClient) {
     AppRoutingModule,
     MySharedModule,
     ReactiveFormsModule,
-    ModalModule.forRoot(),
+    // Removed ModalModule - using Angular Material instead
     HttpClientModule,
     TranslateModule.forRoot({
       defaultLanguage: 'ar',
@@ -51,7 +51,8 @@ export function HttpLoaderFactory(http: HttpClient) {
   providers: [
     provideBrowserGlobalErrorListeners(),
     provideHttpClient(withInterceptors([JwtInterceptor, LoaderInterceptor])),
-    BsModalService
+    { provide: LOCALE_ID, useValue: 'ar' },
+    // Removed BsModalService - using Angular Material instead
   ],
   bootstrap: [App]
 })

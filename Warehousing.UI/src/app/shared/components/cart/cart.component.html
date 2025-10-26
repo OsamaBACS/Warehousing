@@ -1,196 +1,283 @@
-<div class="container py-4 bottom-padded-container">
-  <h2 class="text-center mb-4">{{ title }}</h2>
-
-  <!-- Loading Indicator -->
-  <div *ngIf="isLoading" class="text-center py-5">
-    <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
-      <span class="visually-hidden">{{ 'MESSAGES.LOADING' | translate }}</span>
-    </div>
-    <p class="mt-3 text-muted">{{ 'MESSAGES.LOADING' | translate }} {{ 'CART.TITLE' | translate }}...</p>
-  </div>
-
-  <div [formGroup]="cartService.cartForm" *ngIf="!isLoading">
-    <!-- Supplier / Customer -->
-    <div class="d-flex flex-wrap justify-content-center align-items-center mb-3">
-      <div class="p-1 flex-fill" *ngIf="cartService.orderTypeId == 1">
-        <div class="floating-label-select">
-          <select class="form-select" id="supplierId" formControlName="supplierId">
-            <option value="">{{ 'SHARED.BUTTONS.SELECT' | translate }} {{ 'SUPPLIERS.TITLE' | translate }}</option>
-            <option *ngFor="let supplier of suppliers" [value]="supplier.id">{{ supplier.name }}</option>
-          </select>
-          <label>{{ 'SUPPLIERS.TITLE' | translate }}</label>
-        </div>
-      </div>
-      <div class="p-1 flex-fill" *ngIf="cartService.orderTypeId == 2">
-        <div class="floating-label-select">
-          <select class="form-select" id="customerId" formControlName="customerId">
-            <option value="">{{ 'SHARED.BUTTONS.SELECT' | translate }} {{ 'CUSTOMERS.TITLE' | translate }}</option>
-            <option *ngFor="let customer of customers" [value]="customer.id">{{ customer.nameAr }}</option>
-          </select>
-          <label>{{ 'CUSTOMERS.TITLE' | translate }}</label>
-        </div>
-      </div>
+<div class="min-h-screen bg-gray-50 py-8">
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+    <!-- Header -->
+    <div class="text-center mb-8">
+      <h1 class="text-3xl font-bold text-gray-900 mb-2">سلة الطلبات</h1>
+      <div class="w-24 h-1 bg-gradient-to-r from-blue-600 to-indigo-600 mx-auto rounded-full"></div>
     </div>
 
-    <!-- Cart Items -->
-    <div *ngFor="let item of getCartItemFormGroups(); let i = index" [formGroup]="item"
-      class="cart-item card mb-3 shadow-sm">
-      <div class="card-body">
-        <!-- Image and Name -->
-        <div class="d-flex align-items-start justify-content-between gap-3 flex-wrap flex-md-nowrap">
-          <!-- Image (always right) -->
-          <div class="flex-shrink-0">
-            <img
-              [src]="resourceUrl + getProductInfo(item.get('productId')?.value)?.imagePath || 'https://via.placeholder.com/60'"
-              alt="{{ 'CART_DETAILS.PRODUCT_IMAGE' | translate }}" class="product-thumb" style="width: 60px; height: auto;" />
+    <!-- Loading Indicator -->
+    <div *ngIf="isLoading" class="text-center py-12">
+      <div class="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+      <p class="text-lg text-gray-600">جاري التحميل...</p>
+    </div>
+
+    <div [formGroup]="cartService.cartForm" *ngIf="!isLoading">
+      <!-- Supplier / Customer Selection -->
+      <div class="bg-white rounded-2xl shadow-lg p-6 mb-6">
+        <div class="flex justify-center">
+          <div class="w-full max-w-2xl" *ngIf="cartService.orderTypeId == 1">
+            <div class="flex items-end gap-4">
+              <div class="flex-1">
+                <div class="relative">
+                  <select class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200" 
+                          id="supplierId" formControlName="supplierId">
+                    <option value="">اختر المورد</option>
+                    <option *ngFor="let supplier of suppliers" [value]="supplier.id">{{ supplier.name }}</option>
+                  </select>
+                  <label class="absolute left-4 -top-2.5 text-sm text-gray-600 bg-white px-1">المورد</label>
+                </div>
+              </div>
+              <button class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl text-sm font-semibold hover:from-green-600 hover:to-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-all duration-200 transform hover:scale-105 shadow-lg" 
+                      (click)="openSupplierForm()">
+                <i class="bi bi-plus-circle mr-2 text-lg"></i>
+                إضافة مورد جديد
+              </button>
+            </div>
           </div>
-
-          <!-- Product Name (left with more space) -->
-          <div class="flex-grow-1 text-center border">
-            <h5 class="fw-bold mb-2 p-2">{{ getProductInfo(item.get('productId')?.value)?.nameAr }}</h5>
-            <!-- Variant Information -->
-            <div *ngIf="item.get('variantId')?.value" class="small text-info mb-1">
-              <i class="bi bi-tag me-1"></i>
-              {{ getVariantName(item.get('productId')?.value, item.get('variantId')?.value) }}
-            </div>
-            <!-- Store Information -->
-            <div *ngIf="item.get('storeId')?.value" class="small text-muted">
-              <i class="bi bi-building me-1"></i>
-              {{ getStoreName(item.get('storeId')?.value) }}
-            </div>
-            <!-- Modifiers Information -->
-            <div *ngIf="item.get('selectedModifiers')?.value && getSelectedModifiers(item.get('productId')?.value, item.get('selectedModifiers')?.value).length > 0" class="small text-warning">
-              <i class="bi bi-gear me-1"></i>
-              <span *ngFor="let modifier of getSelectedModifiers(item.get('productId')?.value, item.get('selectedModifiers')?.value); let last = last">
-                {{ modifier }}<span *ngIf="!last">, </span>
-              </span>
+          <div class="w-full max-w-2xl" *ngIf="cartService.orderTypeId == 2">
+            <div class="flex items-end gap-4">
+              <div class="flex-1">
+                <div class="relative">
+                  <select class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200" 
+                          id="customerId" formControlName="customerId">
+                    <option value="">اختر العميل</option>
+                    <option *ngFor="let customer of customers" [value]="customer.id">{{ customer.nameAr }}</option>
+                  </select>
+                  <label class="absolute left-4 -top-2.5 text-sm text-gray-600 bg-white px-1">العميل</label>
+                </div>
+              </div>
+              <button class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl text-sm font-semibold hover:from-blue-600 hover:to-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200 transform hover:scale-105 shadow-lg" 
+                      (click)="openCustomerForm()">
+                <i class="bi bi-plus-circle mr-2 text-lg"></i>
+                إضافة عميل جديد
+              </button>
             </div>
           </div>
         </div>
+      </div>
 
-        <!-- Quantity + Buttons -->
-        <div class="d-flex justify-content-between align-items-center mt-3">
-          <!-- Quantity Input (right, more space) -->
-          <div class="flex-grow-1 text-end ms-1">
-            <input type="number" 
-                   formControlName="quantity" 
-                   class="form-control text-center w-100 d-inline-block" 
-                   [max]="getMaxQuantityForItem(item)"
-                   min="0"
-                   (change)="onQuantityChange(item)" />
+      <!-- Cart Items -->
+      <div class="space-y-4">
+        <div *ngFor="let item of getCartItemFormGroups(); let i = index" [formGroup]="item"
+             class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden hover:shadow-xl transition-all duration-300">
+          
+          <!-- Product Header -->
+          <div class="p-6">
+            <div class="flex items-start gap-4">
+              <!-- Product Image -->
+              <div class="flex-shrink-0">
+                <div class="w-20 h-20 bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl flex items-center justify-center overflow-hidden">
+                  <img
+                    [src]="resourceUrl + getProductInfo(item.get('productId')?.value)?.imagePath || 'https://via.placeholder.com/80'"
+                    alt="{{ 'CART_DETAILS.PRODUCT_IMAGE' | translate }}" 
+                    class="w-full h-full object-cover" />
+                </div>
+              </div>
+
+              <!-- Product Info -->
+              <div class="flex-grow">
+                <h3 class="text-lg font-bold text-gray-900 mb-2">{{ getProductInfo(item.get('productId')?.value)?.nameAr }}</h3>
+                
+                <!-- Product Details -->
+                <div class="space-y-1">
+                  <!-- Variant Information -->
+                  <div *ngIf="item.get('variantId')?.value" class="flex items-center text-blue-600 text-sm">
+                    <i class="bi bi-tag mr-2"></i>
+                    <span class="font-medium">{{ getVariantName(item.get('productId')?.value, item.get('variantId')?.value) }}</span>
+                  </div>
+                  
+                  <!-- Store Information -->
+                  <div *ngIf="item.get('storeId')?.value" class="flex items-center text-gray-600 text-sm">
+                    <i class="bi bi-building mr-2"></i>
+                    <span>{{ getStoreName(item.get('storeId')?.value) }}</span>
+                  </div>
+                  
+                  <!-- Modifiers Information -->
+                  <div *ngIf="item.get('selectedModifiers')?.value && getSelectedModifiers(item.get('productId')?.value, item.get('selectedModifiers')?.value).length > 0" 
+                       class="flex items-center text-amber-600 text-sm">
+                    <i class="bi bi-gear mr-2"></i>
+                    <span class="font-medium">
+                      <span *ngFor="let modifier of getSelectedModifiers(item.get('productId')?.value, item.get('selectedModifiers')?.value); let last = last">
+                        {{ modifier }}<span *ngIf="!last">, </span>
+                      </span>
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Delete Button -->
+              <div class="flex-shrink-0" *ngIf="hasAnyPermission(permissionsEnum.EDIT_APPROVED_INVOICE)">
+                <button class="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors" 
+                        (click)="onDelete(i)" 
+                        title="حذف المنتج">
+                  <i class="bi bi-trash text-lg"></i>
+                </button>
+              </div>
+            </div>
           </div>
 
-          <!-- + / - Buttons (left) -->
-          <div class="d-flex" *ngIf="hasAnyPermission(permissionsEnum.EDIT_APPROVED_INVOICE)">
-            <button class="btn btn-outline-secondary ms-1"
-              (click)="decreaseQuantity(item.get('productId')?.value)">-</button>
-            <button class="btn btn-outline-secondary"
-              (click)="increaseQuantity(item.get('productId')?.value)">+</button>
-          </div>
-        </div>
+          <!-- Quantity and Price Controls -->
+          <div class="px-6 py-4 bg-gray-50 border-t border-gray-100">
+            <div class="flex items-center justify-between">
+              <!-- Quantity Controls -->
+              <div class="flex items-center space-x-3">
+                <span class="text-sm font-medium text-gray-700">الكمية:</span>
+                <div class="flex items-center bg-white rounded-lg border border-gray-300">
+                  <button class="px-3 py-2 text-red-600 hover:bg-red-50 rounded-r-lg transition-colors" 
+                          (click)="decreaseQuantity(item.get('productId')?.value)"
+                          *ngIf="hasAnyPermission(permissionsEnum.EDIT_APPROVED_INVOICE)">
+                    <i class="bi bi-dash"></i>
+                  </button>
+                  
+                  <input type="number" 
+                         formControlName="quantity" 
+                         class="w-20 px-3 py-2 text-center border-0 focus:outline-none focus:ring-0" 
+                         [max]="getMaxQuantityForItem(item)"
+                         min="0"
+                         (change)="onQuantityChange(item)" />
+                  
+                  <button class="px-3 py-2 text-green-600 hover:bg-green-50 rounded-l-lg transition-colors" 
+                          (click)="increaseQuantity(item.get('productId')?.value)"
+                          *ngIf="hasAnyPermission(permissionsEnum.EDIT_APPROVED_INVOICE)">
+                    <i class="bi bi-plus"></i>
+                  </button>
+                </div>
+              </div>
 
-        <!-- Total (below all) -->
-        <div class="d-flex justify-content-between align-items-center mt-3">
-          <div class="flex-grow-1 text-end ms-1">
-            JD {{ item.get('quantity')?.value * (cartService.orderTypeId == 1 ? item.get('costPrice')?.value :
-            item.get('sellingPrice')?.value) | number }} :
-            <strong>{{ 'CART_DETAILS.TOTAL' | translate }}</strong>
-          </div>
-          <div class="d-flex" *ngIf="hasAnyPermission(permissionsEnum.EDIT_APPROVED_INVOICE)">
-            <button class="btn btn-danger" (click)="onDelete(i)"><i class="bi bi-trash"></i></button>
+              <!-- Price and Total -->
+              <div class="text-right">
+                <div class="text-sm text-gray-600">
+                  السعر: <span class="font-semibold">{{ (cartService.orderTypeId == 1 ? item.get('unitCost')?.value : item.get('unitPrice')?.value) | number:'1.2-2' }} د.أ</span>
+                </div>
+                <div class="text-lg font-bold text-green-600">
+                  {{ item.get('quantity')?.value * (cartService.orderTypeId == 1 ? item.get('unitCost')?.value : item.get('unitPrice')?.value) | number:'1.2-2' }} د.أ
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
-    </div>
 
-    <!-- Empty Cart -->
-    <div *ngIf="cartService.cartItems.length === 0"
-      class="alert alert-info text-center mt-4">
-      {{ 'CART_DETAILS.EMPTY_CART' | translate }}
-    </div>
-
-    <!-- Total -->
-    <div class="card mt-4 shadow-sm total-section">
-      <div class="card-body text-end">
-        <h5 class="card-title">{{ 'CART_DETAILS.GRAND_TOTAL' | translate }}</h5>
-        <p class="card-text fs-4 fw-bold">
-          {{ cartService.cartForm.get('totalAmount')?.value }} JD
-        </p>
+      <!-- Empty Cart -->
+      <div *ngIf="cartService.cartItems.length === 0" class="text-center py-12">
+        <div class="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+          <i class="bi bi-cart-x text-gray-400 text-4xl"></i>
+        </div>
+        <h3 class="text-xl font-semibold text-gray-900 mb-2">{{ 'CART_DETAILS.EMPTY_CART' | translate }}</h3>
+        <p class="text-gray-500">أضف منتجات إلى سلة التسوق لبدء الطلب</p>
       </div>
-    </div>
 
-    <!-- Submit Order -->
-     <div class="fixed-bottom-actions">
-       <div class="d-flex flex-row justify-content-center mt-4" *ngIf="getCartItemFormGroups().length > 0">
-         <ng-container
-           *ngIf="
-               cartService.cartForm.get('statusId')?.value != '6'
-               && cartService.cartForm.get('statusId')?.value != '1'
-               && cartService.cartForm.get('statusId')?.value != '8'
-             ">
-   
-           <div class="p-2 w-100" *ngIf="cartService.cartForm.get('statusId')?.value != '11'">
-             <button class="btn btn-secondary btn-lg w-100 text-center" (click)="onSave()">
-               {{ 'SHARED.BUTTONS.SAVE' | translate }}
-             </button>
-           </div>
-           <div class="p-2 w-100">
-             <button class="btn btn-danger btn-lg w-100 text-center" (click)="onCancel()">
-               {{ 'SHARED.BUTTONS.CANCEL' | translate }}
-             </button>
-           </div>
-           <div class="p-2 w-100">
-             <button class="btn btn-primary btn-lg w-100 text-center" (click)="onSubmit()">
-               إرسال
-             </button>
-           </div>
-         </ng-container>
-         <ng-container
-           *ngIf="
-               cartService.cartForm.get('statusId')?.value == '6'
-               || cartService.cartForm.get('statusId')?.value == '1'
-             ">
-           <div class="p-2 w-100">
-             <button class="btn btn-secondary btn-lg w-100 text-center" (click)="cartService.clearCart()">إفراغ السلة</button>
-           </div>
-         </ng-container>
-         <ng-container *ngIf="
-             hasAnyPermission(permissionsEnum.PRINT_SALE_ORDER) 
-             && cartService.cartItems.length > 0
-             && cartService.cartForm.get('statusId')?.value != '6'
-             && cartService.cartForm.get('statusId')?.value != '11'
-             && cartService.cartForm.get('statusId')?.value != '8'
-             && cartService.cartForm.get('statusId')?.value != null
-           ">
-           <div class="p-2 w-100">
-             <button class="btn btn-danger btn-lg w-100 text-center" (click)="onCancel()">
-               {{ 'SHARED.BUTTONS.CANCEL' | translate }}
-             </button>
-           </div>
-           <div class="p-2 w-100">
-             <button class="btn btn-success btn-lg w-100 text-center" (click)="onConfirm(cartService.cartForm.get('id')?.value)">إعتماد الطلب</button>
-           </div>
-         </ng-container>
-         <ng-container *ngIf="
-             hasAnyPermission(permissionsEnum.PRINT_SALE_ORDER) 
-             && cartService.cartItems.length > 0
-             && cartService.cartForm.get('statusId')?.value == '8'
-           ">
-           <div class="p-2 w-100">
-             <button class="btn btn-secondary btn-lg w-100 text-center" (click)="cartService.clearCart()">إفراغ السلة</button>
-           </div>
-           <div class="p-2 w-100" *ngIf="hasAnyPermission(permissionsEnum.EDIT_APPROVED_INVOICE)">
-             <button class="btn btn-primary btn-lg w-100 text-center" (click)="onEdit(cartService.cartForm.get('id')?.value)">{{ 'CART_DETAILS.EDIT_ORDER' | translate }}</button>
-           </div>
-           <div class="p-2 w-100" *ngIf="hasAnyPermission(permissionsEnum.EDIT_APPROVED_INVOICE)">
-             <button class="btn btn-danger btn-lg w-100 text-center" (click)="onEdit(cartService.cartForm.get('id')?.value)">{{ 'CART_DETAILS.CANCEL_ORDER' | translate }}</button>
-           </div>
-           <div class="p-2 w-100">
-             <button class="btn btn-info btn-lg w-100 text-center" (click)="printOrder()">طباعه</button>
-           </div>
-         </ng-container>
-       </div>
-     </div>
+      <!-- Total Section -->
+      <div *ngIf="cartService.cartItems.length > 0" class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-6 mt-6 border border-blue-200">
+        <div class="text-center">
+          <h3 class="text-2xl font-bold text-gray-900 mb-2">{{ 'CART_DETAILS.GRAND_TOTAL' | translate }}</h3>
+          <div class="text-4xl font-bold text-blue-600">
+            {{ cartService.cartForm.get('totalAmount')?.value | number:'1.2-2' }} د.أ
+          </div>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="mt-8" *ngIf="getCartItemFormGroups().length > 0">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <!-- Save Order -->
+          <ng-container
+            *ngIf="
+                cartService.cartForm.get('statusId')?.value != '6'
+                && cartService.cartForm.get('statusId')?.value != '1'
+                && cartService.cartForm.get('statusId')?.value != '8'
+              ">
+    
+            <button *ngIf="cartService.cartForm.get('statusId')?.value != '11'"
+                    class="w-full bg-gray-600 text-white py-3 px-6 rounded-xl font-semibold hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-all duration-200 transform hover:scale-105" 
+                    (click)="onSave()">
+              <i class="bi bi-save mr-2"></i>
+              حفظ
+            </button>
+            
+            <button class="w-full bg-red-600 text-white py-3 px-6 rounded-xl font-semibold hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-all duration-200 transform hover:scale-105" 
+                    (click)="onCancel()">
+              <i class="bi bi-x-circle mr-2"></i>
+              إلغاء
+            </button>
+            
+            <button class="w-full bg-blue-600 text-white py-3 px-6 rounded-xl font-semibold hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200 transform hover:scale-105" 
+                    (click)="onSubmit()">
+              <i class="bi bi-send mr-2"></i>
+              إرسال
+            </button>
+          </ng-container>
+          
+          <!-- Clear Cart -->
+          <ng-container
+            *ngIf="
+                cartService.cartForm.get('statusId')?.value == '6'
+                || cartService.cartForm.get('statusId')?.value == '1'
+              ">
+            <button class="w-full bg-gray-600 text-white py-3 px-6 rounded-xl font-semibold hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-all duration-200 transform hover:scale-105" 
+                    (click)="cartService.clearCart()">
+              <i class="bi bi-trash mr-2"></i>
+              إفراغ السلة
+            </button>
+          </ng-container>
+          
+          <!-- Approve Order -->
+          <ng-container *ngIf="
+              hasAnyPermission(permissionsEnum.PRINT_SALE_ORDER) 
+              && cartService.cartItems.length > 0
+              && cartService.cartForm.get('statusId')?.value != '6'
+              && cartService.cartForm.get('statusId')?.value != '11'
+              && cartService.cartForm.get('statusId')?.value != '8'
+              && cartService.cartForm.get('statusId')?.value != null
+            ">
+            <button class="w-full bg-red-600 text-white py-3 px-6 rounded-xl font-semibold hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-all duration-200 transform hover:scale-105" 
+                    (click)="onCancel()">
+              <i class="bi bi-x-circle mr-2"></i>
+              إلغاء
+            </button>
+            
+            <button class="w-full bg-green-600 text-white py-3 px-6 rounded-xl font-semibold hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-all duration-200 transform hover:scale-105" 
+                    (click)="onConfirm(cartService.cartForm.get('id')?.value)">
+              <i class="bi bi-check-circle mr-2"></i>
+              اعتماد الطلب
+            </button>
+          </ng-container>
+          
+          <!-- Order Management -->
+          <ng-container *ngIf="
+              hasAnyPermission(permissionsEnum.PRINT_SALE_ORDER) 
+              && cartService.cartItems.length > 0
+              && cartService.cartForm.get('statusId')?.value == '8'
+            ">
+            <button class="w-full bg-gray-600 text-white py-3 px-6 rounded-xl font-semibold hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-all duration-200 transform hover:scale-105" 
+                    (click)="cartService.clearCart()">
+              <i class="bi bi-trash mr-2"></i>
+              إفراغ السلة
+            </button>
+            
+            <button *ngIf="hasAnyPermission(permissionsEnum.EDIT_APPROVED_INVOICE)"
+                    class="w-full bg-blue-600 text-white py-3 px-6 rounded-xl font-semibold hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200 transform hover:scale-105" 
+                    (click)="onEdit(cartService.cartForm.get('id')?.value)">
+              <i class="bi bi-pencil mr-2"></i>
+              {{ 'CART_DETAILS.EDIT_ORDER' | translate }}
+            </button>
+            
+            <button *ngIf="hasAnyPermission(permissionsEnum.EDIT_APPROVED_INVOICE)"
+                    class="w-full bg-red-600 text-white py-3 px-6 rounded-xl font-semibold hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-all duration-200 transform hover:scale-105" 
+                    (click)="onEdit(cartService.cartForm.get('id')?.value)">
+              <i class="bi bi-x-circle mr-2"></i>
+              {{ 'CART_DETAILS.CANCEL_ORDER' | translate }}
+            </button>
+            
+            <button class="w-full bg-indigo-600 text-white py-3 px-6 rounded-xl font-semibold hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-all duration-200 transform hover:scale-105" 
+                    (click)="printOrder()">
+              <i class="bi bi-printer mr-2"></i>
+              طباعة
+            </button>
+          </ng-container>
+        </div>
+      </div>
 
     <!-- Footer Note -->
     <!-- <small class="text-muted mt-3 d-block text-center">
@@ -278,7 +365,7 @@
       <tbody formArrayName="items" *ngIf="cartService.cartItems && cartService.orderObject">
         <tr class="text-center" *ngFor="let item of cartService.cartItems.controls; let i = index" [formGroupName]="i">
           <td class="text-center">{{ i + 1 }}</td>
-          <td>{{ cartService.orderObject.items[i]?.product?.subCategory?.nameAr }}</td>
+          <td>{{ cartService.orderObject.items[i]?.product?.subCategory?.nameAr || 'غير محدد' }}</td>
           <td>{{ getProductDescription(item.get('productId')?.value) }}</td>
           <td>
             {{ getProductName(item.get('productId')?.value) }}
@@ -299,10 +386,10 @@
           <td>{{ item.get('quantity')?.value }}</td>
           <td>
             {{ 
-              cartService.orderTypeId === 1 ?
+              (cartService.orderTypeId === 1 ?
                 item.get('unitCost')?.value :
-                item.get('unitPrice')?.value 
-            }}
+                item.get('unitPrice')?.value) | number:'1.2-2' 
+            }} د.أ
           </td>
           <td>
             {{ 
@@ -310,15 +397,15 @@
                 item.get('quantity')?.value * item.get('unitCost')?.value :
                 item.get('quantity')?.value * item.get('unitPrice')?.value
               )
-               | currency 
-            }}
+               | number:'1.2-2' 
+            }} د.أ
           </td>
         </tr>
         <!-- Total Row -->
         <tr>
           <!-- <td colspan="6" class="text-end"><strong>{{ 'SALESORDERITEMS.TOTALAMOUNT' | translate }}</strong></td> -->
           <td colspan="6" class="text-end"><strong>{{ 'CART_DETAILS.TOTAL' | translate }}</strong></td>
-          <td class="text-center"><strong>{{ cartService.cartForm.get('totalAmount')?.value | currency }}</strong></td>
+          <td class="text-center"><strong>{{ cartService.cartForm.get('totalAmount')?.value | number:'1.2-2' }} د.أ</strong></td>
         </tr>
       </tbody>
     </table>

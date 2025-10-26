@@ -7,6 +7,7 @@ import { AuthService } from '../../core/services/auth.service';
 import { Observable } from 'rxjs';
 import { SubCategory } from '../../admin/models/SubCategory';
 import { Category } from '../../admin/models/category';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-order-sub-categories',
@@ -52,6 +53,7 @@ export class OrderSubCategoriesComponent implements OnInit {
   orderTypeId: number = 1;
   categoryId: number = 1;
   categories!: Category[];
+  serverUrl: string = environment.resourcesUrl;
 
 
   loadSubCategories(categoryId: number) {

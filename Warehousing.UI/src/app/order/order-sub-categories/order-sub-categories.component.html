@@ -1,15 +1,51 @@
-<div class="container my-5">
-  <div class="row g-3 justify-content-center" *ngIf="(subCategories$ | async) as subCategories">
-    <div class="col-6 col-sm-4 col-md-3 col-lg-2" *ngFor="let subCategory of subCategories">
-      <div
-        class="card square-card shadow-sm"
-        (click)="onCardClick(subCategory.id)">
-        
-        <div class="card-body text-center">
-          <h5 class="card-title fw-bold">{{ subCategory.nameAr }}</h5>
-          <p class="card-text text-muted small">{{ subCategory.description }}</p>
+<div class="min-h-screen bg-gray-50 py-8">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <!-- Header -->
+    <div class="text-center mb-12">
+      <h1 class="text-3xl font-bold text-gray-900 mb-4">اختر التصنيف الفرعي</h1>
+      <p class="text-lg text-gray-600">اختر التصنيف الفرعي المناسب لتصفح المنتجات</p>
+    </div>
+
+    <!-- SubCategories Grid -->
+    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-6" *ngIf="(subCategories$ | async) as subCategories">
+      <div *ngFor="let subCategory of subCategories" class="group h-full">
+        <div class="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 cursor-pointer overflow-hidden border border-gray-100 h-full flex flex-col" 
+             (click)="onCardClick(subCategory.id)">
+          
+          <!-- SubCategory Image -->
+          <div class="aspect-square bg-gradient-to-br from-green-50 to-emerald-100 flex items-center justify-center p-6 flex-shrink-0">
+            <img *ngIf="subCategory.imagePath" 
+                 [src]="serverUrl + subCategory.imagePath" 
+                 [alt]="subCategory.nameAr"
+                 class="w-full h-full object-cover rounded-xl">
+            <div *ngIf="!subCategory.imagePath" 
+                 class="w-16 h-16 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl flex items-center justify-center">
+              <i class="bi bi-tags text-white text-2xl"></i>
+            </div>
+          </div>
+
+          <!-- SubCategory Info -->
+          <div class="p-4 text-center flex flex-col flex-grow">
+            <h3 class="font-bold text-gray-900 text-sm mb-1 group-hover:text-green-600 transition-colors">
+              {{ subCategory.nameAr }}
+            </h3>
+            <div class="flex-grow flex items-center justify-center">
+              <p class="text-gray-500 text-xs leading-relaxed" *ngIf="subCategory.description">
+                {{ subCategory.description | slice:0:40 }}{{ (subCategory.description && subCategory.description.length > 40) ? '...' : '' }}
+              </p>
+            </div>
+          </div>
         </div>
       </div>
+    </div>
+
+    <!-- Empty State -->
+    <div *ngIf="(subCategories$ | async)?.length === 0" class="text-center py-12">
+      <div class="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+        <i class="bi bi-tags text-gray-400 text-3xl"></i>
+      </div>
+      <h3 class="text-lg font-semibold text-gray-900 mb-2">لا توجد تصنيفات فرعية</h3>
+      <p class="text-gray-500">لم يتم العثور على أي تصنيفات فرعية متاحة</p>
     </div>
   </div>
 </div>

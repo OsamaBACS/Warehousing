@@ -1,0 +1,131 @@
+<div class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen" dir="rtl">
+  <!-- Header -->
+  <div class="bg-white shadow-lg border-b border-gray-200 px-8 py-6">
+    <div class="flex items-center justify-between">
+      <div class="flex items-center">
+        <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center mr-4">
+          <i class="bi bi-person-plus text-white text-xl"></i>
+        </div>
+        <div>
+          <h2 class="text-2xl font-bold text-gray-900">إضافة عميل جديد</h2>
+          <p class="text-gray-600 text-sm">املأ البيانات المطلوبة لإضافة عميل جديد</p>
+        </div>
+      </div>
+      <button class="w-10 h-10 bg-gray-100 hover:bg-gray-200 rounded-full flex items-center justify-center transition-colors" (click)="onCancel()">
+        <i class="bi bi-x-lg text-gray-600"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- Form Content -->
+  <div class="p-8">
+
+  <!-- Form -->
+  <div class="bg-white rounded-2xl shadow-xl p-8">
+    <form [formGroup]="customerForm" (ngSubmit)="onSubmit()" class="space-y-8">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Name Arabic -->
+        <div class="space-y-2">
+          <label class="block text-sm font-semibold text-gray-700">
+            <i class="bi bi-person mr-2 text-blue-600"></i>
+            اسم العميل بالعربية <span class="text-red-500">*</span>
+          </label>
+          <input type="text" 
+                 formControlName="nameAr"
+                 class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-gray-50 focus:bg-white"
+                 [class.border-red-500]="customerForm.get('nameAr')?.invalid && customerForm.get('nameAr')?.touched"
+                 placeholder="أدخل اسم العميل بالعربية">
+          <div class="text-red-500 text-sm mt-1 flex items-center" *ngIf="getFieldError('nameAr')">
+            <i class="bi bi-exclamation-circle mr-1"></i>
+            {{ getFieldError('nameAr') }}
+          </div>
+        </div>
+
+        <!-- Name English -->
+        <div class="space-y-2">
+          <label class="block text-sm font-semibold text-gray-700">
+            <i class="bi bi-person mr-2 text-blue-600"></i>
+            اسم العميل بالإنجليزية <span class="text-red-500">*</span>
+          </label>
+          <input type="text" 
+                 formControlName="nameEn"
+                 class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-gray-50 focus:bg-white"
+                 [class.border-red-500]="customerForm.get('nameEn')?.invalid && customerForm.get('nameEn')?.touched"
+                 placeholder="Enter customer name in English">
+          <div class="text-red-500 text-sm mt-1 flex items-center" *ngIf="getFieldError('nameEn')">
+            <i class="bi bi-exclamation-circle mr-1"></i>
+            {{ getFieldError('nameEn') }}
+          </div>
+        </div>
+
+        <!-- Phone -->
+        <div class="space-y-2">
+          <label class="block text-sm font-semibold text-gray-700">
+            <i class="bi bi-telephone mr-2 text-blue-600"></i>
+            رقم الهاتف <span class="text-red-500">*</span>
+          </label>
+          <input type="tel" 
+                 formControlName="phone"
+                 class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-gray-50 focus:bg-white"
+                 [class.border-red-500]="customerForm.get('phone')?.invalid && customerForm.get('phone')?.touched"
+                 placeholder="أدخل رقم الهاتف">
+          <div class="text-red-500 text-sm mt-1 flex items-center" *ngIf="getFieldError('phone')">
+            <i class="bi bi-exclamation-circle mr-1"></i>
+            {{ getFieldError('phone') }}
+          </div>
+        </div>
+
+        <!-- Email -->
+        <div class="space-y-2">
+          <label class="block text-sm font-semibold text-gray-700">
+            <i class="bi bi-envelope mr-2 text-blue-600"></i>
+            البريد الإلكتروني
+          </label>
+          <input type="email" 
+                 formControlName="email"
+                 class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-gray-50 focus:bg-white"
+                 [class.border-red-500]="customerForm.get('email')?.invalid && customerForm.get('email')?.touched"
+                 placeholder="أدخل البريد الإلكتروني">
+          <div class="text-red-500 text-sm mt-1 flex items-center" *ngIf="getFieldError('email')">
+            <i class="bi bi-exclamation-circle mr-1"></i>
+            {{ getFieldError('email') }}
+          </div>
+        </div>
+      </div>
+
+      <!-- Address -->
+      <div class="space-y-2">
+        <label class="block text-sm font-semibold text-gray-700">
+          <i class="bi bi-geo-alt mr-2 text-blue-600"></i>
+          العنوان <span class="text-red-500">*</span>
+        </label>
+        <textarea formControlName="address"
+                  rows="3"
+                  class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 resize-none bg-gray-50 focus:bg-white"
+                  [class.border-red-500]="customerForm.get('address')?.invalid && customerForm.get('address')?.touched"
+                  placeholder="أدخل العنوان الكامل"></textarea>
+        <div class="text-red-500 text-sm mt-1 flex items-center" *ngIf="getFieldError('address')">
+          <i class="bi bi-exclamation-circle mr-1"></i>
+          {{ getFieldError('address') }}
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="flex justify-end space-x-4 space-x-reverse pt-8 border-t border-gray-200">
+        <button type="button" 
+                (click)="onCancel()"
+                class="px-8 py-3 bg-gray-100 text-gray-700 rounded-xl font-semibold hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-offset-2 transition-all duration-200 border border-gray-300">
+          <i class="bi bi-x-lg mr-2"></i>
+          إلغاء
+        </button>
+        <button type="submit" 
+                [disabled]="customerForm.invalid || isLoading"
+                class="px-8 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-semibold hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg transform hover:scale-105">
+          <i class="bi bi-check-lg mr-2" *ngIf="!isLoading"></i>
+          <i class="bi bi-arrow-clockwise animate-spin mr-2" *ngIf="isLoading"></i>
+          {{ isLoading ? 'جاري الحفظ...' : 'حفظ العميل' }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

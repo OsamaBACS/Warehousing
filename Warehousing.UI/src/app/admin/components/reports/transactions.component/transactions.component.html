@@ -67,7 +67,7 @@
                                 <strong *ngFor="let inv of t.product.inventories">
                                     {{ inv.quantity }}
                                     <small class="text-muted ms-1">
-                                        {{ lang.currentLang === 'ar' ? t.product?.unit?.nameAr : t.product?.unit?.nameEn }}
+                                        {{ lang.currentLang === 'ar' ? t.product.unit?.nameAr : t.product.unit?.nameEn }}
                                     </small>
                                 </strong>
                             </div>
@@ -177,7 +177,7 @@
                                 <strong *ngFor="let inv of t.product.inventories">
                                     {{ inv.quantity }}
                                     <small class="text-muted ms-1">
-                                        {{ lang.currentLang === 'ar' ? t.product?.unit?.nameAr : t.product?.unit?.nameEn }}
+                                        {{ lang.currentLang === 'ar' ? t.product.unit?.nameAr : t.product.unit?.nameEn }}
                                     </small>
                                 </strong>
                             </div>

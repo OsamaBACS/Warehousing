@@ -1,12 +1,51 @@
-<div class="container my-5">
-  <div class="row g-3 justify-content-center" *ngIf="(categories$ | async) as categories">
-    <div class="col-6 col-sm-4 col-md-3 col-lg-2" *ngFor="let category of categories">
-      <div class="card square-card shadow-sm" (click)="onCardClick(category.id)">
-        <div class="card-body text-center">
-          <h5 class="card-title fw-bold">{{ category.nameAr }}</h5>
-          <p class="card-text text-muted small">{{ category.description }}</p>
+<div class="min-h-screen bg-gray-50 py-8">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <!-- Header -->
+    <div class="text-center mb-12">
+      <h1 class="text-3xl font-bold text-gray-900 mb-4">اختر التصنيف</h1>
+      <p class="text-lg text-gray-600">اختر التصنيف المناسب لتصفح المنتجات</p>
+    </div>
+
+    <!-- Categories Grid -->
+    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-6" *ngIf="(categories$ | async) as categories">
+      <div *ngFor="let category of categories" class="group h-full">
+        <div class="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 cursor-pointer overflow-hidden border border-gray-100 h-full flex flex-col" 
+             (click)="onCardClick(category.id)">
+          
+          <!-- Category Image -->
+          <div class="aspect-square bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-6 flex-shrink-0">
+            <img *ngIf="category.imagePath" 
+                 [src]="serverUrl + category.imagePath" 
+                 [alt]="category.nameAr"
+                 class="w-full h-full object-cover rounded-xl">
+            <div *ngIf="!category.imagePath" 
+                 class="w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center">
+              <i class="bi bi-grid-3x3-gap text-white text-2xl"></i>
+            </div>
+          </div>
+
+          <!-- Category Info -->
+          <div class="p-4 text-center flex flex-col flex-grow">
+            <h3 class="font-bold text-gray-900 text-sm mb-1 group-hover:text-blue-600 transition-colors">
+              {{ category.nameAr }}
+            </h3>
+            <div class="flex-grow flex items-center justify-center">
+              <p class="text-gray-500 text-xs leading-relaxed" *ngIf="category.description">
+                {{ category.description | slice:0:40 }}{{ (category.description && category.description.length > 40) ? '...' : '' }}
+              </p>
+            </div>
+          </div>
         </div>
       </div>
+    </div>
+
+    <!-- Empty State -->
+    <div *ngIf="(categories$ | async)?.length === 0" class="text-center py-12">
+      <div class="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+        <i class="bi bi-grid-3x3-gap text-gray-400 text-3xl"></i>
+      </div>
+      <h3 class="text-lg font-semibold text-gray-900 mb-2">لا توجد تصنيفات</h3>
+      <p class="text-gray-500">لم يتم العثور على أي تصنيفات متاحة</p>
     </div>
   </div>
 </div>

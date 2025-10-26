@@ -9,7 +9,7 @@ import { Supplier } from '../../../admin/models/supplier';
 import { Store } from '../../../admin/models/store';
 import { Status } from '../../../admin/models/status';
 import { ToastrService } from 'ngx-toastr';
-import { BsModalRef, BsModalService } from 'ngx-bootstrap/modal';
+import { MatDialog } from '@angular/material/dialog';
 import { ConfirmModalComponent } from '../confirm-modal.component/confirm-modal.component';
 import { Customer } from '../../../admin/models/customer';
 import { OrderService } from '../../../admin/services/order.service';
@@ -20,6 +20,10 @@ import { Unit } from '../../../admin/models/unit';
 import { PrintService } from '../../services/print.service';
 import { OrderItemDto } from '../../../admin/models/OrderItemDto';
 import { Subject } from 'rxjs';
+import { CustomerFormPopupComponent } from '../customer-form-popup/customer-form-popup.component';
+import { SupplierFormPopupComponent } from '../supplier-form-popup/supplier-form-popup.component';
+import { CustomersService } from '../../../admin/services/customers.service';
+import { SupplierService } from '../../../admin/services/supplier.service';
 
 @Component({
   selector: 'app-cart',
@@ -38,9 +42,11 @@ export class CartComponent implements OnInit, OnDestroy {
     private route: ActivatedRoute,
     public lang: LanguageService,
     private toastr: ToastrService,
-    private modalService: BsModalService,
+    private dialog: MatDialog,
     private authService: AuthService,
     private printService: PrintService,
+    private customerService: CustomersService,
+    private supplierService: SupplierService,
   ) {
     this.products = this.route.snapshot.data['productsResolver'];
     this.suppliers = this.route.snapshot.data['suppliersResolver'];
@@ -50,7 +56,7 @@ export class CartComponent implements OnInit, OnDestroy {
     this.subCategories = this.route.snapshot.data['subCategoriesResolver'];
     this.units = this.route.snapshot.data['unitsResolver'];
 
-    this.title = cartService.orderTypeId == 1 ? 'سلة المشتريات' : 'سلة المبيعات';
+    // Title is now handled by translation in the template
   }
 
   ngOnInit(): void {
@@ -95,7 +101,7 @@ export class CartComponent implements OnInit, OnDestroy {
     statusColor: string | null,
     statusCode: string | null
   } = { nameAr: null, nameEn: null, statusColor: null, statusCode: null };
-  bsModalRef?: BsModalRef;
+  // Removed BsModalRef - using Angular Material dialog
   permissionsEnum = PermissionsEnum;
   @ViewChild('printSection') printSection!: ElementRef;
 
@@ -251,18 +257,16 @@ export class CartComponent implements OnInit, OnDestroy {
   }
 
   onCancel() {
-
-    const config = {
-      initialState: {
+    const dialogRef = this.dialog.open(ConfirmModalComponent, {
+      data: {
         message: 'يرجى الاختيار',
         cancelBtn: 'إلغاء الطلب',
         confirmBtn: 'إفراغ السلة'
       }
-    };
+    });
 
-    this.bsModalRef = this.modalService.show(ConfirmModalComponent, config);
-    this.bsModalRef.content?.onClose.subscribe((result: boolean) => {
-      if (!result) {
+    dialogRef.afterClosed().subscribe((result: boolean) => {
+      if (result === false) {
         this.cartService.cartForm.get('statusId')?.setValue(6);
         this.orderService.SaveOrder(this.cartService.cartForm.value).subscribe({
           next: (response) => {
@@ -280,7 +284,7 @@ export class CartComponent implements OnInit, OnDestroy {
           }
         });
       }
-      else {
+      else if (result === true) {
         //Just clear cart
         this.cartService.clearCart();
       }
@@ -313,16 +317,15 @@ export class CartComponent implements OnInit, OnDestroy {
   }
 
   onConfirm(orderId: number) {
-    const config = {
-      initialState: {
+    const dialogRef = this.dialog.open(ConfirmModalComponent, {
+      data: {
         message: 'هل انت متاكد من هذا الجراء؟',
         cancelBtn: 'لا',
         confirmBtn: 'نعم'
       }
-    };
+    });
 
-    this.bsModalRef = this.modalService.show(ConfirmModalComponent, config);
-    this.bsModalRef.content?.onClose.subscribe((result: boolean) => {
+    dialogRef.afterClosed().subscribe((result: boolean) => {
       if (result) {
         console.log(result)
         if (orderId) {
@@ -353,16 +356,15 @@ export class CartComponent implements OnInit, OnDestroy {
   }
 
   onEdit(orderId: number) {
-    const config = {
-      initialState: {
+    const dialogRef = this.dialog.open(ConfirmModalComponent, {
+      data: {
         message: 'هل انت متاكد من هذا الجراء؟',
         cancelBtn: 'لا',
         confirmBtn: 'نعم'
       }
-    };
+    });
 
-    this.bsModalRef = this.modalService.show(ConfirmModalComponent, config);
-    this.bsModalRef.content?.onClose.subscribe((result: boolean) => {
+    dialogRef.afterClosed().subscribe((result: boolean) => {
       if (result) {
         console.log(result)
         if (orderId) {
@@ -393,16 +395,15 @@ export class CartComponent implements OnInit, OnDestroy {
   }
 
   onCancelApprovedOrder(orderId: number) {
-    const config = {
-      initialState: {
+    const dialogRef = this.dialog.open(ConfirmModalComponent, {
+      data: {
         message: 'هل انت متاكد من هذا الجراء؟',
         cancelBtn: 'لا',
         confirmBtn: 'نعم'
       }
-    };
+    });
 
-    this.bsModalRef = this.modalService.show(ConfirmModalComponent, config);
-    this.bsModalRef.content?.onClose.subscribe((result: boolean) => {
+    dialogRef.afterClosed().subscribe((result: boolean) => {
       if (result) {
         console.log(result)
         if (orderId) {
@@ -550,5 +551,49 @@ export class CartComponent implements OnInit, OnDestroy {
     } else {
       console.error("Print section not found");
     }
+  }
+
+  openCustomerForm(): void {
+    const dialogRef = this.dialog.open(CustomerFormPopupComponent, {
+      width: '600px',
+      maxWidth: '90vw',
+      maxHeight: '90vh',
+      disableClose: true,
+      data: {}
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        // Add the new customer to the customers list
+        this.customers.push(result);
+        // Set the new customer as selected
+        this.cartService.cartForm.patchValue({
+          customerId: result.id
+        });
+        this.toastr.success('تم إضافة العميل الجديد واختياره', 'نجح');
+      }
+    });
+  }
+
+  openSupplierForm(): void {
+    const dialogRef = this.dialog.open(SupplierFormPopupComponent, {
+      width: '600px',
+      maxWidth: '90vw',
+      maxHeight: '90vh',
+      disableClose: true,
+      data: {}
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        // Add the new supplier to the suppliers list
+        this.suppliers.push(result);
+        // Set the new supplier as selected
+        this.cartService.cartForm.patchValue({
+          supplierId: result.id
+        });
+        this.toastr.success('تم إضافة المورد الجديد واختياره', 'نجح');
+      }
+    });
   }
 }

@@ -1,50 +1,103 @@
-<div class="dialog-container p-3 p-md-4">
-  <h5 class="mb-4 text-center">{{ isEditMode ? 'Edit Supplier' : 'Add Supplier' }}</h5>
-
-  <form [formGroup]="supplierForm" (ngSubmit)="onSubmit()">
-    <div class="row g-3">
-
-      <!-- Name (EN) -->
-      <div class="col-12 col-sm-6 col-md-4">
-        <div class="floating-label-input">
-          <input class="form-control" formControlName="name" placeholder=" " />
-          <label>Name (EN)</label>
+<div class="min-h-screen bg-gray-50 py-8" dir="rtl">
+  <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+    <!-- Header -->
+    <div class="bg-white rounded-2xl shadow-lg p-6 mb-8">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center">
+          <div class="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl flex items-center justify-center mr-4">
+            <i class="bi bi-building text-white text-xl"></i>
+          </div>
+          <div>
+            <h1 class="text-3xl font-bold text-gray-900">
+              {{ isEditMode ? 'تعديل المورد' : 'إضافة مورد جديد' }}
+            </h1>
+            <p class="text-gray-600 mt-1">إدارة بيانات الموردين في النظام</p>
+          </div>
         </div>
-      </div>
-
-      <!-- Phone -->
-      <div class="col-12 col-sm-6 col-md-4">
-        <div class="floating-label-input">
-          <input class="form-control" formControlName="phone" placeholder=" " />
-          <label>Phone</label>
-        </div>
-      </div>
-
-      <!-- Email -->
-      <div class="col-12 col-sm-6 col-md-4">
-        <div class="floating-label-input">
-          <input type="email" class="form-control" formControlName="email" placeholder=" " />
-          <label>Email</label>
-        </div>
-      </div>
-
-      <!-- Address -->
-      <div class="col-12 col-md-8">
-        <div class="floating-label-textarea">
-          <textarea class="form-control" rows="3" formControlName="address" placeholder=" "></textarea>
-          <label>Address</label>
-        </div>
+        <button class="w-10 h-10 bg-gray-100 hover:bg-gray-200 rounded-full flex items-center justify-center transition-colors" 
+                (click)="cancel()">
+          <i class="bi bi-x-lg text-gray-600"></i>
+        </button>
       </div>
     </div>
 
-    <!-- Actions -->
-    <div class="col-12 mt-4 d-flex justify-content-end gap-2 flex-wrap">
-      <button type="button" class="btn btn-secondary flex-fill" (click)="cancel()">
-        Cancel
-      </button>
-      <button type="submit" class="btn btn-primary flex-fill" [disabled]="supplierForm.invalid">
-        {{ isEditMode ? 'Update' : 'Save' }}
-      </button>
+    <!-- Form -->
+    <div class="bg-white rounded-2xl shadow-xl p-8">
+      <form [formGroup]="supplierForm" (ngSubmit)="onSubmit()" class="space-y-8">
+        <!-- Basic Information Section -->
+        <div class="border-b border-gray-200 pb-8">
+          <h2 class="text-xl font-bold text-gray-900 mb-6 flex items-center">
+            <i class="bi bi-info-circle text-green-600 mr-3"></i>
+            المعلومات الأساسية
+          </h2>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Name -->
+            <div class="space-y-2">
+              <label class="block text-sm font-semibold text-gray-700">
+                <i class="bi bi-building mr-2 text-green-600"></i>
+                اسم المورد <span class="text-red-500">*</span>
+              </label>
+              <input type="text" 
+                     formControlName="name"
+                     class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 bg-gray-50 focus:bg-white"
+                     placeholder="أدخل اسم المورد">
+            </div>
+
+            <!-- Phone -->
+            <div class="space-y-2">
+              <label class="block text-sm font-semibold text-gray-700">
+                <i class="bi bi-telephone mr-2 text-green-600"></i>
+                رقم الهاتف <span class="text-red-500">*</span>
+              </label>
+              <input type="tel" 
+                     formControlName="phone"
+                     class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 bg-gray-50 focus:bg-white"
+                     placeholder="أدخل رقم الهاتف">
+            </div>
+
+            <!-- Email -->
+            <div class="space-y-2">
+              <label class="block text-sm font-semibold text-gray-700">
+                <i class="bi bi-envelope mr-2 text-green-600"></i>
+                البريد الإلكتروني <span class="text-red-500">*</span>
+              </label>
+              <input type="email" 
+                     formControlName="email"
+                     class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 bg-gray-50 focus:bg-white"
+                     placeholder="أدخل البريد الإلكتروني">
+            </div>
+          </div>
+
+          <!-- Address -->
+          <div class="mt-6 space-y-2">
+            <label class="block text-sm font-semibold text-gray-700">
+              <i class="bi bi-geo-alt mr-2 text-green-600"></i>
+              العنوان
+            </label>
+            <textarea formControlName="address" 
+                      rows="4"
+                      class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 bg-gray-50 focus:bg-white resize-none"
+                      placeholder="أدخل العنوان الكامل"></textarea>
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="flex justify-end space-x-4 space-x-reverse pt-8 border-t border-gray-200">
+          <button type="button" 
+                  (click)="cancel()"
+                  class="px-8 py-3 bg-gray-100 text-gray-700 rounded-xl font-semibold hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-offset-2 transition-all duration-200 border border-gray-300">
+            <i class="bi bi-x-lg mr-2"></i>
+            إلغاء
+          </button>
+          <button type="submit" 
+                  [disabled]="supplierForm.invalid"
+                  class="px-8 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl font-semibold hover:from-green-700 hover:to-emerald-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg transform hover:scale-105">
+            <i class="bi bi-check-lg mr-2"></i>
+            {{ isEditMode ? 'تحديث المورد' : 'حفظ المورد' }}
+          </button>
+        </div>
+      </form>
     </div>
-  </form>
+  </div>
 </div>

@@ -1,12 +1,26 @@
-<nav aria-label="breadcrumb" class="mb-3" *ngIf="breadcrumbs.length > 0">
-  <ol class="breadcrumb">
-    <li *ngFor="let breadcrumb of breadcrumbs; let last = last" 
-        class="breadcrumb-item" 
-        [class.active]="last">
-      <a *ngIf="!last && breadcrumb.route" [routerLink]="breadcrumb.route" class="text-decoration-none">
-        {{ breadcrumb.label }}
-      </a>
-      <span *ngIf="last || !breadcrumb.route">{{ breadcrumb.label }}</span>
+<nav aria-label="breadcrumb" class="mb-6" *ngIf="breadcrumbs.length > 0" dir="rtl">
+  <ol class="flex items-center space-x-1 space-x-reverse">
+    <li *ngFor="let breadcrumb of breadcrumbs; let last = last; let i = index" 
+        class="flex items-center">
+      <!-- Breadcrumb Item -->
+      <div class="flex items-center">
+        <a *ngIf="!last && breadcrumb.route" 
+           [routerLink]="breadcrumb.route" 
+           class="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-all duration-200 group">
+          <i class="bi bi-house mr-2 text-gray-400 group-hover:text-gray-600 transition-colors" *ngIf="i === 0"></i>
+          {{ breadcrumb.label }}
+        </a>
+        <span *ngIf="last || !breadcrumb.route" 
+              class="inline-flex items-center px-3 py-2 text-sm font-semibold text-gray-900 bg-blue-50 rounded-lg">
+          <i class="bi bi-chevron-left mr-2 text-blue-600" *ngIf="i > 0"></i>
+          {{ breadcrumb.label }}
+        </span>
+      </div>
+      
+      <!-- Separator -->
+      <div *ngIf="!last" class="flex items-center mx-2">
+        <i class="bi bi-chevron-left text-gray-400 text-sm"></i>
+      </div>
     </li>
   </ol>
 </nav>

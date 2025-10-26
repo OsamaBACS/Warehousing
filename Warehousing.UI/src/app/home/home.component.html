@@ -1,42 +1,104 @@
-<div class="container my-5" dir="rtl">
-  <div class="row justify-content-center g-4">
-
-    <!-- الإدارة -->
-    <div class="col-6 col-sm-4 col-md-4 col-lg-3 col-xl-2" *ngIf="authService.hasPermission('VIEW_ADMIN')">
-      <a routerLink="/admin" class="text-decoration-none">
-        <div class="card h-100 border shadow-sm text-center py-4">
-          <div class="card-body d-flex flex-column justify-content-center align-items-center">
-            <i class="bi bi-speedometer2 fs-2 mb-3 text-primary"></i>
-            <span class="fw-bold fs-5 text-dark">{{ 'BREADCRUMB.ADMIN' | translate }}</span>
-          </div>
-        </div>
-      </a>
+<div class="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-100 py-12" dir="rtl">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <!-- Header -->
+    <div class="text-center mb-16">
+      <h1 class="text-4xl font-bold text-gray-900 mb-4">نظام إدارة مواد البناء</h1>
+      <p class="text-xl text-gray-600">اختر الخدمة المطلوبة للبدء</p>
     </div>
 
-    <!-- الشراء -->
-    <div class="col-6 col-sm-4 col-md-4 col-lg-3 col-xl-2" *ngIf="authService.hasPermission('VIEW_PURCHASE_ORDERS')">
-      <a routerLink="/order/1" class="text-decoration-none">
-        <div class="card h-100 border shadow-sm text-center py-4">
-          <div class="card-body d-flex flex-column justify-content-center align-items-center">
-            <i class="bi bi-cart-check fs-2 mb-3 text-success"></i>
-            <span class="fw-bold fs-5 text-dark">الشراء</span>
+    <!-- Cards Grid -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 max-w-4xl mx-auto">
+      
+      <!-- الإدارة -->
+      <div *ngIf="authService.hasPermission('VIEW_ADMIN')" class="group">
+        <a routerLink="/admin" class="block">
+          <div class="bg-white rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-500 transform hover:scale-105 overflow-hidden border border-gray-100">
+            <!-- Gradient Header -->
+            <div class="h-2 bg-gradient-to-r from-blue-500 via-blue-600 to-indigo-600"></div>
+            
+            <!-- Card Content -->
+            <div class="p-8 text-center">
+              <div class="w-20 h-20 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl mx-auto mb-6 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                <i class="bi bi-speedometer2 text-white text-3xl"></i>
+              </div>
+              
+              <h3 class="text-2xl font-bold text-gray-900 mb-3 group-hover:text-blue-600 transition-colors">
+                {{ 'BREADCRUMB.ADMIN' | translate }}
+              </h3>
+              
+              <p class="text-gray-600 text-sm leading-relaxed">
+                إدارة النظام والمستخدمين والإعدادات
+              </p>
+              
+              <!-- Arrow Icon -->
+              <div class="mt-6">
+                <i class="bi bi-arrow-left text-blue-600 text-xl group-hover:translate-x-1 transition-transform duration-300"></i>
+              </div>
+            </div>
           </div>
-        </div>
-      </a>
-    </div>
+        </a>
+      </div>
 
-    <!-- البيع -->
-    <div class="col-6 col-sm-4 col-md-4 col-lg-3 col-xl-2" *ngIf="authService.hasPermission('VIEW_SALE_ORDERS')">
-      <a routerLink="/order/2" class="text-decoration-none">
-        <div class="card h-100 border shadow-sm text-center py-4">
-          <div class="card-body d-flex flex-column justify-content-center align-items-center">
-            <i class="bi bi-cash fs-2 mb-3 text-warning"></i>
-            <span class="fw-bold fs-5 text-dark">البيع</span>
+      <!-- الشراء -->
+      <div *ngIf="authService.hasPermission('VIEW_PURCHASE_ORDERS')" class="group">
+        <a routerLink="/order/1" class="block">
+          <div class="bg-white rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-500 transform hover:scale-105 overflow-hidden border border-gray-100">
+            <!-- Gradient Header -->
+            <div class="h-2 bg-gradient-to-r from-green-500 via-green-600 to-emerald-600"></div>
+            
+            <!-- Card Content -->
+            <div class="p-8 text-center">
+              <div class="w-20 h-20 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl mx-auto mb-6 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                <i class="bi bi-cart-check text-white text-3xl"></i>
+              </div>
+              
+              <h3 class="text-2xl font-bold text-gray-900 mb-3 group-hover:text-green-600 transition-colors">
+                الشراء
+              </h3>
+              
+              <p class="text-gray-600 text-sm leading-relaxed">
+                إدارة طلبات الشراء والموردين
+              </p>
+              
+              <!-- Arrow Icon -->
+              <div class="mt-6">
+                <i class="bi bi-arrow-left text-green-600 text-xl group-hover:translate-x-1 transition-transform duration-300"></i>
+              </div>
+            </div>
           </div>
-        </div>
-      </a>
+        </a>
+      </div>
+
+      <!-- البيع -->
+      <div *ngIf="authService.hasPermission('VIEW_SALE_ORDERS')" class="group">
+        <a routerLink="/order/2" class="block">
+          <div class="bg-white rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-500 transform hover:scale-105 overflow-hidden border border-gray-100">
+            <!-- Gradient Header -->
+            <div class="h-2 bg-gradient-to-r from-yellow-500 via-orange-500 to-red-500"></div>
+            
+            <!-- Card Content -->
+            <div class="p-8 text-center">
+              <div class="w-20 h-20 bg-gradient-to-br from-yellow-500 to-orange-500 rounded-2xl mx-auto mb-6 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                <i class="bi bi-cash text-white text-3xl"></i>
+              </div>
+              
+              <h3 class="text-2xl font-bold text-gray-900 mb-3 group-hover:text-orange-600 transition-colors">
+                البيع
+              </h3>
+              
+              <p class="text-gray-600 text-sm leading-relaxed">
+                إدارة طلبات البيع والعملاء
+              </p>
+              
+              <!-- Arrow Icon -->
+              <div class="mt-6">
+                <i class="bi bi-arrow-left text-orange-600 text-xl group-hover:translate-x-1 transition-transform duration-300"></i>
+              </div>
+            </div>
+          </div>
+        </a>
+      </div>
+
     </div>
-
-
   </div>
 </div>

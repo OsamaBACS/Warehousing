@@ -1,272 +1,190 @@
-<div class="dialog-container p-3 p-md-4" *ngIf="order$ | async as order">
-  <!-- Header -->
-  <div class="modal-header mb-4 d-flex justify-content-between align-items-center">
-    <!-- <h5 class="modal-title fw-bold">{{ 'SALESORDERITEMS.TITLE' | translate }}</h5> -->
-    <h5 class="modal-title fw-bold">
-      {{
-        order.orderTypeId == 1 ?
-          'تفاصيل طلب الشراء' :
-          'تفاصيل طلب البيع'
-      }}
-    </h5>
-
-    <div class="d-flex align-items-center gap-3">
-      <!-- Status Badge -->
-      <div class="mb-0">
-        <span class="badge rounded-pill px-3 py-2 d-inline-flex align-items-center"
-          [style.background-color]="status.statusColor">
-          <i class="bi bi-circle-fill me-2 small"></i>
-          <!-- {{ lang.currentLang === 'ar' ? status.nameAr : status.nameEn }} -->
-            {{ status.nameAr  }}
-        </span>
-      </div>
-      <!-- Optional: Show completed message if order is already completed -->
-      <ng-container *ngIf="status?.statusCode === 'COMPLETED'">
-        <span class="text-success d-flex align-items-center gap-1">
-          <i class="bi bi-check-circle-fill"></i>
-          <!-- <span>{{ 'STATUS.COMPLETED' | translate }}</span> -->
-          <span>مكتمل</span>
-        </span>
-      </ng-container>
-
-      <button class="btn btn-outline-dark" (click)="printOrder()" *ngIf="items.length > 0">
-        <i class="bi bi-printer me-1"></i>
-      </button>
-    </div>
-  </div>
-
-  <!-- Form -->
-  <div class="modal-body" *ngIf="orderForm" [formGroup]="orderForm">
-    <!-- Order Info -->
-    <div class="row g-3 mb-4">
-      <!-- Order Date -->
-      <div class="col-12 col-sm-6 col-md-4">
-        <div class="floating-label-input">
-          <input type="date" class="form-control" id="orderDate" formControlName="orderDate" placeholder=" " />
-          <!-- <label>{{ 'SALESORDERITEMS.ORDERDATE' | translate }}</label> -->
-          <label>تاريخ الطلب</label>
+<div class="min-h-screen bg-gray-50 py-8" dir="rtl" *ngIf="order$ | async as order">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <!-- Header -->
+    <div class="bg-white rounded-2xl shadow-lg p-6 mb-8">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center">
+          <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center mr-4">
+            <i class="bi bi-list-ul text-white text-xl"></i>
+          </div>
+          <div>
+            <h1 class="text-3xl font-bold text-gray-900">
+              {{ order.orderTypeId == 1 ? 'تفاصيل طلب الشراء' : 'تفاصيل طلب البيع' }}
+            </h1>
+            <p class="text-gray-600 mt-1">رقم الطلب: {{ order.id }}</p>
+          </div>
         </div>
-      </div>
-
-      <!-- Customer -->
-      <div class="col-12 col-sm-6 col-md-4">
-        <div class="floating-label-select">
-          <select class="form-select" id="customerId" formControlName="customerId">
-            <option value="">Select Customer</option>
-            <option *ngFor="let customer of customers" [value]="customer.id">
-              <!-- {{ lang.currentLang === 'ar' ? customer.nameAr : customer.nameEn }} -->
-                {{ customer.nameAr }}
-            </option>
-          </select>
-          <!-- <label>{{ 'SALESORDERITEMS.CUSTOMER' | translate }}</label> -->
-          <label>الزبون</label>
-        </div>
-      </div>
-
-      <!-- Total Amount -->
-      <div class="col-12 col-sm-6 col-md-4">
-        <div class="floating-label-input">
-          <input type="number" class="form-control" formControlName="totalAmount" readonly placeholder=" " />
-          <!-- <label>{{ 'SALESORDERITEMS.TOTALAMOUNT' | translate }}</label> -->
-          <label>المبلغ الاجمالي</label>
+        <div class="flex items-center space-x-3 space-x-reverse">
+          <!-- Status Badge -->
+          <span class="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium text-white bg-blue-500">
+            <i class="bi bi-circle-fill mr-2 text-xs"></i>
+            حالة الطلب
+          </span>
+          
+          <!-- Print Button -->
+          <button class="inline-flex items-center px-4 py-2 bg-gray-600 text-white rounded-xl font-semibold hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-all duration-200 transform hover:scale-105 shadow-lg"
+                  (click)="printOrder()">
+            <i class="bi bi-printer mr-2"></i>
+            طباعة
+          </button>
         </div>
       </div>
     </div>
 
-    <!-- Add Item Button -->
-    <!-- <div class="row mb-3">
-      <div class="col-md-6">
-        <button *ngIf="status.statusCode == statusEnum[statusEnum.PENDING] || status.statusCode == null" type="button"
-          class="btn btn-outline-primary mb-3" (click)="addItem()">
-          <i class="bi bi-plus-circle"></i>
-        </button>
-      </div>
-    </div> -->
-
-    <!-- Items Table -->
-    <div class="table-responsive mb-4">
-      <table class="table table-bordered align-middle">
-        <thead class="table-light">
-          <tr>
-            <!-- <th style="width: 20%;">{{ 'SALESORDERITEMS.CATEGORY' | translate }}</th>
-            <th style="width: 10%;">{{ 'PRODUCTS.CODE' | translate }}</th>
-            <th style="width: 30%;">{{ 'SALESORDERITEMS.PRODUCT' | translate }}</th>
-            <th style="width: 15%;">{{ 'SALESORDERITEMS.UNIT' | translate }}</th>
-            <th style="width: 8%;">{{ 'SALESORDERITEMS.QUANTITY' | translate }}</th>
-            <th style="width: 10%;">{{ 'SALESORDERITEMS.sellingPrice' | translate }}</th>
-            <th style="width: 10%;">{{ 'SALESORDERITEMS.SUBTOTAL' | translate }}</th>
-            <th style="width: 7%;">{{ 'SHARED.ACTIONS' | translate }}</th> -->
-
-            <th style="width: 20%;">التصنيف</th>
-            <th style="width: 10%;">الكود</th>
-            <th style="width: 30%;">المنتج</th>
-            <th style="width: 15%;">الوحدة</th>
-            <th style="width: 8%;">الكمية</th>
-            <th style="width: 10%;">سعر البيع</th>
-            <th style="width: 10%;">المجموع</th>
-            <th style="width: 7%;">الاجراء</th>
-          </tr>
-        </thead>
-        <tbody formArrayName="items">
-          <tr *ngFor="let item of items.controls; let i = index" [formGroupName]="i">
-            <td>
-              <div class="p-1 min-w-150px">
-                <select class="form-select" formControlName="subCategoryId">
-                  <!-- <option value="">{{ 'SALESORDERITEMS.CATEGORY' | translate }}</option> -->
-                  <option *ngFor="let cat of subCategories" [value]="cat.id">
-                    <!-- {{ lang.currentLang === 'ar' ? cat.nameAr : cat.nameEn }} -->
-                      {{ cat.nameAr }}
-                  </option>
-                </select>
-              </div>
-            </td>
-            <td>
-              <div class="p-1 min-w-100px">
-                <input type="text" class="form-control" formControlName="code">
-              </div>
-            </td>
-            <td>
-              <div class="p-1 min-w-200px">
-                <select class="form-select" formControlName="productId">
-                  <!-- <option value="">{{ 'PURCHASEORDERSITEMS.PRODUCT' | translate }}</option> -->
-                  <option value="">يرجى اختيار المنتج</option>
-                  <option *ngFor="let product of products" [value]="product.id">
-                    <!-- {{ lang.currentLang === 'ar' ? product.nameAr : product.nameEn }} -->
-                      {{ product.nameAr }}
-                  </option>
-                </select>
-              </div>
-            </td>
-            <td>
-              <div class="p-1 min-w-120px">
-                <select class="form-select" formControlName="unitId">
-                  <option *ngFor="let unit of units" [value]="unit.id">
-                    <!-- {{ lang.currentLang === 'ar' ? unit.nameAr : unit.nameEn }} -->
-                      {{ unit.nameAr }}
-                  </option>
-                </select>
-              </div>
-            </td>
-            <td>
-              <div class="p-1 min-w-100px">
-                <input type="number" class="form-control" formControlName="quantity" placeholder="0.00" min="0.01"
-                  step="0.01">
-              </div>
-            </td>
-            <td>
-              <div class="p-1 min-w-100px">
-                <input type="number" class="form-control" formControlName="sellingPrice" placeholder="0.00" min="0.01"
-                  step="0.01">
-              </div>
-            </td>
-            <td>
-              {{ item.get('quantity')?.value * item.get('sellingPrice')?.value | currency }}
-            </td>
-            <td>
-              <div class="p-1 text-center">
-                <button [disabled]="status.statusCode == statusEnum[statusEnum.COMPLETED]" type="button"
-                  class="btn btn-danger w-100" (click)="removeItem(i)">
-                  <i class="bi bi-trash"></i>
-                </button>
-              </div>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-  <!-- Hidden Print Template -->
-<div #printSection style="display: none;" *ngIf="orderForm" [formGroup]="orderForm">
-  <div dir="rtl" class="p-4">
-    <!-- Company Header -->
-     <ng-container *ngIf="storeId">
-       <app-company-header></app-company-header>
-     </ng-container>
-
-    <!-- Title -->
-    <h4 class="text-center my-3">
-      {{
-        order.orderTypeId == 1 ?
-          'طلب الشراء' :
-          'طلب البيع'
-      }}
-      <!-- {{ 'SALESORDERITEMS.TITLE' | translate }} -->
-    </h4>
-
-    <!-- Order Info -->
-    <div class="mb-3">
-      <div class="row g-3">
+    <!-- Order Information -->
+    <div class="bg-white rounded-2xl shadow-lg p-6 mb-8" *ngIf="order$ | async as order">
+      <h2 class="text-xl font-bold text-gray-900 mb-6 flex items-center">
+        <i class="bi bi-info-circle mr-3 text-blue-600"></i>
+        معلومات الطلب
+      </h2>
+      
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
         <!-- Order Date -->
-        <div class="col-12 col-md-6">
-          <div class="p-2 border rounded bg-light d-block">
-            <!-- <strong>{{ 'SALESORDERITEMS.ORDERDATE' | translate }}:</strong> -->
-             <strong>التاريخ: </strong>
-            {{ orderForm.get('orderDate')?.value | date }}
+        <div class="space-y-2">
+          <label class="block text-sm font-semibold text-gray-700">
+            <i class="bi bi-calendar mr-2 text-blue-600"></i>
+            تاريخ الطلب
+          </label>
+          <div class="w-full px-4 py-3 bg-gray-100 rounded-xl text-gray-700 font-medium">
+            {{ order.orderDate | date:'yyyy-MM-dd' }}
           </div>
         </div>
 
-        <!-- Customer Name -->
-        <div class="col-12 col-md-6">
-          <div class="p-2 border rounded bg-light d-block" *ngIf="order.orderTypeId == 2">
-            <!-- <strong>{{ 'SALESORDERITEMS.CUSTOMER' | translate }}:</strong> -->
-            <strong>الزبون: </strong>
-            {{ getCustomerName(orderForm.get('customerId')?.value) }}
+        <!-- Customer -->
+        <div class="space-y-2">
+          <label class="block text-sm font-semibold text-gray-700">
+            <i class="bi bi-person mr-2 text-blue-600"></i>
+            الزبون
+          </label>
+          <div class="w-full px-4 py-3 bg-gray-100 rounded-xl text-gray-700 font-medium">
+            {{ getCustomerName(order.customerId) }}
           </div>
-          <div class="p-2 border rounded bg-light d-block" *ngIf="order.orderTypeId == 1">
-            <!-- <strong>{{ 'SALESORDERITEMS.CUSTOMER' | translate }}:</strong> -->
-            <strong>المورد: </strong>
-            {{ getSupplierName(orderForm.get('supplierId')?.value) }}
+        </div>
+
+        <!-- Total Amount -->
+        <div class="space-y-2">
+          <label class="block text-sm font-semibold text-gray-700">
+            <i class="bi bi-currency-dollar mr-2 text-blue-600"></i>
+            المبلغ الإجمالي
+          </label>
+          <div class="w-full px-4 py-3 bg-gray-100 rounded-xl text-gray-700 font-medium">
+            {{ order.totalAmount | currency:'JOD':'symbol':'1.2-2':'ar' }}
           </div>
         </div>
       </div>
     </div>
 
     <!-- Items Table -->
-    <table class="table table-bordered small">
-      <thead>
-        <tr>
-          <th>#</th>
-          <!-- <th>{{ 'SALESORDERITEMS.CATEGORY' | translate }}</th>
-          <th>{{ 'SALESORDERITEMS.PRODUCT' | translate }}</th>
-          <th>{{ 'SALESORDERITEMS.UNIT' | translate }}</th>
-          <th>{{ 'SALESORDERITEMS.QUANTITY' | translate }}</th>
-          <th>{{ 'SALESORDERITEMS.sellingPrice' | translate }}</th>
-          <th>{{ 'SALESORDERITEMS.SUBTOTAL' | translate }}</th> -->
+    <div class="bg-white rounded-2xl shadow-lg overflow-hidden" *ngIf="order$ | async as order">
+      <div class="p-6 border-b border-gray-200">
+        <div class="flex justify-between items-center">
+          <h2 class="text-xl font-bold text-gray-900 flex items-center">
+            <i class="bi bi-list-ul mr-3 text-blue-600"></i>
+            عناصر الطلب
+          </h2>
+          <div class="text-sm text-gray-500">
+            إجمالي العناصر: {{ order.items?.length || 0 }}
+          </div>
+        </div>
+      </div>
+      
+      <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+          <thead class="bg-gradient-to-r from-blue-500 to-indigo-600">
+            <tr>
+              <th class="px-6 py-4 text-right text-xs font-medium text-white uppercase tracking-wider">#</th>
+              <th class="px-6 py-4 text-right text-xs font-medium text-white uppercase tracking-wider">التصنيف</th>
+              <th class="px-6 py-4 text-right text-xs font-medium text-white uppercase tracking-wider">الكود</th>
+              <th class="px-6 py-4 text-right text-xs font-medium text-white uppercase tracking-wider">المنتج</th>
+              <th class="px-6 py-4 text-right text-xs font-medium text-white uppercase tracking-wider">الوحدة</th>
+              <th class="px-6 py-4 text-right text-xs font-medium text-white uppercase tracking-wider">الكمية</th>
+              <th class="px-6 py-4 text-right text-xs font-medium text-white uppercase tracking-wider">سعر البيع</th>
+              <th class="px-6 py-4 text-right text-xs font-medium text-white uppercase tracking-wider">المجموع</th>
+            </tr>
+          </thead>
+          <tbody class="bg-white divide-y divide-gray-200">
+            <tr *ngFor="let item of order.items; let i = index" class="hover:bg-gray-50 transition-colors">
+              <!-- Row Number -->
+              <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                {{ i + 1 }}
+              </td>
 
-          <th>الصنيف</th>
-          <th>رقم البيان</th>
-          <th>المنتج</th>
-          <th>الوحدة</th>
-          <th>الكمية</th>
-          <th>السعر</th>
-          <th>المجموع</th>
-        </tr>
-      </thead>
-      <tbody formArrayName="items" *ngIf="items">
-        <tr class="text-center" *ngFor="let item of items.controls; let i = index" [formGroupName]="i">
-          <td class="text-center">{{ i + 1 }}</td>
-          <td>{{ getCategoryName(item.get('subCategoryId')?.value) }}</td>
-          <td>{{ getProductDescription(item.get('productId')?.value) }}</td>
-          <td>{{ getProductName(item.get('productId')?.value) }}</td>
-          <td>{{ getUnitName(item.get('unitId')?.value) }}</td>
-          <td>{{ item.get('quantity')?.value }}</td>
-          <td>{{ item.get('sellingPrice')?.value }}</td>
-          <td>{{ item.get('quantity')?.value * item.get('sellingPrice')?.value | currency }}</td>
-        </tr>
-        <!-- Total Row -->
-        <tr>
-          <!-- <td colspan="6" class="text-end"><strong>{{ 'SALESORDERITEMS.TOTALAMOUNT' | translate }}</strong></td> -->
-          <td colspan="6" class="text-end"><strong>الاجمالي</strong></td>
-          <td class="text-center"><strong>{{ orderForm.get('totalAmount')?.value | currency }}</strong></td>
-        </tr>
-      </tbody>
-    </table>
+              <!-- Category -->
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                {{ getCategoryName(item.product?.subCategoryId) }}
+              </td>
 
-    <!-- Company Footer -->
-     <ng-container *ngIf="storeId">
-       <app-company-footer></app-company-footer>
-     </ng-container>
+              <!-- Product Code -->
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                {{ item.product?.code }}
+              </td>
+
+              <!-- Product -->
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                {{ item.product?.nameAr }}
+              </td>
+
+              <!-- Unit -->
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                {{ getUnitName(item.product?.unitId) }}
+              </td>
+
+              <!-- Quantity -->
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                {{ item.quantity }}
+              </td>
+
+              <!-- Selling Price -->
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                {{ item.unitPrice | currency:'JOD':'symbol':'1.2-2':'ar' }}
+              </td>
+
+              <!-- Subtotal -->
+              <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                {{ (item.quantity * item.unitPrice) | currency:'JOD':'symbol':'1.2-2':'ar' }}
+              </td>
+            </tr>
+            
+            <!-- Empty State -->
+            <tr *ngIf="!order.items || order.items.length === 0">
+              <td colspan="8" class="px-6 py-12 text-center">
+                <div class="flex flex-col items-center">
+                  <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                    <i class="bi bi-list-ul text-gray-400 text-2xl"></i>
+                  </div>
+                  <h3 class="text-lg font-semibold text-gray-900 mb-2">لا توجد عناصر</h3>
+                  <p class="text-gray-500">لم يتم العثور على أي عناصر في هذا الطلب</p>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <!-- Action Buttons -->
+    <div class="bg-white rounded-2xl shadow-lg p-6 mt-8">
+      <div class="flex justify-between items-center">
+        <div class="text-sm text-gray-500">
+          <i class="bi bi-info-circle mr-2"></i>
+          صفحة عرض الطلب - للطباعة فقط
+        </div>
+        <div class="flex space-x-4 space-x-reverse">
+          <button type="button" 
+                  class="px-6 py-3 bg-gray-100 text-gray-700 rounded-xl font-semibold hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-offset-2 transition-all duration-200 border border-gray-300"
+                  (click)="goBack()">
+            <i class="bi bi-arrow-right mr-2"></i>
+            العودة
+          </button>
+          <button type="button" 
+                  class="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-semibold hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200 transform hover:scale-105 shadow-lg"
+                  (click)="printOrder()">
+            <i class="bi bi-printer mr-2"></i>
+            طباعة الطلب
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
-</div>
+
 

@@ -1,59 +1,79 @@
-// Global RTL Styles
+/* Tailwind CSS directives */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Global RTL Styles */
 html[dir="rtl"] {
   direction: rtl;
   text-align: right;
-
-  // You can also import full components here if needed
-  // e.g., .btn, .form-control etc.
-
-  // Custom RTL Overrides
-  .text-start {
-    text-align: right !important;
-  }
-
-  .text-end {
-    text-align: left !important;
-  }
-
-  .float-start {
-    float: right !important;
-  }
-
-  .float-end {
-    float: left !important;
-  }
-
-  .flex-row-reverse {
-    flex-direction: row !important;
-  }
-
-  .ms-auto {
-    margin-left: auto !important;
-    margin-right: 0 !important;
-  }
-
-  .me-auto {
-    margin-right: auto !important;
-    margin-left: 0 !important;
-  }
-
-  // Add more overrides as needed
 }
 
-.card {
-  border: none;
-  border-radius: 1rem;
+/* Custom RTL Overrides for Tailwind */
+html[dir="rtl"] .text-left {
+  text-align: right !important;
 }
 
-.btn-primary {
-  border-radius: 0.5rem;
-  font-weight: 600;
+html[dir="rtl"] .text-right {
+  text-align: left !important;
+}
+
+html[dir="rtl"] .float-left {
+  float: right !important;
+}
+
+html[dir="rtl"] .float-right {
+  float: left !important;
+}
+
+html[dir="rtl"] .flex-row {
+  flex-direction: row-reverse !important;
+}
+
+html[dir="rtl"] .ml-auto {
+  margin-left: 0 !important;
+  margin-right: auto !important;
+}
+
+html[dir="rtl"] .mr-auto {
+  margin-right: 0 !important;
+  margin-left: auto !important;
+}
+
+/* Custom Tailwind utilities */
+@layer components {
+  .card {
+    @apply bg-white border border-gray-200 rounded-xl shadow-sm;
+  }
+  
+  .btn-primary {
+    @apply bg-blue-600 text-white px-4 py-2 rounded-md font-semibold hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors;
+  }
+  
+  .btn-secondary {
+    @apply bg-gray-500 text-white px-4 py-2 rounded-md font-semibold hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors;
+  }
+  
+  .btn-outline-primary {
+    @apply border border-blue-300 text-blue-700 bg-white px-4 py-2 rounded-md font-semibold hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors;
+  }
+  
+  .btn-outline-secondary {
+    @apply border border-gray-300 text-gray-700 bg-white px-4 py-2 rounded-md font-semibold hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors;
+  }
+  
+  .form-control {
+    @apply w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500;
+  }
+  
+  .form-select {
+    @apply w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500;
+  }
 }
 
 /* === DARK MODE GLOBAL STYLES === */
 body.dark-mode {
-  background-color: #1e1e1e;
-  color: #f5f5f5;
+  @apply bg-gray-900 text-white;
 }
 
 body.dark-mode h1,
@@ -65,102 +85,78 @@ body.dark-mode h6,
 body.dark-mode p,
 body.dark-mode span,
 body.dark-mode label,
-body.dark-mode small,
-body.dark-mode .form-label {
-  color: #f5f5f5 !important;
+body.dark-mode small {
+  @apply text-white;
 }
 
 body.dark-mode .navbar {
-  background-color: #2b2b2b !important;
+  @apply bg-gray-800;
 }
 
 body.dark-mode .card,
-body.dark-mode .main-container,
+body.dark-mode .main-container {
+  @apply bg-gray-800 text-white;
+}
+
 body.dark-mode .form-control {
-  background-color: #2a2a2a !important;
-  color: #f5f5f5 !important;
+  @apply bg-gray-700 text-white border-gray-600;
 }
 
 body.dark-mode .form-control::placeholder {
-  color: #aaa;
+  @apply text-gray-400;
 }
 
 body.dark-mode .btn-outline-secondary {
-  border-color: #aaa;
-  color: #ddd;
+  @apply border-gray-500 text-gray-300;
 }
 
 body.dark-mode .btn-outline-secondary:hover {
-  background-color: #444;
-  color: #fff;
+  @apply bg-gray-600 text-white;
 }
 
 body.dark-mode .btn-outline-danger {
-  border-color: #f66;
-  color: #f66;
+  @apply border-red-500 text-red-400;
 }
 
 body.dark-mode .btn-outline-danger:hover {
-  background-color: #700;
-  color: white;
+  @apply bg-red-600 text-white;
 }
 
 body.dark-mode .text-muted {
-  color: #ccc !important;
+  @apply text-gray-400;
 }
 
 .dark-mode .dark-mode-text {
-  color: #fff !important;
+  @apply text-white;
 }
 
 .dark-mode .dark-mode-bg {
-  background-color: #1e1e2f !important;
+  @apply bg-gray-800;
 }
 
 .login-wrapper {
-  background-color: #f8f9fa; // Light mode
-
+  @apply bg-gray-50;
+  
   body.dark-mode & {
-    background-color: #1e1e1e; // Dark mode
+    @apply bg-gray-900;
   }
 }
 
+html, body { 
+  @apply h-full;
+}
 
-
-html, body { height: 100%; }
-body { direction: rtl; margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
-
-// .custom-dialog-container .mat-dialog-container {
-//   padding: 0 !important;
-//   border-radius: 12px;
-//   width: 100%;
-//   max-width: 300vw;
-//   max-height: 90vh; /* Limit height */
-//   overflow-y: auto;  /* Enable scroll */
-//   box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
-// }
-
-// .custom-dialog-container .mat-dialog-container {
-//   scrollbar-width: thin;
-//   scrollbar-color: #c1c1c1 transparent;
-// }
-
-// .custom-dialog-container .mat-dialog-container::-webkit-scrollbar {
-//   width: 6px;
-// }
-
-// .custom-dialog-container .mat-dialog-container::-webkit-scrollbar-thumb {
-//   background: #c1c1c1;
-//   border-radius: 8px;
-// }
+body { 
+  @apply m-0 font-roboto;
+  direction: rtl;
+}
 
 table {
-  text-align: center;
+  @apply text-center;
 }
 
 .breadcrumb-item + .breadcrumb-item::before {
   content: "/\00a0";           // "/" + non-breaking space
-  color: #6c757d;
-  font-weight: bold;
-  padding: 0 0.5rem;
+  @apply text-gray-500 font-bold px-2;
 }
+

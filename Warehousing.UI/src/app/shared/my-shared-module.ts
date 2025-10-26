@@ -15,6 +15,8 @@ import { TranslateModule } from '@ngx-translate/core';
 import { CartComponent } from './components/cart/cart.component';
 import { BreadcrumbComponent } from './components/breadcrumb/breadcrumb.component';
 import { OrderPendingListComponent } from './components/order-pending-list/order-pending-list.component';
+import { CustomerFormPopupComponent } from './components/customer-form-popup/customer-form-popup.component';
+import { SupplierFormPopupComponent } from './components/supplier-form-popup/supplier-form-popup.component';
 
 
 
@@ -26,7 +28,9 @@ import { OrderPendingListComponent } from './components/order-pending-list/order
     CompanyFooterComponent,
     CartComponent,
     BreadcrumbComponent,
-    OrderPendingListComponent
+    OrderPendingListComponent,
+    CustomerFormPopupComponent,
+    SupplierFormPopupComponent
   ],
   imports: [
     CommonModule,

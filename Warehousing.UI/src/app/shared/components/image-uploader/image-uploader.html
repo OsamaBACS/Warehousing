@@ -1,16 +1,41 @@
-<div class="upload-box border rounded p-3 text-center" [class.dragover]="isDragging" [class.readonly]="readonly"
+<div class="upload-container w-full h-full" [class.dragover]="isDragging" [class.readonly]="readonly"
   (dragover)="onDragOver($event)" (dragleave)="onDragLeave($event)" (drop)="onDrop($event)">
 
-  <div *ngIf="!readonly">
+  <!-- Upload Interface (when no image) -->
+  <div *ngIf="!imageToShow && !readonly" class="upload-interface w-full h-full flex flex-col items-center justify-center bg-gray-50 rounded-lg border-2 border-dashed border-gray-300 hover:border-blue-400 transition-colors">
     <input type="file" #fileInput hidden accept="image/*" (change)="onFileChange($event)" />
-
-    <button class="btn btn-sm btn-outline-primary" (click)="triggerFileInput(fileInput)">
-      Choose Image
-    </button>
-    <p class="text-muted small mt-2">Or drag & drop an image here</p>
+    
+    <div class="text-center p-6">
+      <i class="bi bi-cloud-upload text-4xl text-gray-400 mb-4"></i>
+      <button class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors" 
+              (click)="triggerFileInput(fileInput)">
+        اختر صورة
+      </button>
+      <p class="text-gray-500 text-sm mt-2">أو اسحب الصورة هنا</p>
+    </div>
   </div>
 
-  <div *ngIf="imageToShow" class="mt-2">
-    <img [src]="imageToShow" class="img-thumbnail" alt="Selected image" style="max-width: 200px; max-height: 200px" />
+  <!-- Image Display -->
+  <div *ngIf="imageToShow" class="image-display w-full h-full relative">
+    <img [src]="imageToShow" 
+         class="w-full h-full object-cover rounded-lg" 
+         alt="Selected image" />
+    
+    <!-- Edit Button (when not readonly) -->
+    <div *ngIf="!readonly" class="absolute inset-0 bg-black bg-opacity-0 hover:bg-opacity-30 transition-all duration-200 rounded-lg flex items-center justify-center opacity-0 hover:opacity-100">
+      <input type="file" #fileInputEdit hidden accept="image/*" (change)="onFileChange($event)" />
+      <button class="px-3 py-2 bg-white text-gray-700 rounded-lg shadow-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors" 
+              (click)="triggerFileInput(fileInputEdit)">
+        <i class="bi bi-pencil-fill mr-1"></i>
+        تغيير
+      </button>
+    </div>
+  </div>
+
+  <!-- Readonly Image Display -->
+  <div *ngIf="imageToShow && readonly" class="image-display w-full h-full">
+    <img [src]="imageToShow" 
+         class="w-full h-full object-cover rounded-lg" 
+         alt="Image" />
   </div>
 </div>

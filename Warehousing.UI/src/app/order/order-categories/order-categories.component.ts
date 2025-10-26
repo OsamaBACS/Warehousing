@@ -6,6 +6,7 @@ import { BreadcrumbService } from '../../shared/services/breadcrumb.service';
 import { OrderBreadcrumbService } from '../services/order-breadcrumb.service';
 import { Observable } from 'rxjs';
 import { Category } from '../../admin/models/category';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-order-categories',
@@ -35,6 +36,7 @@ export class OrderCategoriesComponent implements OnInit {
 
   categories$!: Observable<Category[]>;
   orderTypeId: number = 1;
+  serverUrl: string = environment.resourcesUrl;
 
   loadCategories() {
     this.categories$ = this.categoriesService.GetActiveCategories();

@@ -1,119 +1,118 @@
-<div class="container py-4" dir="rtl">
-  <!-- Header -->
-  <div class="row mb-4">
-    <div class="col-12">
-      <div class="d-flex justify-content-between align-items-center">
-        <h2 class="text-primary mb-0">{{ selectedSubCategory?.nameAr || ('ORDER.PRODUCTS' | translate) }}</h2>
-        <div class="text-muted">
-          <i class="fas fa-shopping-cart me-2"></i>
-          {{ orderTypeId === 1 ? ('PURCHASE.TITLE' | translate) : ('SALE.TITLE' | translate) }}
+<div class="min-h-screen bg-gray-50 py-8" dir="rtl">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <!-- Header -->
+    <div class="mb-8">
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h1 class="text-3xl font-bold text-gray-900 mb-2">{{ (selectedSubCategory && selectedSubCategory.nameAr) || ('ORDER.PRODUCTS' | translate) }}</h1>
+          <div class="flex items-center text-gray-600">
+            <i class="bi bi-cart3 mr-2"></i>
+            <span class="text-lg">{{ orderTypeId === 1 ? ('PURCHASE.TITLE' | translate) : ('SALE.TITLE' | translate) }}</span>
+          </div>
         </div>
       </div>
     </div>
-  </div>
 
-  <!-- Products Grid -->
-  <div class="row g-4">
-    <div class="col-sm-6 col-md-4 col-lg-3" *ngFor="let product of (products$ | async)">
-      <div class="card h-100 border-0 shadow-sm rounded product-card" 
-           (click)="viewProductDetail(product)"
-           style="cursor: pointer; transition: transform 0.3s ease, box-shadow 0.3s ease;">
-        
-        <!-- Product Image -->
-        <div class="card-img-top bg-light d-flex justify-content-center align-items-center p-3">
-          <app-image-uploader [initialImageUrl]="serverUrl + product.imagePath" [readonly]="true">
-          </app-image-uploader>
-        </div>
-
-        <!-- Card Body -->
-        <div class="card-body d-flex flex-column">
-          <!-- Product Name -->
-          <h6 class="card-title fw-bold text-primary mb-1">
-            {{ product.nameAr }}
-          </h6>
+    <!-- Products Grid -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+      <div *ngFor="let product of (products$ | async)" class="group">
+        <div class="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 cursor-pointer overflow-hidden border border-gray-100" 
+             (click)="viewProductDetail(product)">
           
-          <!-- Description -->
-          <p class="card-text text-muted small mb-2" [title]="product.description">
-            {{ product.description | slice:0:50 }}{{ (product.description?.length || 0) > 50 ? '...' : '' }}
-          </p>
-
-          <!-- Price -->
-          <div class="d-flex justify-content-between align-items-center mb-2">
-            <span class="fw-semibold text-success fs-5">{{ product.sellingPrice | currency }}</span>
-            <span class="text-muted small">{{ product.unit?.nameAr }}</span>
+          <!-- Product Image -->
+          <div class="aspect-square bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center p-4">
+            <app-image-uploader [initialImageUrl]="serverUrl + product.imagePath" [readonly]="true">
+            </app-image-uploader>
           </div>
 
-          <!-- Unified Stock & Variants Display -->
-          <div class="mb-3">
-            <!-- Main Product Stock (if no variants or variants have no stock) -->
-            <div *ngIf="!product.variants || product.variants.length === 0 || !hasVariantStock(product)" class="mb-2">
-              <div class="d-flex justify-content-between align-items-center mb-1">
-                <span class="text-muted small fw-semibold">المخزون الرئيسي</span>
-              </div>
-              <div class="compact-stock-list">
-                <div *ngFor="let inventory of getMainProductInventories(product)" 
-                     class="stock-item p-2 rounded mb-2">
-                  <div class="d-flex justify-content-between align-items-center">
-                    <div class="d-flex align-items-center">
-                      <i class="bi bi-building text-primary me-2"></i>
-                      <div>
-                        <div class="small fw-semibold">{{ inventory.store?.nameAr }}</div>
-                        <div class="text-muted small">{{ inventory.store?.code }}</div>
-                      </div>
-                    </div>
-                    <span class="badge bg-success small">{{ inventory.quantity }} {{ product?.unit?.nameAr }}</span>
-                  </div>
-                </div>
-              </div>
+          <!-- Product Info -->
+          <div class="p-4">
+            <!-- Product Name -->
+            <h3 class="font-bold text-gray-900 text-sm mb-2 group-hover:text-blue-600 transition-colors line-clamp-2">
+              {{ product.nameAr }}
+            </h3>
+            
+            <!-- Description -->
+            <p class="text-gray-500 text-xs mb-3 line-clamp-2" [title]="product.description">
+              {{ product.description | slice:0:60 }}{{ (product.description?.length || 0) > 60 ? '...' : '' }}
+            </p>
+
+            <!-- Price and Unit -->
+            <div class="flex justify-between items-center mb-3">
+              <span class="font-bold text-green-600 text-lg">{{ product.sellingPrice | currency }}</span>
+              <span class="text-gray-500 text-xs bg-gray-100 px-2 py-1 rounded-full">{{ product.unit?.nameAr }}</span>
             </div>
 
-            <!-- Variants with Store Display (unified) -->
-            <div *ngIf="product.variants && product.variants.length > 0 && hasVariantStock(product)" class="mb-2">
-              <div class="d-flex justify-content-between align-items-center mb-1">
-                <span class="text-muted small fw-semibold">المتغيرات</span>
-                <span class="badge bg-info small">{{ getTotalVariantsWithStock(product) }}</span>
-              </div>
-              <div class="compact-stock-list">
-                <div *ngFor="let variant of product.variants" 
-                     class="variant-stock-item p-2 rounded mb-2">
-                  <div class="d-flex justify-content-between align-items-center mb-1">
-                    <div class="d-flex align-items-center">
-                      <i class="bi bi-tag text-info me-2"></i>
-                      <span class="small fw-semibold">{{ variant.name }}</span>
-                    </div>
-                  </div>
-                  
-                  <!-- Stores for this variant -->
-                  <div class="stores-for-variant">
-                    <div *ngFor="let store of getStoresForVariant(product, variant.id!)" 
-                         class="store-variant-item d-flex justify-content-between align-items-center p-1 rounded mb-1">
-                      <div class="d-flex align-items-center">
-                        <i class="bi bi-building text-primary me-1"></i>
-                        <span class="small">{{ store.name }}</span>
+            <!-- Stock Info -->
+            <div class="mb-3">
+              <!-- Main Product Stock -->
+              <div *ngIf="!product.variants || product.variants.length === 0 || !hasVariantStock(product)" class="mb-2">
+                <div class="flex justify-between items-center mb-1">
+                  <span class="text-gray-500 text-xs font-semibold">المخزون الرئيسي</span>
+                </div>
+                <div class="space-y-1">
+                  <div *ngFor="let inventory of getMainProductInventories(product)" 
+                       class="bg-gray-50 p-2 rounded-lg">
+                    <div class="flex justify-between items-center">
+                      <div class="flex items-center">
+                        <i class="bi bi-building text-blue-600 mr-2 text-xs"></i>
+                        <div>
+                          <div class="text-xs font-semibold text-gray-900">{{ inventory.store?.nameAr }}</div>
+                          <div class="text-gray-500 text-xs">{{ inventory.store?.code }}</div>
+                        </div>
                       </div>
-                      <span class="badge bg-info small">
-                        {{ getVariantStockForStore(product.id, variant.id!, store.id) }} {{ product?.unit?.nameAr }}
-                      </span>
+                      <span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">{{ inventory.quantity }} {{ product?.unit?.nameAr }}</span>
                     </div>
                   </div>
                 </div>
               </div>
+
+              <!-- Variants Stock -->
+              <div *ngIf="product.variants && product.variants.length > 0 && hasVariantStock(product)" class="mb-2">
+                <div class="flex justify-between items-center mb-1">
+                  <span class="text-gray-500 text-xs font-semibold">المتغيرات</span>
+                  <span class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">{{ getTotalVariantsWithStock(product) }}</span>
+                </div>
+                <div class="space-y-1">
+                  <div *ngFor="let variant of product.variants" 
+                       class="bg-blue-50 p-2 rounded-lg">
+                    <div class="flex justify-between items-center mb-1">
+                      <div class="flex items-center">
+                        <i class="bi bi-tag text-blue-600 mr-2 text-xs"></i>
+                        <span class="text-xs font-semibold text-gray-900">{{ variant.name }}</span>
+                      </div>
+                    </div>
+                    
+                    <!-- Stores for this variant -->
+                    <div class="space-y-1">
+                      <div *ngFor="let store of getStoresForVariant(product, variant.id!)" 
+                           class="flex justify-between items-center p-1 bg-white rounded">
+                        <div class="flex items-center">
+                          <i class="bi bi-building text-blue-600 mr-1 text-xs"></i>
+                          <span class="text-xs text-gray-900">{{ store.name }}</span>
+                        </div>
+                        <span class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">
+                          {{ getVariantStockForStore(product.id, variant.id!, store.id) }} {{ product?.unit?.nameAr }}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- No Stock Message -->
+              <div *ngIf="(!product.inventories || product.inventories.length === 0) && (!product.variants || product.variants.length === 0)" 
+                   class="text-center p-2 bg-yellow-50 rounded-lg">
+                <i class="bi bi-exclamation-triangle text-yellow-600 text-xs"></i>
+                <span class="text-yellow-600 text-xs mr-1">{{ 'ORDER.NO_STOCK' | translate }}</span>
+              </div>
             </div>
 
-            <!-- No Stock Message -->
-            <div *ngIf="(!product.inventories || product.inventories.length === 0) && (!product.variants || product.variants.length === 0)" 
-                 class="text-center p-2 bg-warning bg-opacity-10 rounded">
-              <i class="bi bi-exclamation-triangle text-warning"></i>
-                  <span class="text-warning small ms-1">{{ 'ORDER.NO_STOCK' | translate }}</span>
-            </div>
-          </div>
-
-          <!-- Quick Actions -->
-          <div class="mt-auto">
-            <div class="d-flex gap-2">
-              <button class="btn btn-outline-primary btn-sm flex-fill" 
+            <!-- Quick Actions -->
+            <div class="mt-auto">
+              <button class="w-full bg-blue-600 text-white py-2 px-3 rounded-lg text-xs font-semibold hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors" 
                       (click)="viewProductDetail(product); $event.stopPropagation()">
-                <i class="fas fa-eye me-1"></i>
+                <i class="bi bi-eye mr-1"></i>
                 عرض التفاصيل
               </button>
             </div>
@@ -121,16 +120,14 @@
         </div>
       </div>
     </div>
-  </div>
 
-  <!-- Empty State -->
-  <div class="row" *ngIf="(products$ | async)?.length === 0">
-    <div class="col-12">
-      <div class="text-center py-5">
-        <i class="fas fa-box-open fa-3x text-muted mb-3"></i>
-        <h4 class="text-muted">{{ 'ORDER_MANAGEMENT.NO_PRODUCTS_IN_CATEGORY' | translate }}</h4>
-        <p class="text-muted">{{ 'ORDER_MANAGEMENT.CHOOSE_OTHER_CATEGORY' | translate }}</p>
+    <!-- Empty State -->
+    <div *ngIf="(products$ | async)?.length === 0" class="text-center py-12">
+      <div class="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+        <i class="bi bi-box text-gray-400 text-3xl"></i>
       </div>
+      <h3 class="text-lg font-semibold text-gray-900 mb-2">{{ 'ORDER_MANAGEMENT.NO_PRODUCTS_IN_CATEGORY' | translate }}</h3>
+      <p class="text-gray-500">{{ 'ORDER_MANAGEMENT.CHOOSE_OTHER_CATEGORY' | translate }}</p>
     </div>
   </div>
 </div>

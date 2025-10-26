@@ -1,39 +1,42 @@
-<div class="container-fluid">
-  <div class="d-flex flex-wrap justify-content-between">
+<div class="w-full">
+  <div class="flex flex-wrap justify-between items-center mb-4">
     <div class="p-2">
-      <h4 class="fw-bold dark-mode-text">{{ 'PRODUCTS.TITLE' | translate }}</h4>
+      <h4 class="font-bold text-gray-900">{{ 'PRODUCTS.TITLE' | translate }}</h4>
     </div>
     <div class="p-2">
-      <button *ngIf="hasAnyPermission(permissionsEnum.ADD_PRODUCT)" class="btn btn-primary d-flex align-items-center"
+      <button *ngIf="hasAnyPermission(permissionsEnum.ADD_PRODUCT)" 
+        class="inline-flex items-center px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
         (click)="openForm(null)">
-        <i class="bi bi-plus-lg me-1"></i>
+        <i class="bi bi-plus-lg mr-1"></i>
       </button>
     </div>
   </div>
 
-  <!-- <h4 class="fw-bold dark-mode-text">{{ 'PRODUCTS.TITLE' | translate }}</h4> -->
-  <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap">
+  <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-4 gap-4">
 
-    <div class="p-2">
-      <div class="d-flex flex-wrap justify-content-between" [formGroup]="searchForm">
-        <div class="p-2">
-          <input type="text" class="form-control" [formControlName]="'keyword'"
-            placeholder="{{ 'SHARED.SEARCH' | translate }}" aria-label="Search products" autocomplete="off">
+    <div class="p-2 w-full lg:w-auto">
+      <div class="flex flex-wrap gap-2" [formGroup]="searchForm">
+        <div class="flex-1 min-w-64">
+          <input type="text" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+            [formControlName]="'keyword'" placeholder="{{ 'SHARED.SEARCH' | translate }}" aria-label="Search products" autocomplete="off">
         </div>
-        <div class="p-2">
-          <button class="btn btn-outline-secondary" type="button" (click)="loadProducts('SEARCH')">
+        <div>
+          <button class="px-3 py-2 border border-gray-300 text-gray-700 bg-white rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors" 
+            type="button" (click)="loadProducts('SEARCH')">
             <i class="bi bi-search"></i>
           </button>
         </div>
-        <div class="p-2">
-          <button class="btn btn-outline-secondary" type="button" (click)="loadProducts(storeId > 0 ? 'SEARCH' : 'GET')">
+        <div>
+          <button class="px-3 py-2 border border-gray-300 text-gray-700 bg-white rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors" 
+            type="button" (click)="loadProducts(storeId > 0 ? 'SEARCH' : 'GET')">
             <i class="bi bi-x-circle"></i>
           </button>
         </div>
       </div>
     </div>
-    <div class="p-2">
-      <select class="form-select" [(ngModel)]="storeId" (change)="loadProducts(storeId > 0 ? 'SEARCH' : 'GET')">
+    <div class="p-2 w-full lg:w-auto">
+      <select class="w-full lg:w-auto px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+        [(ngModel)]="storeId" (change)="loadProducts(storeId > 0 ? 'SEARCH' : 'GET')">
         <option [ngValue]="0">{{ 'FORMS.ALL_BRANCHES' | translate }}</option>
         <option *ngFor="let store of stores" [ngValue]="store.id">
           {{ lang.currentLang === 'ar' ? store.nameAr : store.nameEn }}
@@ -42,171 +45,182 @@
     </div>
   </div>
 
-  <div *ngIf="(products$ | async) as products">
-    <div class="row g-4">
-      <div class="col-sm-6 col-md-4 col-lg-3" *ngFor="let product of products.products">
-        <div class="card h-100 border-0 shadow-sm rounded dark-mode-bg">
+  <!-- Products Grid -->
+  <div *ngIf="(products$ | async) as products" class="mb-12">
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+      <div class="bg-white border-0 shadow-sm rounded-lg h-full" *ngFor="let product of products.products">
 
-          <!-- Product Image -->
-          <div class="card-img-top bg-light d-flex justify-content-center align-items-center p-3">
-            <app-image-uploader [initialImageUrl]="serverUrl + product.imagePath" [readonly]="true">
-            </app-image-uploader>
+        <!-- Product Image -->
+        <div class="w-full h-48 bg-gray-100 rounded-t-lg overflow-hidden">
+          <app-image-uploader [initialImageUrl]="serverUrl + product.imagePath" [readonly]="true">
+          </app-image-uploader>
+        </div>
+
+        <!-- Card Body -->
+        <div class="p-4 flex flex-col h-full">
+          <!-- Name and Category Badge -->
+          <h6 class="font-bold text-blue-600 mb-1 text-lg">
+            <!-- {{ lang.currentLang === 'ar' ? product.nameAr : product.nameEn }} -->
+              {{ product.nameAr }}
+          </h6>
+          <span class="inline-block bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded-full mb-2 self-start">
+            <!-- {{ lang.currentLang === 'ar' ? product?.category?.nameAr : product?.category?.nameEn }} -->
+              {{ product?.subCategory?.nameAr }}
+          </span>
+
+          <!-- Description -->
+          <p class="text-gray-500 text-sm mb-2 flex-grow" [title]="product.description">
+            {{ product.description | slice:0:50 }}{{ (product.description?.length || 0) > 50 ? '...' : '' }}
+          </p>
+
+          <!-- Price -->
+          <div class="flex justify-between items-center mt-auto">
+            <span class="font-semibold text-green-600 text-lg">{{ product.sellingPrice | currency
+              }}</span>
+
+            <!-- Edit Button -->
+            <button class="px-2 py-1 border border-gray-300 text-gray-700 bg-white rounded hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors" 
+              (click)="openForm(product.id)">
+              <i class="bi bi-pencil-fill"></i>
+            </button>
           </div>
 
-          <!-- Card Body -->
-          <div class="card-body d-flex flex-column">
-            <!-- Name and Category Badge -->
-            <h6 class="card-title fw-bold text-primary mb-1">
-              <!-- {{ lang.currentLang === 'ar' ? product.nameAr : product.nameEn }} -->
-                {{ product.nameAr }}
-            </h6>
-            <span class="badge bg-secondary bg-opacity-25 text-secondary mb-2 align-self-start">
-              <!-- {{ lang.currentLang === 'ar' ? product?.category?.nameAr : product?.category?.nameEn }} -->
-                {{ product?.subCategory?.nameAr }}
-            </span>
-
-            <!-- Description -->
-            <p class="card-text text-muted small mb-2" [title]="product.description">
-              {{ product.description | slice:0:50 }}{{ (product.description?.length || 0) > 50 ? '...' : '' }}
-            </p>
-
-            <!-- Price -->
-            <div class="d-flex justify-content-between align-items-center mt-auto">
-              <span class="fw-semibold text-success fs-5">{{ product.sellingPrice | currency
-                }}</span>
-
-              <!-- Edit Button -->
-              <button class="btn btn-sm btn-outline-secondary" (click)="openForm(product.id)">
-                <i class="bi bi-pencil-fill"></i>
-              </button>
+          <!-- Unit & Stock Info -->
+          <div class="mt-3 pt-3 border-t border-gray-200 text-sm">
+            <div class="flex justify-between">
+              <!-- <span class="text-gray-500">{{ 'PRODUCTS.CODE' | translate }}</span> -->
+              <span class="text-gray-500">{{ 'PRODUCTS.CODE' | translate }}</span>
+              <strong class="text-gray-900">{{ product?.code }}</strong>
             </div>
-
-            <!-- Unit & Stock Info -->
-            <div class="mt-3 pt-3 border-top small">
-              <div class="d-flex justify-content-between">
-                <!-- <span class="text-muted">{{ 'PRODUCTS.CODE' | translate }}</span> -->
-                <span class="text-muted">{{ 'PRODUCTS.CODE' | translate }}</span>
-                <strong>{{ product?.code }}</strong>
-              </div>
-              <div class="d-flex justify-content-between">
-                <span class="text-muted">{{ 'UNIT.TITLE' | translate }}</span>
-                <strong>
-                  <!-- {{ lang.currentLang === 'ar' ? product?.unit?.nameAr : product?.unit?.nameEn }} -->
-                    {{ product?.unit?.nameAr }}
-                </strong>
-              </div>
-              <!-- Unified Stock & Variants Display -->
-              <div class="mt-2">
-                <!-- Main Product Stock (if no variants or variants have no stock) -->
-                <div *ngIf="!product.variants || product.variants.length === 0 || !hasVariantStock(product)" class="mb-2">
-                  <div class="d-flex justify-content-between align-items-center mb-1">
-                    <span class="text-muted small fw-semibold">{{ 'ORDER.MAIN_STOCK' | translate }}</span>
-                  </div>
-                  <div class="compact-stock-list">
-                    <div *ngFor="let inventory of getMainProductInventories(product)" 
-                         class="stock-item p-2 rounded mb-2">
-                      <div class="d-flex justify-content-between align-items-center">
-                        <div class="d-flex align-items-center">
-                          <i class="bi bi-building text-primary me-2"></i>
-                          <div>
-                            <div class="small fw-semibold">{{ inventory.store?.nameAr }}</div>
-                            <div class="text-muted small">{{ inventory.store?.code }}</div>
-                          </div>
+            <div class="flex justify-between">
+              <span class="text-gray-500">{{ 'UNIT.TITLE' | translate }}</span>
+              <strong class="text-gray-900">
+                <!-- {{ lang.currentLang === 'ar' ? product?.unit?.nameAr : product?.unit?.nameEn }} -->
+                  {{ product?.unit?.nameAr }}
+              </strong>
+            </div>
+            <!-- Unified Stock & Variants Display -->
+            <div class="mt-2">
+              <!-- Main Product Stock (if no variants or variants have no stock) -->
+              <div *ngIf="!product.variants || product.variants.length === 0 || !hasVariantStock(product)" class="mb-2">
+                <div class="flex justify-between items-center mb-1">
+                  <span class="text-gray-500 text-xs font-semibold">{{ 'ORDER.MAIN_STOCK' | translate }}</span>
+                </div>
+                <div class="space-y-2">
+                  <div *ngFor="let inventory of getMainProductInventories(product)" 
+                       class="bg-gray-50 p-2 rounded-lg">
+                    <div class="flex justify-between items-center">
+                      <div class="flex items-center">
+                        <i class="bi bi-building text-blue-600 mr-2"></i>
+                        <div>
+                          <div class="text-xs font-semibold text-gray-900">{{ inventory.store?.nameAr }}</div>
+                          <div class="text-gray-500 text-xs">{{ inventory.store?.code }}</div>
                         </div>
-                        <span class="badge bg-success small">{{ inventory.quantity }} {{ product?.unit?.nameAr }}</span>
+                      </div>
+                      <span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">{{ inventory.quantity }} {{ product?.unit?.nameAr }}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Variants with Store Display (unified) -->
+              <div *ngIf="product.variants && product.variants.length > 0 && hasVariantStock(product)" class="mb-2">
+                <div class="flex justify-between items-center mb-1">
+                  <span class="text-gray-500 text-xs font-semibold">{{ 'ORDER.VARIANTS' | translate }}</span>
+                  <span class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">{{ getTotalVariantsWithStock(product) }}</span>
+                </div>
+                <div class="space-y-2">
+                  <div *ngFor="let variant of product.variants" 
+                       class="bg-blue-50 p-2 rounded-lg">
+                    <div class="flex justify-between items-center mb-1">
+                      <div class="flex items-center">
+                        <i class="bi bi-tag text-blue-600 mr-2"></i>
+                        <span class="text-xs font-semibold text-gray-900">{{ variant.name }}</span>
+                      </div>
+                      <button class="px-2 py-1 text-xs border border-blue-300 text-blue-700 bg-white rounded hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors" 
+                              (click)="manageVariantStock(product.id, variant.id!)"
+                              title="إدارة مخزون المتغير">
+                        <i class="bi bi-gear"></i>
+                      </button>
+                    </div>
+                    
+                    <!-- Stores for this variant -->
+                    <div class="space-y-1">
+                      <div *ngFor="let store of getStoresForVariant(product.id, variant.id!)" 
+                           class="flex justify-between items-center p-1 bg-white rounded">
+                        <div class="flex items-center">
+                          <i class="bi bi-building text-blue-600 mr-1"></i>
+                          <span class="text-xs text-gray-900">{{ store.nameAr }}</span>
+                        </div>
+                        <span class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">
+                          {{ getVariantStockForStore(product.id, variant.id!, store.id) }} {{ product?.unit?.nameAr }}
+                        </span>
                       </div>
                     </div>
                   </div>
                 </div>
+              </div>
 
-                <!-- Variants with Store Display (unified) -->
-                <div *ngIf="product.variants && product.variants.length > 0 && hasVariantStock(product)" class="mb-2">
-                  <div class="d-flex justify-content-between align-items-center mb-1">
-                    <span class="text-muted small fw-semibold">{{ 'ORDER.VARIANTS' | translate }}</span>
-                    <span class="badge bg-info small">{{ getTotalVariantsWithStock(product) }}</span>
-                  </div>
-                  <div class="compact-stock-list">
-                    <div *ngFor="let variant of product.variants" 
-                         class="variant-stock-item p-2 rounded mb-2">
-                      <div class="d-flex justify-content-between align-items-center mb-1">
-                        <div class="d-flex align-items-center">
-                          <i class="bi bi-tag text-info me-2"></i>
-                          <span class="small fw-semibold">{{ variant.name }}</span>
-                        </div>
-                        <button class="btn btn-xs btn-outline-primary" 
-                                (click)="manageVariantStock(product.id, variant.id!)"
-                                title="إدارة مخزون المتغير">
-                          <i class="bi bi-gear"></i>
-                        </button>
-                      </div>
-                      
-                      <!-- Stores for this variant -->
-                      <div class="stores-for-variant">
-                        <div *ngFor="let store of getStoresForVariant(product.id, variant.id!)" 
-                             class="store-variant-item d-flex justify-content-between align-items-center p-1 rounded mb-1">
-                          <div class="d-flex align-items-center">
-                            <i class="bi bi-building text-primary me-1"></i>
-                            <span class="small">{{ store.nameAr }}</span>
-                          </div>
-                          <span class="badge bg-info small">
-                            {{ getVariantStockForStore(product.id, variant.id!, store.id) }} {{ product?.unit?.nameAr }}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- No Stock Message -->
-                <div *ngIf="(!product.inventories || product.inventories.length === 0) && (!product.variants || product.variants.length === 0)" 
-                     class="text-center p-2 bg-warning bg-opacity-10 rounded">
-                  <i class="bi bi-exclamation-triangle text-warning"></i>
-                  <span class="text-warning small ms-1">{{ 'ORDER.NO_STOCK' | translate }}</span>
-                </div>
+              <!-- No Stock Message -->
+              <div *ngIf="(!product.inventories || product.inventories.length === 0) && (!product.variants || product.variants.length === 0)" 
+                   class="text-center p-2 bg-yellow-50 rounded-lg">
+                <i class="bi bi-exclamation-triangle text-yellow-600"></i>
+                <span class="text-yellow-600 text-xs ml-1">{{ 'ORDER.NO_STOCK' | translate }}</span>
               </div>
             </div>
           </div>
         </div>
       </div>
     </div>
+  </div>
 
-    <!-- Pagination -->
-    <nav aria-label="Page navigation" class="mt-4 d-flex justify-content-center">
-      <ul class="pagination">
-        <li class="page-item" [class.disabled]="pageIndex === 1">
-          <button class="page-link btn" (click)="changePage(pageIndex - 1)">«</button>
-        </li>
+  <!-- Pagination - Completely separate container with large top margin -->
+  <div *ngIf="(products$ | async) as products" class="w-full mt-48">
+    <div class="flex justify-center pt-8 border-t border-gray-200">
+      <nav aria-label="Page navigation">
+        <ul class="flex items-center space-x-1">
+          <li>
+            <button class="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-l-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed" 
+              [disabled]="pageIndex === 1" (click)="changePage(pageIndex - 1)">«</button>
+          </li>
 
-        <!-- First page -->
-        <li class="page-item" [class.active]="pageIndex === 1">
-          <button class="page-link btn" (click)="changePage(1)">1</button>
-        </li>
+          <!-- First page -->
+          <li>
+            <button class="px-3 py-2 text-sm font-medium border border-gray-300 hover:bg-gray-50" 
+              [class]="pageIndex === 1 ? 'bg-blue-600 text-white border-blue-600' : 'text-gray-500 bg-white'" 
+              (click)="changePage(1)">1</button>
+          </li>
 
-        <!-- Left Ellipsis -->
-        <li class="page-item disabled" *ngIf="pageIndex > 4">
-          <span class="page-link">...</span>
-        </li>
+          <!-- Left Ellipsis -->
+          <li *ngIf="pageIndex > 4">
+            <span class="px-3 py-2 text-sm text-gray-500 bg-white border border-gray-300">...</span>
+          </li>
 
-        <!-- Dynamic middle pages -->
-        <li class="page-item" *ngFor="let page of getPageRange()" [class.active]="page === pageIndex">
-          <button class="page-link btn" (click)="changePage(page)">{{ page }}</button>
-        </li>
+          <!-- Dynamic middle pages -->
+          <li *ngFor="let page of getPageRange()">
+            <button class="px-3 py-2 text-sm font-medium border border-gray-300 hover:bg-gray-50" 
+              [class]="page === pageIndex ? 'bg-blue-600 text-white border-blue-600' : 'text-gray-500 bg-white'" 
+              (click)="changePage(page)">{{ page }}</button>
+          </li>
 
-        <!-- Right Ellipsis -->
-        <li class="page-item disabled" *ngIf="pageIndex < totalPages - 3">
-          <span class="page-link">...</span>
-        </li>
+          <!-- Right Ellipsis -->
+          <li *ngIf="pageIndex < totalPages - 3">
+            <span class="px-3 py-2 text-sm text-gray-500 bg-white border border-gray-300">...</span>
+          </li>
 
-        <!-- Last page -->
-        <li class="page-item" [class.active]="pageIndex === totalPages" *ngIf="totalPages > 1">
-          <button class="page-link btn" (click)="changePage(totalPages)">{{ totalPages }}</button>
-        </li>
+          <!-- Last page -->
+          <li *ngIf="totalPages > 1">
+            <button class="px-3 py-2 text-sm font-medium border border-gray-300 hover:bg-gray-50" 
+              [class]="pageIndex === totalPages ? 'bg-blue-600 text-white border-blue-600' : 'text-gray-500 bg-white'" 
+              (click)="changePage(totalPages)">{{ totalPages }}</button>
+          </li>
 
-        <li class="page-item" [class.disabled]="pageIndex === totalPages || totalPages === 0">
-          <button class="page-link btn" (click)="changePage(pageIndex + 1)">»</button>
-        </li>
-      </ul>
-    </nav>
-
+          <li>
+            <button class="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-r-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed" 
+              [disabled]="pageIndex === totalPages || totalPages === 0" (click)="changePage(pageIndex + 1)">»</button>
+          </li>
+        </ul>
+      </nav>
+    </div>
   </div>
 </div>

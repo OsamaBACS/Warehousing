@@ -1,207 +1,248 @@
-<div class="container-fluid">
-  <!-- Header -->
-  <div class="d-flex justify-content-between align-items-center mb-4">
-    <h4>{{ 'REPORTS.TITLE' | translate }}</h4>
-    <div class="p-2">
-      <select class="form-select" [(ngModel)]="storeId" (change)="onFilterChange()">
-        <option [ngValue]="0">جميع الفروع</option>
-        <option *ngFor="let store of stores" [ngValue]="store.id">
-          {{ lang.currentLang === 'ar' ? store.nameAr : store.nameEn }}
-        </option>
-      </select>
-    </div>
-    <div class="mt-3 d-flex justify-content-center gap-2">
-      <button class="btn btn-outline-primary btn-sm" (click)="printCurrentPage()">
-        <i class="bi bi-printer me-1"></i> الصفحة الحالية
-      </button>
-      <button class="btn btn-primary btn-sm" (click)="printAllPages()">
-        <i class="bi bi-printer-fill me-1"></i> طباعة الكل
-      </button>
-    </div>
-  </div>
-
-  <!-- Report Tabs -->
-  <ul class="nav nav-tabs mb-4" role="tablist">
-    <li class="nav-item" role="presentation">
-      <button class="nav-link" [class.active]="activeTab === 'inventory'" 
-              (click)="setActiveTab('inventory')">
-        <i class="bi bi-box-seam me-1"></i>
-        تقرير الجرد
-      </button>
-    </li>
-    <li class="nav-item" role="presentation">
-      <button class="nav-link" [class.active]="activeTab === 'stock-movement'" 
-              (click)="setActiveTab('stock-movement')">
-        <i class="bi bi-arrow-left-right me-1"></i>
-        حركة المخزون
-      </button>
-    </li>
-    <li class="nav-item" role="presentation">
-      <button class="nav-link" [class.active]="activeTab === 'valuation'" 
-              (click)="setActiveTab('valuation')">
-        <i class="bi bi-currency-dollar me-1"></i>
-        تقييم المخزون
-      </button>
-    </li>
-    <li class="nav-item" role="presentation">
-      <button class="nav-link" [class.active]="activeTab === 'low-stock'" 
-              (click)="setActiveTab('low-stock')">
-        <i class="bi bi-exclamation-triangle me-1"></i>
-        المخزون المنخفض
-      </button>
-    </li>
-    <li class="nav-item" role="presentation">
-      <button class="nav-link" [class.active]="activeTab === 'trends'" 
-              (click)="setActiveTab('trends')">
-        <i class="bi bi-graph-up me-1"></i>
-        الاتجاهات
-      </button>
-    </li>
-    <li class="nav-item" role="presentation">
-      <button class="nav-link" [class.active]="activeTab === 'top-products'" 
-              (click)="setActiveTab('top-products')">
-        <i class="bi bi-trophy me-1"></i>
-        أكثر المنتجات حركة
-      </button>
-    </li>
-  </ul>
-
-  <!-- Additional Filters for Comprehensive Reports -->
-  <div class="card mb-4" *ngIf="activeTab !== 'inventory'">
-    <div class="card-header">
-      <h6 class="mb-0">
-        <i class="bi bi-funnel me-2"></i>
-        فلاتر إضافية
-      </h6>
-    </div>
-    <div class="card-body">
-      <div class="row g-3">
-        <div class="col-md-3" *ngIf="activeTab === 'stock-movement' || activeTab === 'top-products'">
-          <label class="form-label">من تاريخ</label>
-          <input type="date" class="form-control" [ngModel]="fromDate | date:'yyyy-MM-dd'" (ngModelChange)="onFromDateChange($event)" />
+<div class="min-h-screen bg-gradient-to-br from-gray-50 via-indigo-50 to-purple-100 py-8" dir="rtl">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <!-- Header -->
+    <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-8">
+      <div>
+        <h1 class="text-3xl font-bold text-gray-900 mb-2">{{ 'REPORTS.TITLE' | translate }}</h1>
+        <p class="text-gray-600">تقارير شاملة ومفصلة للمخزون والمعاملات</p>
+      </div>
+      
+      <div class="mt-4 lg:mt-0 flex flex-col sm:flex-row gap-4">
+        <!-- Store Filter -->
+        <div class="flex-1 min-w-48">
+          <select class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200" 
+                  [(ngModel)]="storeId" (change)="onFilterChange()">
+            <option [ngValue]="0">جميع الفروع</option>
+            <option *ngFor="let store of stores" [ngValue]="store.id">
+              {{ lang.currentLang === 'ar' ? store.nameAr : store.nameEn }}
+            </option>
+          </select>
         </div>
         
-        <div class="col-md-3" *ngIf="activeTab === 'stock-movement' || activeTab === 'top-products'">
-          <label class="form-label">إلى تاريخ</label>
-          <input type="date" class="form-control" [ngModel]="toDate | date:'yyyy-MM-dd'" (ngModelChange)="onToDateChange($event)" />
-        </div>
-        
-        <div class="col-md-3" *ngIf="activeTab === 'low-stock'">
-          <label class="form-label">حد المخزون المنخفض</label>
-          <input type="number" class="form-control" [(ngModel)]="threshold" (change)="onFilterChange()" min="0" />
-        </div>
-        
-        <div class="col-md-3" *ngIf="activeTab === 'trends'">
-          <label class="form-label">عدد الأشهر</label>
-          <input type="number" class="form-control" [(ngModel)]="months" (change)="onFilterChange()" min="1" max="12" />
-        </div>
-        
-        <div class="col-md-3" *ngIf="activeTab === 'top-products'">
-          <label class="form-label">عدد المنتجات</label>
-          <input type="number" class="form-control" [(ngModel)]="topCount" (change)="onFilterChange()" min="1" max="50" />
+        <!-- Print Buttons -->
+        <div class="flex gap-2">
+          <button class="inline-flex items-center px-4 py-3 bg-gray-600 text-white rounded-xl font-semibold hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-all duration-200" 
+                  (click)="printCurrentPage()">
+            <i class="bi bi-printer mr-2"></i>
+            الصفحة الحالية
+          </button>
+          <button class="inline-flex items-center px-4 py-3 bg-indigo-600 text-white rounded-xl font-semibold hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-all duration-200" 
+                  (click)="printAllPages()">
+            <i class="bi bi-printer-fill mr-2"></i>
+            طباعة الكل
+          </button>
         </div>
       </div>
     </div>
-  </div>
 
-  <!-- Inventory Report Tab -->
-  <div *ngIf="activeTab === 'inventory'">
-    <!-- Table -->
-    <div class="table-responsive shadow-sm rounded">
-    <table class="table table-striped table-hover align-middle mb-0">
-      <thead class="table-light dark-mode-bg">
-        <tr>
-          <th>#</th>
-          <!-- <th>{{ 'PRODUCTS.CODE' | translate }}</th>
-          <th>{{ 'PRODUCTS.PRODUCTNAME' | translate }}</th>
-          <th>{{ 'PRODUCTS.CATEGORY' | translate }}</th>
-          <th>{{ 'PRODUCTS.UNIT' | translate }}</th>
-          <th class="text-end">{{ 'PRODUCTS.COSTPRICE' | translate }}</th>
-          <th class="text-end">{{ 'PRODUCTS.SELLINGPRICE' | translate }}</th>
-          <th class="text-center">{{ 'PRODUCTS.QUANTITYINSTOCK' | translate }}</th>
-          <th class="text-center">{{ 'PRODUCTS.REORDERLEVEL' | translate }}</th>
-          <th class="text-center">{{ 'PRODUCTS.ISACTIVE' | translate }}</th> -->
+    <!-- Report Tabs -->
+    <div class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden mb-8">
+      <div class="bg-gradient-to-r from-indigo-500 to-purple-600 px-6 py-4">
+        <h2 class="text-xl font-semibold text-white">أنواع التقارير</h2>
+      </div>
+      
+      <div class="p-6">
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+          <button class="flex flex-col items-center p-4 rounded-xl border-2 transition-all duration-200 hover:scale-105"
+                  [ngClass]="activeTab === 'inventory' ? 'border-indigo-500 bg-indigo-50 text-indigo-700' : 'border-gray-200 bg-white text-gray-600 hover:border-indigo-300 hover:bg-indigo-50'"
+                  (click)="setActiveTab('inventory')">
+            <i class="bi bi-box-seam text-2xl mb-2"></i>
+            <span class="text-sm font-medium">تقرير الجرد</span>
+          </button>
+          
+          <button class="flex flex-col items-center p-4 rounded-xl border-2 transition-all duration-200 hover:scale-105"
+                  [ngClass]="activeTab === 'stock-movement' ? 'border-indigo-500 bg-indigo-50 text-indigo-700' : 'border-gray-200 bg-white text-gray-600 hover:border-indigo-300 hover:bg-indigo-50'"
+                  (click)="setActiveTab('stock-movement')">
+            <i class="bi bi-arrow-left-right text-2xl mb-2"></i>
+            <span class="text-sm font-medium">حركة المخزون</span>
+          </button>
+          
+          <button class="flex flex-col items-center p-4 rounded-xl border-2 transition-all duration-200 hover:scale-105"
+                  [ngClass]="activeTab === 'valuation' ? 'border-indigo-500 bg-indigo-50 text-indigo-700' : 'border-gray-200 bg-white text-gray-600 hover:border-indigo-300 hover:bg-indigo-50'"
+                  (click)="setActiveTab('valuation')">
+            <i class="bi bi-currency-dollar text-2xl mb-2"></i>
+            <span class="text-sm font-medium">تقييم المخزون</span>
+          </button>
+          
+          <button class="flex flex-col items-center p-4 rounded-xl border-2 transition-all duration-200 hover:scale-105"
+                  [ngClass]="activeTab === 'low-stock' ? 'border-indigo-500 bg-indigo-50 text-indigo-700' : 'border-gray-200 bg-white text-gray-600 hover:border-indigo-300 hover:bg-indigo-50'"
+                  (click)="setActiveTab('low-stock')">
+            <i class="bi bi-exclamation-triangle text-2xl mb-2"></i>
+            <span class="text-sm font-medium">المخزون المنخفض</span>
+          </button>
+          
+          <button class="flex flex-col items-center p-4 rounded-xl border-2 transition-all duration-200 hover:scale-105"
+                  [ngClass]="activeTab === 'trends' ? 'border-indigo-500 bg-indigo-50 text-indigo-700' : 'border-gray-200 bg-white text-gray-600 hover:border-indigo-300 hover:bg-indigo-50'"
+                  (click)="setActiveTab('trends')">
+            <i class="bi bi-graph-up text-2xl mb-2"></i>
+            <span class="text-sm font-medium">الاتجاهات</span>
+          </button>
+          
+          <button class="flex flex-col items-center p-4 rounded-xl border-2 transition-all duration-200 hover:scale-105"
+                  [ngClass]="activeTab === 'top-products' ? 'border-indigo-500 bg-indigo-50 text-indigo-700' : 'border-gray-200 bg-white text-gray-600 hover:border-indigo-300 hover:bg-indigo-50'"
+                  (click)="setActiveTab('top-products')">
+            <i class="bi bi-trophy text-2xl mb-2"></i>
+            <span class="text-sm font-medium">أكثر المنتجات حركة</span>
+          </button>
+        </div>
+      </div>
+    </div>
 
-          <th>الكود</th>
-          <th>المنتج</th>
-          <th>الصنف</th>
-          <th>الوجدة</th>
-          <th class="text-end">سعر الشراء</th>
-          <th class="text-end">سعر البيع</th>
-          <th class="text-center">الكمية</th>
-          <th class="text-center">الحالة</th>
-        </tr>
-      </thead>
-      <tbody *ngIf="products$ | async as data">
-        <tr *ngFor="let item of data.products; let i = index">
-          <td>{{ (pageIndex - 1) * pageSize + i + 1 }}</td>
-          <td>
-            <a [routerLink]="['/admin/transaction', item.id]" class="text-decoration-underline text-primary"
-              style="cursor: pointer;">
-              {{ item.code }}
-            </a>
-          </td>
+    <!-- Additional Filters for Comprehensive Reports -->
+    <div class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden mb-8" *ngIf="activeTab !== 'inventory'">
+      <div class="bg-gradient-to-r from-gray-500 to-gray-600 px-6 py-4">
+        <h3 class="text-lg font-semibold text-white flex items-center">
+          <i class="bi bi-funnel mr-3"></i>
+          فلاتر إضافية
+        </h3>
+      </div>
+      <div class="p-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div *ngIf="activeTab === 'stock-movement' || activeTab === 'top-products'">
+            <label class="block text-sm font-medium text-gray-700 mb-2">من تاريخ</label>
+            <input type="date" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200" 
+                   [ngModel]="fromDate | date:'yyyy-MM-dd'" (ngModelChange)="onFromDateChange($event)" />
+          </div>
+          
+          <div *ngIf="activeTab === 'stock-movement' || activeTab === 'top-products'">
+            <label class="block text-sm font-medium text-gray-700 mb-2">إلى تاريخ</label>
+            <input type="date" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200" 
+                   [ngModel]="toDate | date:'yyyy-MM-dd'" (ngModelChange)="onToDateChange($event)" />
+          </div>
+          
+          <div *ngIf="activeTab === 'low-stock'">
+            <label class="block text-sm font-medium text-gray-700 mb-2">حد المخزون المنخفض</label>
+            <input type="number" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200" 
+                   [(ngModel)]="threshold" (change)="onFilterChange()" min="0" />
+          </div>
+          
+          <div *ngIf="activeTab === 'trends'">
+            <label class="block text-sm font-medium text-gray-700 mb-2">عدد الأشهر</label>
+            <input type="number" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200" 
+                   [(ngModel)]="months" (change)="onFilterChange()" min="1" max="12" />
+          </div>
+          
+          <div *ngIf="activeTab === 'top-products'">
+            <label class="block text-sm font-medium text-gray-700 mb-2">عدد المنتجات</label>
+            <input type="number" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200" 
+                   [(ngModel)]="topCount" (change)="onFilterChange()" min="1" max="50" />
+          </div>
+        </div>
+      </div>
+    </div>
 
-          <td>{{ lang.currentLang === 'ar' ? item.nameAr : item.nameEn }}</td>
-          <td>{{ lang.currentLang === 'ar' ? item.subCategory?.nameAr : item.subCategory?.nameEn }}</td>
-          <td>{{ lang.currentLang === 'ar' ? item.unit?.nameAr : item.unit?.nameEn }}</td>
-          <td class="text-end">{{ item.costPrice | currency }}</td>
-          <td class="text-end">{{ item.sellingPrice | currency }}</td>
-          <td class="text-center">
-            <div *ngFor="let inv of item.inventories" class="mb-1">
-              <strong>{{ inv.quantity }}</strong>
-              <small class="text-muted ms-1">
-                {{ lang.currentLang === 'ar' ? item?.unit?.nameAr : item?.unit?.nameEn }}
-              </small>
-            </div>
-          </td>
-          <td class="text-center">
-            <span class="badge" [class.bg-success]="item.isActive" [class.bg-secondary]="!item.isActive">
-              {{ item.isActive ? 'Active' : 'Inactive' }}
-            </span>
-          </td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
+    <!-- Inventory Report Tab -->
+    <div *ngIf="activeTab === 'inventory'">
+      <!-- Report Card -->
+      <div class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+        <div class="bg-gradient-to-r from-indigo-500 to-purple-600 px-6 py-4">
+          <h3 class="text-xl font-semibold text-white flex items-center">
+            <i class="bi bi-box-seam mr-3"></i>
+            تقرير الجرد
+          </h3>
+        </div>
+        
+        <!-- Table -->
+        <div class="overflow-x-auto">
+          <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+              <tr>
+                <th class="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">#</th>
+                <th class="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">الكود</th>
+                <th class="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">المنتج</th>
+                <th class="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">الصنف</th>
+                <th class="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">الوحدة</th>
+                <th class="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">سعر الشراء</th>
+                <th class="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">سعر البيع</th>
+                <th class="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">الكمية</th>
+                <th class="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">الحالة</th>
+              </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200" *ngIf="products$ | async as data">
+              <tr *ngFor="let item of data.products; let i = index" class="hover:bg-gray-50 transition-colors">
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ (pageIndex - 1) * pageSize + i + 1 }}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm">
+                  <a [routerLink]="['/admin/transaction', item.id]" class="text-indigo-600 hover:text-indigo-900 font-medium">
+                    {{ item.code }}
+                  </a>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-semibold">{{ lang.currentLang === 'ar' ? item.nameAr : item.nameEn }}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{{ lang.currentLang === 'ar' ? item.subCategory?.nameAr : item.subCategory?.nameEn }}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{{ lang.currentLang === 'ar' ? item.unit?.nameAr : item.unit?.nameEn }}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">{{ item.costPrice | currency }}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">{{ item.sellingPrice | currency }}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-center">
+                  <div *ngFor="let inv of item.inventories" class="mb-1">
+                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                      <strong>{{ inv.quantity }}</strong>
+                      <span class="mr-1 text-gray-500">
+                        {{ lang.currentLang === 'ar' ? item?.unit?.nameAr : item?.unit?.nameEn }}
+                      </span>
+                    </span>
+                  </div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-center">
+                  <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium"
+                        [ngClass]="item.isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'">
+                    <i class="bi mr-1" [ngClass]="item.isActive ? 'bi-check-circle' : 'bi-x-circle'"></i>
+                    {{ item.isActive ? 'نشط' : 'غير نشط' }}
+                  </span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
 
-  <!-- Pagination -->
-  <nav aria-label="Page navigation" class="mt-4 d-flex justify-content-center">
-    <ul class="pagination">
-      <li class="page-item" [class.disabled]="pageIndex === 1">
-        <button class="page-link btn" (click)="changePage(pageIndex - 1)">«</button>
-      </li>
+      <!-- Pagination -->
+      <div class="mt-8 flex justify-center" *ngIf="activeTab === 'inventory'">
+        <nav aria-label="Page navigation">
+          <ul class="flex items-center space-x-1">
+            <li>
+              <button class="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-r-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                [disabled]="pageIndex === 1" (click)="changePage(pageIndex - 1)">«</button>
+            </li>
 
-      <!-- First page -->
-      <li class="page-item" [class.active]="pageIndex === 1">
-        <button class="page-link btn" (click)="changePage(1)">1</button>
-      </li>
+            <!-- First page -->
+            <li>
+              <button class="px-3 py-2 text-sm font-medium border border-gray-300 hover:bg-gray-50"
+                [class]="pageIndex === 1 ? 'bg-indigo-600 text-white border-indigo-600' : 'text-gray-500 bg-white'"
+                (click)="changePage(1)">1</button>
+            </li>
 
-      <!-- Left Ellipsis -->
-      <li class="page-item disabled" *ngIf="pageIndex > 4">
-        <span class="page-link">...</span>
-      </li>
+            <!-- Left Ellipsis -->
+            <li *ngIf="pageIndex > 4">
+              <span class="px-3 py-2 text-sm text-gray-500 bg-white border border-gray-300">...</span>
+            </li>
 
-      <!-- Dynamic middle pages -->
-      <li class="page-item" *ngFor="let page of getPageRange()" [class.active]="page === pageIndex">
-        <button class="page-link btn" (click)="changePage(page)">{{ page }}</button>
-      </li>
+            <!-- Dynamic middle pages -->
+            <li *ngFor="let page of getPageRange()">
+              <button class="px-3 py-2 text-sm font-medium border border-gray-300 hover:bg-gray-50"
+                [class]="page === pageIndex ? 'bg-indigo-600 text-white border-indigo-600' : 'text-gray-500 bg-white'"
+                (click)="changePage(page)">{{ page }}</button>
+            </li>
 
-      <!-- Right Ellipsis -->
-      <li class="page-item disabled" *ngIf="pageIndex < totalPages - 3">
-        <span class="page-link">...</span>
-      </li>
+            <!-- Right Ellipsis -->
+            <li *ngIf="pageIndex < totalPages - 3">
+              <span class="px-3 py-2 text-sm text-gray-500 bg-white border border-gray-300">...</span>
+            </li>
 
-      <!-- Last page -->
-      <li class="page-item" [class.active]="pageIndex === totalPages" *ngIf="totalPages > 1">
-        <button class="page-link btn" (click)="changePage(totalPages)">{{ totalPages }}</button>
-      </li>
+            <!-- Last page -->
+            <li *ngIf="totalPages > 1">
+              <button class="px-3 py-2 text-sm font-medium border border-gray-300 hover:bg-gray-50"
+                [class]="pageIndex === totalPages ? 'bg-indigo-600 text-white border-indigo-600' : 'text-gray-500 bg-white'"
+                (click)="changePage(totalPages)">{{ totalPages }}</button>
+            </li>
 
-      <li class="page-item" [class.disabled]="pageIndex === totalPages || totalPages === 0">
-        <button class="page-link btn" (click)="changePage(pageIndex + 1)">»</button>
-      </li>
-    </ul>
-  </nav>
+            <li>
+              <button class="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-l-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                [disabled]="pageIndex === totalPages || totalPages === 0" (click)="changePage(pageIndex + 1)">»</button>
+            </li>
+          </ul>
+        </nav>
+      </div>
+    </div>
 
   <!-- Hidden Print Template -->
   <div #printSection style="display: none;" *ngIf="products$ | async as data">
@@ -424,50 +465,80 @@
     </ng-container>
   </div>
 </div>
-  </div>
 
   <!-- Stock Movement Report Tab -->
   <div *ngIf="activeTab === 'stock-movement'">
-    <div class="card">
-      <div class="card-header d-flex justify-content-between align-items-center">
-        <h5 class="mb-0">تقرير حركة المخزون</h5>
-        <div *ngIf="isLoadingStockMovement" class="spinner-border spinner-border-sm text-primary"></div>
+    <div class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+      <div class="bg-gradient-to-r from-blue-500 to-indigo-600 px-6 py-4">
+        <div class="flex justify-between items-center">
+          <h5 class="text-lg font-semibold text-white flex items-center">
+            <i class="bi bi-arrow-left-right mr-3"></i>
+            تقرير حركة المخزون
+          </h5>
+          <div *ngIf="isLoadingStockMovement" class="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+        </div>
       </div>
-      <div class="card-body">
-        <div *ngIf="!isLoadingStockMovement && stockMovementReport.length === 0" class="text-center py-4 text-muted">
-          <i class="bi bi-inbox fs-1 mb-3"></i>
-          <p>لا توجد بيانات حركة مخزون</p>
+      
+      <div class="p-6">
+        <div *ngIf="!isLoadingStockMovement && stockMovementReport.length === 0" class="text-center py-12">
+          <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <i class="bi bi-inbox text-gray-400 text-2xl"></i>
+          </div>
+          <h4 class="text-lg font-semibold text-gray-900 mb-2">لا توجد بيانات حركة مخزون</h4>
+          <p class="text-gray-500">لم يتم العثور على أي بيانات حركة مخزون متاحة</p>
         </div>
         
-        <div *ngIf="!isLoadingStockMovement && stockMovementReport.length > 0" class="table-responsive">
-          <table class="table table-hover">
-            <thead class="table-light">
+        <div *ngIf="!isLoadingStockMovement && stockMovementReport.length > 0" class="overflow-x-auto">
+          <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
               <tr>
-                <th>المنتج</th>
-                <th>الكود</th>
-                <th>إجمالي الداخل</th>
-                <th>إجمالي الخارج</th>
-                <th>صافي الحركة</th>
-                <th>عدد المعاملات</th>
-                <th>آخر معاملة</th>
+                <th class="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">المنتج</th>
+                <th class="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">الكود</th>
+                <th class="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">إجمالي الداخل</th>
+                <th class="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">إجمالي الخارج</th>
+                <th class="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">صافي الحركة</th>
+                <th class="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">عدد المعاملات</th>
+                <th class="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">آخر معاملة</th>
               </tr>
             </thead>
-            <tbody>
-              <tr *ngFor="let item of stockMovementReport">
-                <td>
-                  <strong>{{ item.productNameAr }}</strong>
-                  <br>
-                  <small class="text-muted">{{ item.productNameEn }}</small>
+            <tbody class="bg-white divide-y divide-gray-200">
+              <tr *ngFor="let item of stockMovementReport" class="hover:bg-gray-50 transition-colors">
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="flex items-center">
+                    <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center mr-3">
+                      <i class="bi bi-box text-white text-sm"></i>
+                    </div>
+                    <div>
+                      <div class="text-sm font-semibold text-gray-900">{{ item.productNameAr }}</div>
+                      <div class="text-sm text-gray-500">{{ item.productNameEn }}</div>
+                    </div>
+                  </div>
                 </td>
-                <td>{{ item.productCode }}</td>
-                <td class="text-success">{{ formatNumber(item.totalIn) }}</td>
-                <td class="text-danger">{{ formatNumber(item.totalOut) }}</td>
-                <td [ngClass]="getMovementClass(item.netMovement)">
-                  <i [class]="getMovementIcon(item.netMovement)"></i>
-                  {{ formatNumber(item.netMovement) }}
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-mono">{{ item.productCode }}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-green-600 font-semibold">
+                  <div class="flex items-center">
+                    <i class="bi bi-arrow-up mr-1"></i>
+                    {{ formatNumber(item.totalIn) }}
+                  </div>
                 </td>
-                <td>{{ formatNumber(item.transactionCount) }}</td>
-                <td>{{ formatDate(item.lastTransactionDate) }}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-red-600 font-semibold">
+                  <div class="flex items-center">
+                    <i class="bi bi-arrow-down mr-1"></i>
+                    {{ formatNumber(item.totalOut) }}
+                  </div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold" [ngClass]="getMovementClass(item.netMovement)">
+                  <div class="flex items-center">
+                    <i [class]="getMovementIcon(item.netMovement)" class="mr-1"></i>
+                    {{ formatNumber(item.netMovement) }}
+                  </div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                    {{ formatNumber(item.transactionCount) }}
+                  </span>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ formatDate(item.lastTransactionDate) }}</td>
               </tr>
             </tbody>
           </table>
@@ -478,88 +549,112 @@
 
   <!-- Inventory Valuation Report Tab -->
   <div *ngIf="activeTab === 'valuation'">
-    <div class="card">
-      <div class="card-header d-flex justify-content-between align-items-center">
-        <h5 class="mb-0">تقرير تقييم المخزون</h5>
-        <div *ngIf="isLoadingValuation" class="spinner-border spinner-border-sm text-primary"></div>
+    <div class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+      <div class="bg-gradient-to-r from-green-500 to-emerald-600 px-6 py-4">
+        <div class="flex justify-between items-center">
+          <h5 class="text-lg font-semibold text-white flex items-center">
+            <i class="bi bi-currency-dollar mr-3"></i>
+            تقرير تقييم المخزون
+          </h5>
+          <div *ngIf="isLoadingValuation" class="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+        </div>
       </div>
-      <div class="card-body">
-        <div *ngIf="!isLoadingValuation && inventoryValuationReport" class="row">
+      
+      <div class="p-6">
+        <div *ngIf="!isLoadingValuation && inventoryValuationReport">
           <!-- Summary Cards -->
-          <div class="col-md-3 mb-3">
-            <div class="card bg-primary text-white">
-              <div class="card-body text-center">
-                <i class="bi bi-box-seam fs-1 mb-2"></i>
-                <h4>{{ formatNumber(inventoryValuationReport.summary?.totalItems || 0) }}</h4>
-                <p class="mb-0">إجمالي الأصناف</p>
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div class="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-6 text-white">
+              <div class="flex items-center justify-between">
+                <div>
+                  <p class="text-blue-100 text-sm font-medium mb-1">إجمالي الأصناف</p>
+                  <p class="text-3xl font-bold">{{ formatNumber(inventoryValuationReport.summary?.totalItems || 0) }}</p>
+                </div>
+                <div class="w-12 h-12 bg-blue-400 rounded-xl flex items-center justify-center">
+                  <i class="bi bi-box-seam text-white text-xl"></i>
+                </div>
               </div>
             </div>
-          </div>
-          
-          <div class="col-md-3 mb-3">
-            <div class="card bg-success text-white">
-              <div class="card-body text-center">
-                <i class="bi bi-clipboard-data fs-1 mb-2"></i>
-                <h4>{{ formatNumber(inventoryValuationReport.summary?.totalQuantity || 0) }}</h4>
-                <p class="mb-0">إجمالي الكمية</p>
+            
+            <div class="bg-gradient-to-br from-green-500 to-green-600 rounded-2xl p-6 text-white">
+              <div class="flex items-center justify-between">
+                <div>
+                  <p class="text-green-100 text-sm font-medium mb-1">إجمالي الكمية</p>
+                  <p class="text-3xl font-bold">{{ formatNumber(inventoryValuationReport.summary?.totalQuantity || 0) }}</p>
+                </div>
+                <div class="w-12 h-12 bg-green-400 rounded-xl flex items-center justify-center">
+                  <i class="bi bi-clipboard-data text-white text-xl"></i>
+                </div>
               </div>
             </div>
-          </div>
-          
-          <div class="col-md-3 mb-3">
-            <div class="card bg-info text-white">
-              <div class="card-body text-center">
-                <i class="bi bi-currency-dollar fs-1 mb-2"></i>
-                <h4>{{ formatCurrency(inventoryValuationReport.summary?.totalCostValue || 0) }}</h4>
-                <p class="mb-0">القيمة التكلفة</p>
+            
+            <div class="bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl p-6 text-white">
+              <div class="flex items-center justify-between">
+                <div>
+                  <p class="text-purple-100 text-sm font-medium mb-1">القيمة التكلفة</p>
+                  <p class="text-3xl font-bold">{{ formatCurrency(inventoryValuationReport.summary?.totalCostValue || 0) }}</p>
+                </div>
+                <div class="w-12 h-12 bg-purple-400 rounded-xl flex items-center justify-center">
+                  <i class="bi bi-currency-dollar text-white text-xl"></i>
+                </div>
               </div>
             </div>
-          </div>
-          
-          <div class="col-md-3 mb-3">
-            <div class="card bg-warning text-white">
-              <div class="card-body text-center">
-                <i class="bi bi-graph-up fs-1 mb-2"></i>
-                <h4>{{ formatCurrency(inventoryValuationReport.summary?.totalSellingValue || 0) }}</h4>
-                <p class="mb-0">القيمة البيعية</p>
+            
+            <div class="bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl p-6 text-white">
+              <div class="flex items-center justify-between">
+                <div>
+                  <p class="text-orange-100 text-sm font-medium mb-1">القيمة البيعية</p>
+                  <p class="text-3xl font-bold">{{ formatCurrency(inventoryValuationReport.summary?.totalSellingValue || 0) }}</p>
+                </div>
+                <div class="w-12 h-12 bg-orange-400 rounded-xl flex items-center justify-center">
+                  <i class="bi bi-graph-up text-white text-xl"></i>
+                </div>
               </div>
             </div>
           </div>
 
           <!-- Detailed Table -->
-          <div class="col-12">
-            <div class="table-responsive">
-              <table class="table table-hover">
-                <thead class="table-light">
-                  <tr>
-                    <th>المنتج</th>
-                    <th>المستودع</th>
-                    <th>الكمية</th>
-                    <th>سعر التكلفة</th>
-                    <th>القيمة التكلفة</th>
-                    <th>سعر البيع</th>
-                    <th>القيمة البيعية</th>
-                    <th>آخر تحديث</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr *ngFor="let item of inventoryValuationReport.valuations">
-                    <td>
-                      <strong>{{ item.productNameAr }}</strong>
-                      <br>
-                      <small class="text-muted">{{ item.productCode }}</small>
-                    </td>
-                    <td>{{ item.storeNameAr }}</td>
-                    <td>{{ formatNumber(item.quantity) }}</td>
-                    <td>{{ formatCurrency(item.unitCost) }}</td>
-                    <td class="text-info">{{ formatCurrency(item.totalCost) }}</td>
-                    <td>{{ formatCurrency(item.unitSellingPrice) }}</td>
-                    <td class="text-warning">{{ formatCurrency(item.totalValue) }}</td>
-                    <td>{{ formatDate(item.lastUpdated) }}</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
+          <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+              <thead class="bg-gray-50">
+                <tr>
+                  <th class="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">المنتج</th>
+                  <th class="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">المستودع</th>
+                  <th class="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">الكمية</th>
+                  <th class="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">سعر التكلفة</th>
+                  <th class="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">القيمة التكلفة</th>
+                  <th class="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">سعر البيع</th>
+                  <th class="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">القيمة البيعية</th>
+                  <th class="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">آخر تحديث</th>
+                </tr>
+              </thead>
+              <tbody class="bg-white divide-y divide-gray-200">
+                <tr *ngFor="let item of inventoryValuationReport.valuations" class="hover:bg-gray-50 transition-colors">
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="flex items-center">
+                      <div class="w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg flex items-center justify-center mr-3">
+                        <i class="bi bi-box text-white text-sm"></i>
+                      </div>
+                      <div>
+                        <div class="text-sm font-semibold text-gray-900">{{ item.productNameAr }}</div>
+                        <div class="text-sm text-gray-500 font-mono">{{ item.productCode }}</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ item.storeNameAr }}</td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-semibold">
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                      {{ formatNumber(item.quantity) }}
+                    </span>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ formatCurrency(item.unitCost) }}</td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-blue-600 font-semibold">{{ formatCurrency(item.totalCost) }}</td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ formatCurrency(item.unitSellingPrice) }}</td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-orange-600 font-semibold">{{ formatCurrency(item.totalValue) }}</td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ formatDate(item.lastUpdated) }}</td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </div>
       </div>
@@ -568,93 +663,126 @@
 
   <!-- Low Stock Report Tab -->
   <div *ngIf="activeTab === 'low-stock'">
-    <div class="card">
-      <div class="card-header d-flex justify-content-between align-items-center">
-        <h5 class="mb-0">تقرير المخزون المنخفض</h5>
-        <div *ngIf="isLoadingLowStock" class="spinner-border spinner-border-sm text-primary"></div>
+    <div class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+      <div class="bg-gradient-to-r from-red-500 to-pink-600 px-6 py-4">
+        <div class="flex justify-between items-center">
+          <h5 class="text-lg font-semibold text-white flex items-center">
+            <i class="bi bi-exclamation-triangle mr-3"></i>
+            تقرير المخزون المنخفض
+          </h5>
+          <div *ngIf="isLoadingLowStock" class="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+        </div>
       </div>
-      <div class="card-body">
-        <div *ngIf="!isLoadingLowStock && lowStockReport" class="row">
+      
+      <div class="p-6">
+        <div *ngIf="!isLoadingLowStock && lowStockReport">
           <!-- Summary Cards -->
-          <div class="col-md-3 mb-3">
-            <div class="card bg-danger text-white">
-              <div class="card-body text-center">
-                <i class="bi bi-exclamation-triangle fs-1 mb-2"></i>
-                <h4>{{ formatNumber(lowStockReport.summary?.totalLowStockItems || 0) }}</h4>
-                <p class="mb-0">إجمالي الأصناف المنخفضة</p>
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div class="bg-gradient-to-br from-red-500 to-red-600 rounded-2xl p-6 text-white">
+              <div class="flex items-center justify-between">
+                <div>
+                  <p class="text-red-100 text-sm font-medium mb-1">إجمالي الأصناف المنخفضة</p>
+                  <p class="text-3xl font-bold">{{ formatNumber(lowStockReport.summary?.totalLowStockItems || 0) }}</p>
+                </div>
+                <div class="w-12 h-12 bg-red-400 rounded-xl flex items-center justify-center">
+                  <i class="bi bi-exclamation-triangle text-white text-xl"></i>
+                </div>
               </div>
             </div>
-          </div>
-          
-          <div class="col-md-3 mb-3">
-            <div class="card bg-warning text-white">
-              <div class="card-body text-center">
-                <i class="bi bi-arrow-down fs-1 mb-2"></i>
-                <h4>{{ formatNumber(lowStockReport.summary?.belowReorderLevel || 0) }}</h4>
-                <p class="mb-0">أدنى من مستوى إعادة الطلب</p>
+            
+            <div class="bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-2xl p-6 text-white">
+              <div class="flex items-center justify-between">
+                <div>
+                  <p class="text-yellow-100 text-sm font-medium mb-1">أدنى من مستوى إعادة الطلب</p>
+                  <p class="text-3xl font-bold">{{ formatNumber(lowStockReport.summary?.belowReorderLevel || 0) }}</p>
+                </div>
+                <div class="w-12 h-12 bg-yellow-400 rounded-xl flex items-center justify-center">
+                  <i class="bi bi-arrow-down text-white text-xl"></i>
+                </div>
               </div>
             </div>
-          </div>
-          
-          <div class="col-md-3 mb-3">
-            <div class="card bg-dark text-white">
-              <div class="card-body text-center">
-                <i class="bi bi-x-circle fs-1 mb-2"></i>
-                <h4>{{ formatNumber(lowStockReport.summary?.zeroStockItems || 0) }}</h4>
-                <p class="mb-0">نافد المخزون</p>
+            
+            <div class="bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl p-6 text-white">
+              <div class="flex items-center justify-between">
+                <div>
+                  <p class="text-gray-300 text-sm font-medium mb-1">نافد المخزون</p>
+                  <p class="text-3xl font-bold">{{ formatNumber(lowStockReport.summary?.zeroStockItems || 0) }}</p>
+                </div>
+                <div class="w-12 h-12 bg-gray-600 rounded-xl flex items-center justify-center">
+                  <i class="bi bi-x-circle text-white text-xl"></i>
+                </div>
               </div>
             </div>
-          </div>
-          
-          <div class="col-md-3 mb-3">
-            <div class="card bg-info text-white">
-              <div class="card-body text-center">
-                <i class="bi bi-currency-dollar fs-1 mb-2"></i>
-                <h4>{{ formatCurrency(lowStockReport.summary?.totalEstimatedValue || 0) }}</h4>
-                <p class="mb-0">القيمة المقدرة</p>
+            
+            <div class="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-6 text-white">
+              <div class="flex items-center justify-between">
+                <div>
+                  <p class="text-blue-100 text-sm font-medium mb-1">القيمة المقدرة</p>
+                  <p class="text-3xl font-bold">{{ formatCurrency(lowStockReport.summary?.totalEstimatedValue || 0) }}</p>
+                </div>
+                <div class="w-12 h-12 bg-blue-400 rounded-xl flex items-center justify-center">
+                  <i class="bi bi-currency-dollar text-white text-xl"></i>
+                </div>
               </div>
             </div>
           </div>
 
           <!-- Detailed Table -->
-          <div class="col-12">
-            <div class="table-responsive">
-              <table class="table table-hover">
-                <thead class="table-light">
-                  <tr>
-                    <th>المنتج</th>
-                    <th>المستودع</th>
-                    <th>الكمية الحالية</th>
-                    <th>مستوى إعادة الطلب</th>
-                    <th>الحالة</th>
-                    <th>سعر التكلفة</th>
-                    <th>سعر البيع</th>
-                    <th>آخر تحديث</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr *ngFor="let item of lowStockReport.lowStockItems">
-                    <td>
-                      <strong>{{ item.productNameAr }}</strong>
-                      <br>
-                      <small class="text-muted">{{ item.productCode }}</small>
-                    </td>
-                    <td>{{ item.storeNameAr }}</td>
-                    <td [ngClass]="getSeverityClass(item.currentQuantity, threshold)">
+          <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+              <thead class="bg-gray-50">
+                <tr>
+                  <th class="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">المنتج</th>
+                  <th class="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">المستودع</th>
+                  <th class="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">الكمية الحالية</th>
+                  <th class="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">مستوى إعادة الطلب</th>
+                  <th class="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">الحالة</th>
+                  <th class="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">سعر التكلفة</th>
+                  <th class="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">سعر البيع</th>
+                  <th class="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">آخر تحديث</th>
+                </tr>
+              </thead>
+              <tbody class="bg-white divide-y divide-gray-200">
+                <tr *ngFor="let item of lowStockReport.lowStockItems" class="hover:bg-gray-50 transition-colors">
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="flex items-center">
+                      <div class="w-10 h-10 bg-gradient-to-br from-red-500 to-pink-600 rounded-lg flex items-center justify-center mr-3">
+                        <i class="bi bi-box text-white text-sm"></i>
+                      </div>
+                      <div>
+                        <div class="text-sm font-semibold text-gray-900">{{ item.productNameAr }}</div>
+                        <div class="text-sm text-gray-500 font-mono">{{ item.productCode }}</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ item.storeNameAr }}</td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold" [ngClass]="getSeverityClass(item.currentQuantity, threshold)">
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
+                          [ngClass]="item.currentQuantity === 0 ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800'">
                       {{ formatNumber(item.currentQuantity) }}
-                    </td>
-                    <td>{{ formatNumber(item.reorderLevel) }}</td>
-                    <td>
-                      <span *ngIf="item.isBelowReorderLevel" class="badge bg-warning">أدنى من مستوى إعادة الطلب</span>
-                      <span *ngIf="!item.isBelowReorderLevel" class="badge bg-danger">مخزون منخفض</span>
-                    </td>
-                    <td>{{ formatCurrency(item.unitCost) }}</td>
-                    <td>{{ formatCurrency(item.unitSellingPrice) }}</td>
-                    <td>{{ formatDate(item.lastUpdated) }}</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
+                    </span>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                      {{ formatNumber(item.reorderLevel) }}
+                    </span>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm">
+                    <span *ngIf="item.isBelowReorderLevel" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                      <i class="bi bi-arrow-down mr-1"></i>
+                      أدنى من مستوى إعادة الطلب
+                    </span>
+                    <span *ngIf="!item.isBelowReorderLevel" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                      <i class="bi bi-exclamation-triangle mr-1"></i>
+                      مخزون منخفض
+                    </span>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ formatCurrency(item.unitCost) }}</td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ formatCurrency(item.unitSellingPrice) }}</td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ formatDate(item.lastUpdated) }}</td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </div>
       </div>
@@ -663,41 +791,68 @@
 
   <!-- Transaction Trends Report Tab -->
   <div *ngIf="activeTab === 'trends'">
-    <div class="card">
-      <div class="card-header d-flex justify-content-between align-items-center">
-        <h5 class="mb-0">تقرير اتجاهات المعاملات</h5>
-        <div *ngIf="isLoadingTrends" class="spinner-border spinner-border-sm text-primary"></div>
+    <div class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+      <div class="bg-gradient-to-r from-purple-500 to-pink-600 px-6 py-4">
+        <div class="flex justify-between items-center">
+          <h5 class="text-lg font-semibold text-white flex items-center">
+            <i class="bi bi-graph-up mr-3"></i>
+            تقرير اتجاهات المعاملات
+          </h5>
+          <div *ngIf="isLoadingTrends" class="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+        </div>
       </div>
-      <div class="card-body">
-        <div *ngIf="!isLoadingTrends && transactionTrends.length === 0" class="text-center py-4 text-muted">
-          <i class="bi bi-graph-up fs-1 mb-3"></i>
-          <p>لا توجد بيانات اتجاهات</p>
+      
+      <div class="p-6">
+        <div *ngIf="!isLoadingTrends && transactionTrends.length === 0" class="text-center py-12">
+          <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <i class="bi bi-graph-up text-gray-400 text-2xl"></i>
+          </div>
+          <h4 class="text-lg font-semibold text-gray-900 mb-2">لا توجد بيانات اتجاهات</h4>
+          <p class="text-gray-500">لم يتم العثور على أي بيانات اتجاهات متاحة</p>
         </div>
         
-        <div *ngIf="!isLoadingTrends && transactionTrends.length > 0" class="table-responsive">
-          <table class="table table-hover">
-            <thead class="table-light">
+        <div *ngIf="!isLoadingTrends && transactionTrends.length > 0" class="overflow-x-auto">
+          <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
               <tr>
-                <th>الشهر</th>
-                <th>السنة</th>
-                <th>إجمالي المعاملات</th>
-                <th>إجمالي الكمية</th>
-                <th>إجمالي القيمة</th>
-                <th>أنواع المعاملات</th>
+                <th class="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">الشهر</th>
+                <th class="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">السنة</th>
+                <th class="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">إجمالي المعاملات</th>
+                <th class="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">إجمالي الكمية</th>
+                <th class="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">إجمالي القيمة</th>
+                <th class="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">أنواع المعاملات</th>
               </tr>
             </thead>
-            <tbody>
-              <tr *ngFor="let trend of transactionTrends">
-                <td>{{ trend.month }}</td>
-                <td>{{ trend.year }}</td>
-                <td>{{ formatNumber(trend.totalTransactions) }}</td>
-                <td>{{ formatNumber(trend.totalQuantity) }}</td>
-                <td>{{ formatCurrency(trend.totalValue) }}</td>
-                <td>
-                  <div *ngFor="let type of trend.transactionTypes" class="mb-1">
-                    <small class="badge bg-secondary">
-                      {{ type.transactionType }}: {{ type.transactionCount }} معاملة
-                    </small>
+            <tbody class="bg-white divide-y divide-gray-200">
+              <tr *ngFor="let trend of transactionTrends" class="hover:bg-gray-50 transition-colors">
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">
+                  <div class="flex items-center">
+                    <div class="w-8 h-8 bg-gradient-to-br from-purple-500 to-pink-600 rounded-lg flex items-center justify-center mr-3">
+                      <i class="bi bi-calendar text-white text-xs"></i>
+                    </div>
+                    {{ trend.month }}
+                  </div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-mono">{{ trend.year }}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                    {{ formatNumber(trend.totalTransactions) }}
+                  </span>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-semibold">
+                  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                    {{ formatNumber(trend.totalQuantity) }}
+                  </span>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-purple-600 font-semibold">
+                  {{ formatCurrency(trend.totalValue) }}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  <div class="flex flex-wrap gap-1">
+                    <span *ngFor="let type of trend.transactionTypes" 
+                          class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                      {{ type.transactionType }}: {{ type.transactionCount }}
+                    </span>
                   </div>
                 </td>
               </tr>
@@ -710,54 +865,94 @@
 
   <!-- Top Moving Products Report Tab -->
   <div *ngIf="activeTab === 'top-products'">
-    <div class="card">
-      <div class="card-header d-flex justify-content-between align-items-center">
-        <h5 class="mb-0">تقرير أكثر المنتجات حركة</h5>
-        <div *ngIf="isLoadingTopProducts" class="spinner-border spinner-border-sm text-primary"></div>
+    <div class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+      <div class="bg-gradient-to-r from-yellow-500 to-orange-600 px-6 py-4">
+        <div class="flex justify-between items-center">
+          <h5 class="text-lg font-semibold text-white flex items-center">
+            <i class="bi bi-trophy mr-3"></i>
+            تقرير أكثر المنتجات حركة
+          </h5>
+          <div *ngIf="isLoadingTopProducts" class="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+        </div>
       </div>
-      <div class="card-body">
-        <div *ngIf="!isLoadingTopProducts && topMovingProducts.length === 0" class="text-center py-4 text-muted">
-          <i class="bi bi-trophy fs-1 mb-3"></i>
-          <p>لا توجد بيانات منتجات</p>
+      
+      <div class="p-6">
+        <div *ngIf="!isLoadingTopProducts && topMovingProducts.length === 0" class="text-center py-12">
+          <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <i class="bi bi-trophy text-gray-400 text-2xl"></i>
+          </div>
+          <h4 class="text-lg font-semibold text-gray-900 mb-2">لا توجد بيانات منتجات</h4>
+          <p class="text-gray-500">لم يتم العثور على أي بيانات منتجات متاحة</p>
         </div>
         
-        <div *ngIf="!isLoadingTopProducts && topMovingProducts.length > 0" class="table-responsive">
-          <table class="table table-hover">
-            <thead class="table-light">
+        <div *ngIf="!isLoadingTopProducts && topMovingProducts.length > 0" class="overflow-x-auto">
+          <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
               <tr>
-                <th>الترتيب</th>
-                <th>المنتج</th>
-                <th>الكود</th>
-                <th>إجمالي المعاملات</th>
-                <th>إجمالي الكمية المتحركة</th>
-                <th>إجمالي الداخل</th>
-                <th>إجمالي الخارج</th>
-                <th>صافي الحركة</th>
-                <th>إجمالي القيمة</th>
-                <th>آخر معاملة</th>
+                <th class="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">الترتيب</th>
+                <th class="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">المنتج</th>
+                <th class="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">الكود</th>
+                <th class="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">إجمالي المعاملات</th>
+                <th class="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">إجمالي الكمية المتحركة</th>
+                <th class="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">إجمالي الداخل</th>
+                <th class="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">إجمالي الخارج</th>
+                <th class="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">صافي الحركة</th>
+                <th class="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">إجمالي القيمة</th>
+                <th class="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">آخر معاملة</th>
               </tr>
             </thead>
-            <tbody>
-              <tr *ngFor="let product of topMovingProducts; let i = index">
-                <td>
-                  <span class="badge bg-primary fs-6">{{ i + 1 }}</span>
+            <tbody class="bg-white divide-y divide-gray-200">
+              <tr *ngFor="let product of topMovingProducts; let i = index" class="hover:bg-gray-50 transition-colors">
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-center">
+                  <span class="inline-flex items-center justify-center w-8 h-8 rounded-full text-sm font-bold text-white"
+                        [ngClass]="i < 3 ? 'bg-gradient-to-br from-yellow-500 to-orange-600' : 'bg-gray-500'">
+                    {{ i + 1 }}
+                  </span>
                 </td>
-                <td>
-                  <strong>{{ product.productNameAr }}</strong>
-                  <br>
-                  <small class="text-muted">{{ product.productNameEn }}</small>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="flex items-center">
+                    <div class="w-10 h-10 bg-gradient-to-br from-yellow-500 to-orange-600 rounded-lg flex items-center justify-center mr-3">
+                      <i class="bi bi-box text-white text-sm"></i>
+                    </div>
+                    <div>
+                      <div class="text-sm font-semibold text-gray-900">{{ product.productNameAr }}</div>
+                      <div class="text-sm text-gray-500">{{ product.productNameEn }}</div>
+                    </div>
+                  </div>
                 </td>
-                <td>{{ product.productCode }}</td>
-                <td>{{ formatNumber(product.totalTransactions) }}</td>
-                <td class="fw-bold">{{ formatNumber(product.totalQuantityMoved) }}</td>
-                <td class="text-success">{{ formatNumber(product.totalIn) }}</td>
-                <td class="text-danger">{{ formatNumber(product.totalOut) }}</td>
-                <td [ngClass]="getMovementClass(product.netMovement)">
-                  <i [class]="getMovementIcon(product.netMovement)"></i>
-                  {{ formatNumber(product.netMovement) }}
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-mono">{{ product.productCode }}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                    {{ formatNumber(product.totalTransactions) }}
+                  </span>
                 </td>
-                <td class="text-info">{{ formatCurrency(product.totalValue) }}</td>
-                <td>{{ formatDate(product.lastTransactionDate) }}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-bold">
+                  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                    {{ formatNumber(product.totalQuantityMoved) }}
+                  </span>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-green-600 font-semibold">
+                  <div class="flex items-center">
+                    <i class="bi bi-arrow-up mr-1"></i>
+                    {{ formatNumber(product.totalIn) }}
+                  </div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-red-600 font-semibold">
+                  <div class="flex items-center">
+                    <i class="bi bi-arrow-down mr-1"></i>
+                    {{ formatNumber(product.totalOut) }}
+                  </div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold" [ngClass]="getMovementClass(product.netMovement)">
+                  <div class="flex items-center">
+                    <i [class]="getMovementIcon(product.netMovement)" class="mr-1"></i>
+                    {{ formatNumber(product.netMovement) }}
+                  </div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-orange-600 font-semibold">
+                  {{ formatCurrency(product.totalValue) }}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ formatDate(product.lastTransactionDate) }}</td>
               </tr>
             </tbody>
           </table>

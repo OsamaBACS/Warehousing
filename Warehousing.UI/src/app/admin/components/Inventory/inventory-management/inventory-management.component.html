@@ -1,105 +1,207 @@
-<div class="container-fluid">
-  <div class="row">
-    <div class="col-12">
-      <div class="card">
-        <div class="card-header">
-          <h4 class="card-title">Inventory Management</h4>
-        </div>
-        <div class="card-body">
-          
-          <!-- Filters -->
-          <div class="row mb-3">
-            <div class="col-md-3">
-              <label for="storeFilter">Filter by Store</label>
-              <select class="form-control" id="storeFilter" [(ngModel)]="selectedStoreId" (change)="onStoreChange()">
-                <option value="">All Stores</option>
-                <option *ngFor="let store of stores" [value]="store.id">{{ store.nameAr }}</option>
-              </select>
-            </div>
-            <div class="col-md-3">
-              <label for="productFilter">Filter by Product</label>
-              <select class="form-control" id="productFilter" [(ngModel)]="selectedProductId" (change)="onProductChange()">
-                <option value="">All Products</option>
-                <option *ngFor="let product of products" [value]="product.id">{{ product.nameAr }}</option>
-              </select>
-            </div>
-            <div class="col-md-3">
-              <label for="searchKeyword">Search</label>
-              <input type="text" class="form-control" id="searchKeyword" [(ngModel)]="searchKeyword" 
-                     (input)="onSearchChange()" placeholder="Search products...">
-            </div>
-            <div class="col-md-3">
-              <label>&nbsp;</label>
-              <div class="btn-group d-block">
-                <button type="button" class="btn btn-warning" (click)="getLowStockItems()">
-                  Low Stock Items
-                </button>
-                <button type="button" class="btn btn-secondary" (click)="clearFilters()">
-                  Clear Filters
-                </button>
-              </div>
-            </div>
+<div class="min-h-screen bg-gray-50 py-8" dir="rtl">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <!-- Header -->
+    <div class="bg-white rounded-2xl shadow-lg p-6 mb-8">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center">
+          <div class="w-12 h-12 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-2xl flex items-center justify-center mr-4">
+            <i class="bi bi-clipboard-data text-white text-xl"></i>
           </div>
-
-          <!-- Inventory Table -->
-          <div class="table-responsive">
-            <table class="table table-striped table-hover">
-              <thead class="thead-dark">
-                <tr>
-                  <th>Product</th>
-                  <th>Store</th>
-                  <th>Current Quantity</th>
-                  <th>Adjust Quantity</th>
-                  <th>Last Updated</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr *ngIf="loading">
-                  <td colspan="6" class="text-center">
-                    <div class="spinner-border" role="status">
-                      <span class="sr-only">Loading...</span>
-                    </div>
-                  </td>
-                </tr>
-                <tr *ngFor="let inventory of inventories" [class.table-warning]="inventory.quantity < 10">
-                  <td>{{ getProductName(inventory.productId) }}</td>
-                  <td>{{ getStoreName(inventory.storeId) }}</td>
-                  <td>
-                    <span class="badge badge-{{ inventory.quantity < 10 ? 'danger' : 'success' }}">
-                      {{ inventory.quantity }}
-                    </span>
-                  </td>
-                  <td>
-                    <div class="input-group input-group-sm">
-                      <input type="number" class="form-control" 
-                             [(ngModel)]="inventory.quantity" 
-                             step="0.01" min="0">
-                      <div class="input-group-append">
-                        <button class="btn btn-outline-primary" type="button" 
-                                (click)="adjustInventory(inventory, inventory.quantity)">
-                          Update
-                        </button>
-                      </div>
-                    </div>
-                  </td>
-                  <td>{{ inventory.updatedAt | date:'short' }}</td>
-                  <td>
-                    <button class="btn btn-sm btn-info" (click)="viewHistory(inventory)">
-                      <i class="fas fa-history"></i> History
-                    </button>
-                  </td>
-                </tr>
-                <tr *ngIf="!loading && inventories.length === 0">
-                  <td colspan="6" class="text-center text-muted">
-                    No inventory records found
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+          <div>
+            <h1 class="text-3xl font-bold text-gray-900">إدارة المخزون</h1>
+            <p class="text-gray-600 mt-1">مراقبة وإدارة مستويات المخزون في جميع المستودعات</p>
           </div>
-
         </div>
+        <div class="flex items-center space-x-3 space-x-reverse">
+          <button class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-amber-600 to-orange-600 text-white rounded-xl font-semibold hover:from-amber-700 hover:to-orange-700 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 transition-all duration-200 transform hover:scale-105 shadow-lg"
+                  (click)="getLowStockItems()">
+            <i class="bi bi-exclamation-triangle mr-2"></i>
+            المخزون المنخفض
+          </button>
+          <button class="inline-flex items-center px-4 py-2 bg-gray-600 text-white rounded-xl font-semibold hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-all duration-200 transform hover:scale-105 shadow-lg"
+                  (click)="clearFilters()">
+            <i class="bi bi-arrow-clockwise mr-2"></i>
+            مسح الفلاتر
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Filters Section -->
+    <div class="bg-white rounded-2xl shadow-lg p-6 mb-8">
+      <h2 class="text-xl font-bold text-gray-900 mb-6 flex items-center">
+        <i class="bi bi-funnel mr-3 text-cyan-600"></i>
+        فلاتر البحث
+      </h2>
+      
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <!-- Store Filter -->
+        <div class="space-y-2">
+          <label class="block text-sm font-semibold text-gray-700">
+            <i class="bi bi-building mr-2 text-cyan-600"></i>
+            تصفية حسب المستودع
+          </label>
+          <select class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all duration-200 bg-gray-50 focus:bg-white"
+                  id="storeFilter" 
+                  [(ngModel)]="selectedStoreId" 
+                  (change)="onStoreChange()">
+            <option value="">جميع المستودعات</option>
+            <option *ngFor="let store of stores" [value]="store.id">{{ store.nameAr }}</option>
+          </select>
+        </div>
+
+        <!-- Product Filter -->
+        <div class="space-y-2">
+          <label class="block text-sm font-semibold text-gray-700">
+            <i class="bi bi-box mr-2 text-cyan-600"></i>
+            تصفية حسب المنتج
+          </label>
+          <select class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all duration-200 bg-gray-50 focus:bg-white"
+                  id="productFilter" 
+                  [(ngModel)]="selectedProductId" 
+                  (change)="onProductChange()">
+            <option value="">جميع المنتجات</option>
+            <option *ngFor="let product of products" [value]="product.id">{{ product.nameAr }}</option>
+          </select>
+        </div>
+
+        <!-- Search -->
+        <div class="space-y-2">
+          <label class="block text-sm font-semibold text-gray-700">
+            <i class="bi bi-search mr-2 text-cyan-600"></i>
+            البحث
+          </label>
+          <input type="text" 
+                 class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all duration-200 bg-gray-50 focus:bg-white"
+                 id="searchKeyword" 
+                 [(ngModel)]="searchKeyword" 
+                 (input)="onSearchChange()" 
+                 placeholder="البحث في المنتجات...">
+        </div>
+      </div>
+    </div>
+
+    <!-- Inventory Table -->
+    <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+          <thead class="bg-gradient-to-r from-cyan-500 to-blue-600">
+            <tr>
+              <th class="px-6 py-4 text-right text-xs font-medium text-white uppercase tracking-wider">
+                <i class="bi bi-box mr-2"></i>
+                المنتج
+              </th>
+              <th class="px-6 py-4 text-right text-xs font-medium text-white uppercase tracking-wider">
+                <i class="bi bi-building mr-2"></i>
+                المستودع
+              </th>
+              <th class="px-6 py-4 text-right text-xs font-medium text-white uppercase tracking-wider">
+                <i class="bi bi-hash mr-2"></i>
+                الكمية الحالية
+              </th>
+              <th class="px-6 py-4 text-right text-xs font-medium text-white uppercase tracking-wider">
+                <i class="bi bi-pencil mr-2"></i>
+                تعديل الكمية
+              </th>
+              <th class="px-6 py-4 text-right text-xs font-medium text-white uppercase tracking-wider">
+                <i class="bi bi-clock mr-2"></i>
+                آخر تحديث
+              </th>
+              <th class="px-6 py-4 text-right text-xs font-medium text-white uppercase tracking-wider">
+                <i class="bi bi-gear mr-2"></i>
+                الإجراءات
+              </th>
+            </tr>
+          </thead>
+          <tbody class="bg-white divide-y divide-gray-200">
+            <!-- Loading State -->
+            <tr *ngIf="loading">
+              <td colspan="6" class="px-6 py-12 text-center">
+                <div class="flex flex-col items-center">
+                  <div class="w-12 h-12 border-4 border-cyan-600 border-t-transparent rounded-full animate-spin mb-4"></div>
+                  <p class="text-gray-600">جاري التحميل...</p>
+                </div>
+              </td>
+            </tr>
+
+            <!-- Inventory Items -->
+            <tr *ngFor="let inventory of inventories" 
+                class="hover:bg-gray-50 transition-colors"
+                [class.bg-amber-50]="inventory.quantity < 10">
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="flex items-center">
+                  <div class="w-10 h-10 bg-gradient-to-br from-cyan-100 to-blue-100 rounded-lg flex items-center justify-center mr-3">
+                    <i class="bi bi-box text-cyan-600"></i>
+                  </div>
+                  <div>
+                    <div class="text-sm font-medium text-gray-900">{{ getProductName(inventory.productId) }}</div>
+                    <div class="text-sm text-gray-500">ID: {{ inventory.productId }}</div>
+                  </div>
+                </div>
+              </td>
+              
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="flex items-center">
+                  <div class="w-8 h-8 bg-gradient-to-br from-orange-100 to-red-100 rounded-lg flex items-center justify-center mr-2">
+                    <i class="bi bi-building text-orange-600 text-sm"></i>
+                  </div>
+                  <span class="text-sm font-medium text-gray-900">{{ getStoreName(inventory.storeId) }}</span>
+                </div>
+              </td>
+              
+              <td class="px-6 py-4 whitespace-nowrap">
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium"
+                      [ngClass]="inventory.quantity < 10 ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'">
+                  <i class="bi mr-1" [ngClass]="inventory.quantity < 10 ? 'bi-exclamation-triangle' : 'bi-check-circle'"></i>
+                  {{ inventory.quantity }}
+                </span>
+              </td>
+              
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="flex items-center space-x-2 space-x-reverse">
+                  <input type="number" 
+                         class="w-20 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 text-sm"
+                         [(ngModel)]="inventory.quantity" 
+                         step="0.01" 
+                         min="0">
+                  <button class="inline-flex items-center px-3 py-2 bg-cyan-600 text-white rounded-lg text-sm font-medium hover:bg-cyan-700 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2 transition-colors"
+                          (click)="adjustInventory(inventory, inventory.quantity)">
+                    <i class="bi bi-check-lg mr-1"></i>
+                    تحديث
+                  </button>
+                </div>
+              </td>
+              
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                <div class="flex items-center">
+                  <i class="bi bi-clock mr-2 text-gray-400"></i>
+                  {{ inventory.updatedAt | date:'short' }}
+                </div>
+              </td>
+              
+              <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                <button class="inline-flex items-center px-3 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
+                        (click)="viewHistory(inventory)">
+                  <i class="bi bi-clock-history mr-2"></i>
+                  التاريخ
+                </button>
+              </td>
+            </tr>
+
+            <!-- Empty State -->
+            <tr *ngIf="!loading && inventories.length === 0">
+              <td colspan="6" class="px-6 py-12 text-center">
+                <div class="flex flex-col items-center">
+                  <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                    <i class="bi bi-clipboard-data text-gray-400 text-2xl"></i>
+                  </div>
+                  <h3 class="text-lg font-semibold text-gray-900 mb-2">لا توجد سجلات مخزون</h3>
+                  <p class="text-gray-500">لم يتم العثور على أي سجلات مخزون تطابق المعايير المحددة</p>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </div>
   </div>

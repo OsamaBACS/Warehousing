@@ -1,123 +1,191 @@
-<div class="container-fluid">
-  <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap">
-    <!-- <h4 class="dark-mode-text fw-bold">{{ 'USERS.TITLE' | translate }}</h4> -->
-    <h4 class="dark-mode-text fw-bold">المستخدمين</h4>
-    <button class="btn btn-primary d-flex align-items-center" (click)="openForm(null)" dir="ltr">
-      <i class="bi bi-plus-circle me-2"></i>
-    </button>
-  </div>
-
-  <!-- Search Input -->
-  <div class="mb-4">
-    <form [formGroup]="searchForm" (ngSubmit)="loadUsers('SEARCH')">
-      <div class="input-group" dir="ltr">
-        <input type="text" class="form-control" formControlName="keyword"
-          placeholder="{{ 'SHARED.SEARCH' | translate }}" />
-        <button class="btn btn-outline-secondary" type="submit">
-          <i class="bi bi-search"></i>
+<div class="min-h-screen bg-gray-50 py-8">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <!-- Header -->
+    <div class="bg-white rounded-2xl shadow-lg p-6 mb-8">
+      <div class="flex justify-between items-center">
+        <div class="flex items-center">
+          <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center mr-4">
+            <i class="bi bi-people text-white text-xl"></i>
+          </div>
+          <div>
+            <h1 class="text-3xl font-bold text-gray-900">إدارة المستخدمين</h1>
+            <p class="text-gray-600 mt-1">إدارة المستخدمين والصلاحيات في النظام</p>
+          </div>
+        </div>
+        <button class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-semibold hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200 transform hover:scale-105 shadow-lg" 
+                (click)="openForm(null)">
+          <i class="bi bi-plus-circle mr-2 text-lg"></i>
+          إضافة مستخدم جديد
         </button>
       </div>
-    </form>
-  </div>
+    </div>
 
-  <!-- Users Cards -->
-  <div *ngIf="(users$ | async) as data; else noData">
-    <div class="row g-3">
-      <div class="col-12 col-sm-6 col-md-4 col-lg-3" *ngFor="let user of data.users">
-        <div class="card h-100 shadow-sm border rounded-3">
-          <div class="card-body">
-            <div class="d-flex justify-content-between align-items-start mb-3">
-              <h5 class="fw-bold mb-0">{{ user.nameAr }}</h5>
-              <span class="badge bg-primary fs-6">{{ user.username }}</span>
+    <!-- Search Section -->
+    <div class="bg-white rounded-2xl shadow-lg p-6 mb-8">
+      <form [formGroup]="searchForm" (ngSubmit)="loadUsers('SEARCH')" class="flex gap-4">
+        <div class="flex-1 relative">
+          <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+            <i class="bi bi-search text-gray-400"></i>
+          </div>
+          <input type="text" 
+                 class="w-full pl-4 pr-10 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-gray-50 focus:bg-white" 
+                 formControlName="keyword"
+                 placeholder="البحث عن المستخدمين...">
+        </div>
+        <button type="submit" 
+                class="px-8 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl font-semibold hover:from-green-700 hover:to-emerald-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-all duration-200 transform hover:scale-105 shadow-lg">
+          <i class="bi bi-search mr-2"></i>
+          بحث
+        </button>
+      </form>
+    </div>
+
+    <!-- Users Grid -->
+    <div *ngIf="(users$ | async) as data; else noData" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+      <div *ngFor="let user of data.users" class="group">
+        <div class="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 overflow-hidden border border-gray-100 h-full flex flex-col">
+          <!-- User Avatar & Header -->
+          <div class="bg-gradient-to-br from-blue-50 to-indigo-100 p-6 text-center">
+            <div class="w-20 h-20 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full mx-auto flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+              <i class="bi bi-person text-white text-3xl"></i>
+            </div>
+            <h3 class="text-xl font-bold text-gray-900 mt-4 mb-1">{{ user.nameAr }}</h3>
+            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
+              <i class="bi bi-person-circle mr-1"></i>
+              {{ user.username }}
+            </span>
+          </div>
+
+          <!-- User Details -->
+          <div class="p-6 flex flex-col flex-grow">
+            <div class="space-y-3 mb-6">
+              <div class="flex items-center text-gray-600">
+                <i class="bi bi-telephone-fill text-blue-500 mr-3 text-lg"></i>
+                <div>
+                  <p class="text-sm font-medium text-gray-500">الهاتف</p>
+                  <p class="text-sm">{{ user.phone || 'غير محدد' }}</p>
+                </div>
+              </div>
+              
+              <div class="flex items-center text-gray-600">
+                <i class="bi bi-envelope-fill text-green-500 mr-3 text-lg"></i>
+                <div>
+                  <p class="text-sm font-medium text-gray-500">البريد الإلكتروني</p>
+                  <p class="text-sm">{{ user.email || 'غير محدد' }}</p>
+                </div>
+              </div>
+              
+              <div class="flex items-center text-gray-600">
+                <i class="bi bi-house-door-fill text-purple-500 mr-3 text-lg"></i>
+                <div>
+                  <p class="text-sm font-medium text-gray-500">العنوان</p>
+                  <p class="text-sm">{{ user.address || 'غير محدد' }}</p>
+                </div>
+              </div>
             </div>
 
-            <ul class="list-unstyled small">
-              <li class="mb-2">
-                <i class="bi bi-telephone-fill me-2 text-muted"></i>
-                <!-- <strong>{{ 'USERS.PHONE' | translate }}:</strong> {{ user.phone }} -->
-                <strong>الهاتف:</strong> {{ user.phone }}
-              </li>
-              <li class="mb-2">
-                <i class="bi bi-envelope-fill me-2 text-muted"></i>
-                <!-- <strong>{{ 'USERS.EMAIL' | translate }}:</strong> {{ user.email }} -->
-                <strong>الايميل:</strong> {{ user.email }}
-              </li>
-              <li class="mb-2">
-                <i class="bi bi-house-door-fill me-2 text-muted"></i>
-                <!-- <strong>{{ 'USERS.ADDRESS' | translate }}:</strong> {{ user.address }} -->
-                <strong>العنوان:</strong> {{ user.address }}
-              </li>
-              <li class="mb-2">
-                <i class="bi bi-person-badge-fill me-2 text-muted"></i>
-                <!-- <strong>{{ 'ROLES.NAME' | translate }}:</strong> -->
-                <strong>الصلاحية:</strong>
-                <span *ngFor="let ur of user.userRoles" class="badge bg-secondary me-1 mb-1">
-                  <!-- {{ lang.currentLang === 'ar' ? ur.role.nameAr : ur.role.nameEn }} -->
+            <!-- Roles Section -->
+            <div class="mb-6">
+              <p class="text-sm font-medium text-gray-500 mb-2 flex items-center">
+                <i class="bi bi-person-badge-fill text-amber-500 mr-2"></i>
+                الصلاحيات
+              </p>
+              <div class="flex flex-wrap gap-1">
+                <span *ngFor="let ur of user.userRoles" 
+                      class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
                   {{ ur.role.nameAr }}
                 </span>
-              </li>
-            </ul>
+                <span *ngIf="!user.userRoles || user.userRoles.length === 0" 
+                      class="text-xs text-gray-400">لا توجد صلاحيات</span>
+              </div>
+            </div>
 
             <!-- Actions -->
-            <div class="d-flex gap-2 mt-3">
-              <button class="btn btn-sm btn-outline-info flex-fill" (click)="openForm(user.id)">
-                <i class="bi bi-pencil"></i>
+            <div class="flex gap-2 mt-auto">
+              <button class="flex-1 inline-flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors" 
+                      (click)="openForm(user.id)">
+                <i class="bi bi-pencil mr-2"></i>
+                تعديل
               </button>
-              <button class="btn btn-sm btn-outline-danger flex-fill" type="button" (click)="changePassword(user.id)">
-                <i class="bi bi-key me-1"></i> 
-                <!-- {{ 'USERS.CHANGEPASSWORD' | translate }} -->
-                  تغيير كلمة المرور
+              <button class="flex-1 inline-flex items-center justify-center px-4 py-2 bg-amber-600 text-white rounded-lg text-sm font-medium hover:bg-amber-700 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 transition-colors" 
+                      type="button" (click)="changePassword(user.id)">
+                <i class="bi bi-key mr-2"></i>
+                كلمة المرور
               </button>
             </div>
           </div>
         </div>
       </div>
     </div>
-  </div>
 
-  <!-- Empty State -->
-  <ng-template #noData>
-    <div class="alert alert-info text-center py-5">
-      {{ 'SHARED.NO_DATA' | translate }}
+    <!-- Empty State -->
+    <ng-template #noData>
+      <div class="bg-white rounded-2xl shadow-lg p-12 text-center">
+        <div class="w-24 h-24 bg-gray-100 rounded-full mx-auto flex items-center justify-center mb-6">
+          <i class="bi bi-people text-gray-400 text-4xl"></i>
+        </div>
+        <h3 class="text-xl font-semibold text-gray-900 mb-2">لا يوجد مستخدمين</h3>
+        <p class="text-gray-600 mb-6">لم يتم العثور على أي مستخدمين في النظام</p>
+        <button class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-semibold hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200 transform hover:scale-105 shadow-lg" 
+                (click)="openForm(null)">
+          <i class="bi bi-plus-circle mr-2"></i>
+          إضافة أول مستخدم
+        </button>
+      </div>
+    </ng-template>
+
+    <!-- Pagination -->
+    <div class="bg-white rounded-2xl shadow-lg p-6 mt-8" *ngIf="(users$ | async) as data">
+      <nav aria-label="Page navigation" class="flex justify-center">
+        <div class="flex items-center space-x-2 space-x-reverse">
+          <button class="px-4 py-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed" 
+                  [disabled]="pageIndex === 1"
+                  (click)="changePage(pageIndex - 1)">
+            <i class="bi bi-chevron-right"></i>
+          </button>
+
+          <!-- First page -->
+          <button class="px-4 py-2 rounded-lg transition-colors font-medium"
+                  [class.bg-blue-600]="pageIndex === 1"
+                  [class.text-white]="pageIndex === 1"
+                  [class.bg-gray-100]="pageIndex !== 1"
+                  [class.text-gray-700]="pageIndex !== 1"
+                  [class.hover:bg-gray-200]="pageIndex !== 1"
+                  (click)="changePage(1)">1</button>
+
+          <!-- Left Ellipsis -->
+          <span class="px-4 py-2 text-gray-400" *ngIf="pageIndex > 4">...</span>
+
+          <!-- Dynamic middle pages -->
+          <button *ngFor="let page of getPageRange()" 
+                  class="px-4 py-2 rounded-lg transition-colors font-medium"
+                  [class.bg-blue-600]="page === pageIndex"
+                  [class.text-white]="page === pageIndex"
+                  [class.bg-gray-100]="page !== pageIndex"
+                  [class.text-gray-700]="page !== pageIndex"
+                  [class.hover:bg-gray-200]="page !== pageIndex"
+                  (click)="changePage(page)">{{ page }}</button>
+
+          <!-- Right Ellipsis -->
+          <span class="px-4 py-2 text-gray-400" *ngIf="pageIndex < totalPages - 3">...</span>
+
+          <!-- Last page -->
+          <button *ngIf="totalPages > 1"
+                  class="px-4 py-2 rounded-lg transition-colors font-medium"
+                  [class.bg-blue-600]="pageIndex === totalPages"
+                  [class.text-white]="pageIndex === totalPages"
+                  [class.bg-gray-100]="pageIndex !== totalPages"
+                  [class.text-gray-700]="pageIndex !== totalPages"
+                  [class.hover:bg-gray-200]="pageIndex !== totalPages"
+                  (click)="changePage(totalPages)">{{ totalPages }}</button>
+
+          <button class="px-4 py-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed" 
+                  [disabled]="pageIndex === totalPages || totalPages === 0"
+                  (click)="changePage(pageIndex + 1)">
+            <i class="bi bi-chevron-left"></i>
+          </button>
+        </div>
+      </nav>
     </div>
-  </ng-template>
-
-  <!-- Pagination -->
-  <nav aria-label="Page navigation" class="mt-4 d-flex justify-content-center">
-    <ul class="pagination">
-      <li class="page-item" [class.disabled]="pageIndex === 1">
-        <button class="page-link btn" (click)="changePage(pageIndex - 1)">«</button>
-      </li>
-
-      <!-- First page -->
-      <li class="page-item" [class.active]="pageIndex === 1">
-        <button class="page-link btn" (click)="changePage(1)">1</button>
-      </li>
-
-      <!-- Left Ellipsis -->
-      <li class="page-item disabled" *ngIf="pageIndex > 4">
-        <span class="page-link">...</span>
-      </li>
-
-      <!-- Dynamic middle pages -->
-      <li class="page-item" *ngFor="let page of getPageRange()" [class.active]="page === pageIndex">
-        <button class="page-link btn" (click)="changePage(page)">{{ page }}</button>
-      </li>
-
-      <!-- Right Ellipsis -->
-      <li class="page-item disabled" *ngIf="pageIndex < totalPages - 3">
-        <span class="page-link">...</span>
-      </li>
-
-      <!-- Last page -->
-      <li class="page-item" [class.active]="pageIndex === totalPages" *ngIf="totalPages > 1">
-        <button class="page-link btn" (click)="changePage(totalPages)">{{ totalPages }}</button>
-      </li>
-
-      <li class="page-item" [class.disabled]="pageIndex === totalPages || totalPages === 0">
-        <button class="page-link btn" (click)="changePage(pageIndex + 1)">»</button>
-      </li>
-    </ul>
-  </nav>
-
+  </div>
 </div>

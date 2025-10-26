@@ -1,11 +1,11 @@
-<div class="container-fluid p-4" [ngClass]="{ 'bg-body': !isDarkMode, 'bg-dark text-light': isDarkMode }">
-  <div class="d-flex justify-content-between align-items-center mb-4">
-    <!-- <h3 class="fw-bold" [ngClass]="{ 'text-dark': !isDarkMode, 'text-light': isDarkMode }">
+<div class="min-h-screen p-4" [ngClass]="{ 'bg-gray-50': !isDarkMode, 'bg-gray-900 text-white': isDarkMode }">
+  <div class="flex justify-between items-center mb-4">
+    <!-- <h3 class="font-bold" [ngClass]="{ 'text-gray-900': !isDarkMode, 'text-white': isDarkMode }">
       {{ 'ADMIN.TITLE' | translate }}
     </h3> -->
 
     <!-- Optional: Dark Mode Toggle -->
-    <!-- <button class="btn btn-sm" [ngClass]="isDarkMode ? 'btn-light' : 'btn-dark'" (click)="toggleDarkMode()">
+    <!-- <button class="px-3 py-1 text-sm rounded-md" [ngClass]="isDarkMode ? 'bg-white text-gray-900' : 'bg-gray-900 text-white'" (click)="toggleDarkMode()">
       {{ isDarkMode ? 'Light Mode' : 'Dark Mode' }}
     </button> -->
   </div>

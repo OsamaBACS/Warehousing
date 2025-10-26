@@ -1,36 +1,73 @@
-<!-- Dashboard Cards Grid -->
-<div class="row g-4">
-  <div class="col-6 col-md-4 col-lg-3" *ngFor="let card of dashboardCards">
-    <a [routerLink]="card.route" class="text-decoration-none" *ngIf="!card.permission || hasAnyPermission(card.permission)">
-      <div class="card square-card"
-           [ngClass]="{ 'bg-white text-dark': !isDarkMode, 'bg-dark text-light': isDarkMode }">
-        <div class="card-body text-center">
-          <i class="{{ card.icon }} fs-3 mb-2"></i>
-          <div class="fs-5">{{ card.label | translate }}</div>
-        </div>
-      </div>
-    </a>
-  </div>
-</div>
+<div class="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-100 py-8" dir="rtl">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <!-- Header -->
+    <div class="text-center mb-12">
+      <h1 class="text-3xl font-bold text-gray-900 mb-4">لوحة الإدارة</h1>
+      <p class="text-lg text-gray-600">إدارة جميع جوانب النظام والمخزون</p>
+    </div>
 
-<!-- Reports Section -->
-<div class="row mt-5" *ngIf="hasAnyPermission(permissionsEnum.VIEW_INVENTORY_REPORT)">
-  <div class="col-12">
-    <h4 class="mb-4">
-      <i class="bi bi-graph-up me-2"></i>
-      {{ 'REPORTS.TITLE' | translate }}
-    </h4>
-  </div>
-  <div class="col-6 col-md-4 col-lg-3" *ngFor="let card of reportCards">
-    <a [routerLink]="card.route" class="text-decoration-none" *ngIf="!card.permission || hasAnyPermission(card.permission)">
-      <div class="card square-card border-primary"
-           [ngClass]="{ 'bg-white text-dark': !isDarkMode, 'bg-dark text-light': isDarkMode }">
-        <div class="card-body text-center">
-          <i class="{{ card.icon }} fs-3 mb-2 text-primary"></i>
-          <div class="fs-5">{{ card.label | translate }}</div>
-          <div class="fs-6 text-muted" *ngIf="card.description">{{ card.description | translate }}</div>
+    <!-- Admin Cards Grid -->
+    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6 mb-12">
+      <ng-container *ngFor="let card of dashboardCards">
+        <div *ngIf="!card.permission || hasAnyPermission(card.permission)" class="group">
+          <a [routerLink]="card.route" class="block">
+            <div class="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 overflow-hidden border border-gray-100">
+              <!-- Gradient Header -->
+              <div class="h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500"></div>
+              
+              <!-- Card Content -->
+              <div class="p-6 text-center">
+                <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl mx-auto mb-4 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                  <i class="{{ card.icon }} text-white text-xl"></i>
+                </div>
+                
+                <h3 class="font-semibold text-gray-900 text-sm group-hover:text-blue-600 transition-colors">
+                  {{ card.label | translate }}
+                </h3>
+              </div>
+            </div>
+          </a>
         </div>
+      </ng-container>
+    </div>
+
+    <!-- Reports Section -->
+    <div *ngIf="hasAnyPermission(permissionsEnum.VIEW_INVENTORY_REPORT)">
+      <div class="text-center mb-8">
+        <h2 class="text-2xl font-bold text-gray-900 mb-2 flex items-center justify-center">
+          <i class="bi bi-graph-up mr-3 text-blue-600"></i>
+          {{ 'REPORTS.TITLE' | translate }}
+        </h2>
+        <p class="text-gray-600">تقارير مفصلة وتحليلات شاملة</p>
       </div>
-    </a>
+      
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <ng-container *ngFor="let card of reportCards">
+          <div *ngIf="!card.permission || hasAnyPermission(card.permission)" class="group">
+            <a [routerLink]="card.route" class="block">
+              <div class="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 overflow-hidden border border-blue-200">
+                <!-- Gradient Header -->
+                <div class="h-1 bg-gradient-to-r from-blue-500 to-indigo-600"></div>
+                
+                <!-- Card Content -->
+                <div class="p-6 text-center">
+                  <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl mx-auto mb-4 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                    <i class="{{ card.icon }} text-white text-xl"></i>
+                  </div>
+                  
+                  <h3 class="font-semibold text-gray-900 text-sm group-hover:text-blue-600 transition-colors mb-2">
+                    {{ card.label | translate }}
+                  </h3>
+                  
+                  <p class="text-xs text-gray-500" *ngIf="card.description">
+                    {{ card.description | translate }}
+                  </p>
+                </div>
+              </div>
+            </a>
+          </div>
+        </ng-container>
+      </div>
+    </div>
   </div>
 </div>
