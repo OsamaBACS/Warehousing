@@ -14,11 +14,13 @@
             <h3 class="text-lg font-semibold text-gray-900">{{ username }}</h3>
           </div>
 
-          <!-- Language Toggle (Single Button Switch) -->
-          <button class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors" 
-            (click)="toggleLanguage()" [title]="'LANGUAGE.TOGGLE' | translate">
-            <i class="bi bi-translate mr-1"></i>
-            <span>{{ currentLang === 'en' ? 'AR' : 'EN' }}</span>
+          <!-- Language Toggle (With Current Language Display) -->
+          <button class="inline-flex items-center justify-center w-12 h-10 border shadow-sm text-sm leading-4 font-medium rounded-md transition-colors" 
+            [class]="currentLang === 'ar' ? 'border-blue-300 text-blue-700 bg-blue-50 hover:bg-blue-100' : 'border-green-300 text-green-700 bg-green-50 hover:bg-green-100'"
+            (click)="toggleLanguage()" 
+            [title]="getLanguageTooltip()">
+            <i class="bi bi-translate text-lg mr-1"></i>
+            <span class="text-xs font-bold">{{ currentLang === 'ar' ? 'ع' : 'EN' }}</span>
           </button>
 
           <!-- Order list Button -->

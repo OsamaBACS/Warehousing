@@ -14,6 +14,52 @@
       "COMPANIES": "الشركات"
     }
   },
+  "HOME": {
+    "TITLE": "نظام إدارة مواد البناء",
+    "SUBTITLE": "اختر الخدمة المطلوبة للبدء",
+    "ADMIN_TITLE": "الإدارة",
+    "ADMIN_DESCRIPTION": "إدارة النظام والمستخدمين والإعدادات",
+    "PURCHASE_TITLE": "الشراء",
+    "PURCHASE_DESCRIPTION": "إدارة طلبات الشراء والموردين",
+    "SALE_TITLE": "البيع",
+    "SALE_DESCRIPTION": "إدارة طلبات البيع والعملاء"
+  },
+  "COMMON": {
+    "PURCHASE_PRICE": "سعر الشراء",
+    "SELLING_PRICE": "سعر البيع",
+    "PURCHASE_ORDERS": "طلبات الشراء",
+    "SALE_ORDERS": "طلبات البيع",
+    "PURCHASE_ORDER_DETAILS": "تفاصيل طلب الشراء",
+    "SALE_ORDER_DETAILS": "تفاصيل طلب البيع",
+    "ALL_PRODUCTS": "جميع المنتجات",
+    "ALL_CUSTOMERS": "جميع العملاء",
+    "SEARCH_PRODUCTS": "البحث في المنتجات...",
+    "MANAGE_PRODUCTS": "إدارة تصنيفات المنتجات",
+    "MANAGE_CUSTOMERS": "إدارة بيانات العملاء",
+    "MANAGE_UNITS": "إدارة وحدات قياس المنتجات",
+    "MANAGE_STORES": "إدارة مستودعات ومخازن المنتجات",
+    "ADMIN_DASHBOARD": "لوحة الإدارة",
+    "CHOOSE_CATEGORY": "اختر التصنيف المناسب لتصفح المنتجات",
+    "CHOOSE_SUBCATEGORY": "اختر التصنيف الفرعي المناسب لتصفح المنتجات",
+    "ADD_EDIT_PRODUCTS": "إضافة / تعديل المنتجات",
+    "PRODUCTS": "المنتجات",
+    "CUSTOMERS": "العملاء",
+    "MOST_MOVING_PRODUCTS": "أكثر المنتجات حركة",
+    "PRODUCT_COUNT": "عدد المنتجات",
+    "SALE_VALUE": "القيمة البيعية",
+    "MOST_MOVING_PRODUCTS_REPORT": "تقرير أكثر المنتجات حركة",
+    "MANAGE_TRANSFERS": "إدارة تحويلات المنتجات بين المستودعات",
+    "ADD_ITEM_PROMPT": "اضغط على \"إضافة عنصر\" لبدء إضافة المنتجات",
+    "CHOOSE_PRODUCTS_ACCESS": "اختر المنتجات التي يمكن لهذا الدور الوصول إليها:",
+    "PURCHASE_PRICE_REQUIRED": "سعر الشراء مطلوب",
+    "SELLING_PRICE_REQUIRED": "سعر البيع مطلوب"
+  },
+  "LANGUAGE": {
+    "TOGGLE": "تبديل اللغة",
+    "CURRENT": "اللغة الحالية",
+    "ARABIC": "العربية",
+    "ENGLISH": "الإنجليزية"
+  },
   "SHARED": {
     "TITLE": "مشترك",
     "BUTTONS": {
@@ -304,6 +350,7 @@
     "VARIANT_MANAGEMENT": "إدارة المتغيرات",
     "MODIFIER_MANAGEMENT": "إدارة المعدلات",
     "INITIAL_STOCK": "الرصيد الابتدائي",
+    "INITIAL_STOCK_SETUP": "إعداد المخزون الابتدائي",
     "PENDING_ORDERS": "الطلبات المعلقة",
     "STORE_TRANSFERS": "نقلات المستودعات",
     "USER_DEVICES": "أجهزة المستخدمين"
@@ -328,6 +375,11 @@
     "ORDER_EDITABLE_NOTE": "يمكنك تعديل الطلب بعد إرساله لغاية أن يتم البدء بتجهيزه",
     "EMPTY_CART": "السلة فارغة",
     "NO_ITEMS": "لا توجد عناصر مضافة",
+    "CUSTOMER_SIGNATURE": "توقيع العميل",
+    "AUTHORIZED_SIGNATURE": "التوقيع المعتمد",
+    "PHONE": "الهاتف",
+    "EMAIL": "البريد الإلكتروني",
+    "DOCUMENT_GENERATED_ON": "تم إنشاء المستند في",
     "ADD_PRODUCT_NOTE": "اضغط على \"إضافة منتج\" لبدء إدخال الرصيد الابتدائي"
   },
   "FORMS": {

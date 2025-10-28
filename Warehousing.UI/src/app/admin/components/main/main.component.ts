@@ -45,6 +45,7 @@ export class MainComponent implements OnInit {
     { label: 'BREADCRUMB.MODIFIER_MANAGEMENT', route: '/admin/modifier-management', icon: 'bi bi-gear', permission: this.permissionsEnum.VIEW_PRODUCTS },
     { label: 'BREADCRUMB.STORE_TRANSFERS', route: '/admin/store-transfers', icon: 'bi bi-arrow-left-right', permission: this.permissionsEnum.VIEW_STORE_TRANSFERS },
     { label: 'BREADCRUMB.INVENTORY', route: '/admin/inventory-management', icon: 'bi bi-clipboard-data', permission: this.permissionsEnum.VIEW_INVENTORY_MANAGEMENT },
+    { label: 'BREADCRUMB.INITIAL_STOCK_SETUP', route: '/admin/initial-stock-setup', icon: 'bi bi-boxes', permission: this.permissionsEnum.MANAGE_INVENTORY },
     { label: 'BREADCRUMB.INITIAL_STOCK', route: '/admin/initial-stock', icon: 'bi bi-box-seam', permission: this.permissionsEnum.MANAGE_INVENTORY },
     { label: 'BREADCRUMB.USERS', route: '/admin/users', icon: 'bi bi-people', permission: this.permissionsEnum.VIEW_USERS },
     { label: 'BREADCRUMB.USER_DEVICES', route: '/admin/users-devices', icon: 'bi bi-phone', permission: this.permissionsEnum.VIEW_USERS },
@@ -56,9 +57,7 @@ export class MainComponent implements OnInit {
   ];
 
   reportCards = [
-    { label: 'REPORTS.INVENTORY_REPORT', route: '/admin/inventory-report', icon: 'bi bi-file-earmark-text', permission: this.permissionsEnum.VIEW_INVENTORY_REPORT },
-    { label: 'REPORTS.COMPREHENSIVE_STOCK_REPORTS', route: '/admin/inventory-report?tab=stock-movement', icon: 'bi bi-graph-up', permission: this.permissionsEnum.VIEW_INVENTORY_REPORT, description: 'REPORTS.STOCK_MOVEMENT_DESCRIPTION' },
-    { label: 'REPORTS.PRODUCT_TRANSACTIONS', route: '/admin/transaction', icon: 'bi bi-arrow-left-right', permission: this.permissionsEnum.VIEW_INVENTORY_REPORT, description: 'REPORTS.PRODUCT_TRANSACTIONS_DESCRIPTION' }
+    { label: 'REPORTS.INVENTORY_REPORT', route: '/admin/inventory-report', icon: 'bi bi-file-earmark-text', permission: this.permissionsEnum.VIEW_INVENTORY_REPORT }
   ];
 
 }

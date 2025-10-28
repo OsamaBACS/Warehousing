@@ -14,7 +14,7 @@ namespace Warehousing.Repo.Classes
 {
     public class UserRepo : RepositoryBase<User>, IUserRepo
     {
-        private readonly ILogger<UserRepo> _logger;
+        private new readonly ILogger<UserRepo> _logger;
         private readonly IConfiguration _config;
         public UserRepo(WarehousingContext context, ILogger<UserRepo> logger, IConfiguration config) : base(context, logger, config)
         {
@@ -26,28 +26,21 @@ namespace Warehousing.Repo.Classes
         {
             try
             {
-                // Check working hours
-                // var currentHour = DateTime.UtcNow.AddHours(3).Hour; // adjust to your timezone
-                // if (currentHour < 8 || currentHour > 17)
-                //     return Unauthorized("Login only allowed during work hours.");
-
-                // Check IP whitelist
-                // var allowedIps = _config.GetSection("AllowedIPs").Get<string[]>() ?? [];
-                // if (!allowedIps.Contains(ip))
-                //     return Unauthorized("Access not allowed from this network.");
-
                 var hashedPassword = HelperClass.HashPassword(dto.Password);
+                _logger.LogInformation("Attempting login for user: {Username}", dto.Username);
+                
+                // ✅ OPTIMIZED QUERY: Load user with minimal data first
                 var user = await _context.Users
-                .Include(u => u.UserRoles).ThenInclude(ur => ur.Role).ThenInclude(r => r.RolePermissions).ThenInclude(rp => rp.Permission)
-                .Include(u => u.UserRoles).ThenInclude(ur => ur.Role).ThenInclude(r => r.RoleCategories)
-                .Include(u => u.UserRoles).ThenInclude(ur => ur.Role).ThenInclude(r => r.RoleProducts)
-                .FirstOrDefaultAsync(u => u.Username == dto.Username && u.PasswordHash == hashedPassword);
+                    .Include(u => u.UserRoles).ThenInclude(ur => ur.Role)
+                    .FirstOrDefaultAsync(u => u.Username == dto.Username && u.PasswordHash == hashedPassword);
 
                 if (user == null)
                 {
-                    _logger.LogWarning("Login failed for user: {Username}", dto.Username);
+                    _logger.LogWarning("Login failed for user: {Username} - User not found or invalid password", dto.Username);
                     return new LoginResult { Success = false, ErrorMessage = "Invalid credentials" };
                 }
+
+                _logger.LogInformation("User found: {Username}, IsActive: {IsActive}", user.Username, user.IsActive);
 
                 // ✅ Check if user is active
                 if (!user.IsActive)
@@ -68,9 +61,9 @@ namespace Warehousing.Repo.Classes
                         _context.UserDevices.Add(new UserDevice
                         {
                             UserId = user.Id,
-                            Fingerprint = dto.Fingerprint,
+                            Fingerprint = dto.Fingerprint ?? "",
                             FirstSeen = DateTime.UtcNow,
-                            IPAddress = dto.ip,
+                            IPAddress = dto.ip ?? "",
                             IsApproved = false
                         });
                         _context.SaveChanges();
@@ -93,44 +86,98 @@ namespace Warehousing.Repo.Classes
                     new Claim("UserName", user.Username.ToString()),
                 };
 
-                var roles = user.UserRoles.Select(ur => ur.Role.NameEn).ToList();
+                var roles = user.UserRoles.Select(ur => ur.Role?.NameEn).Where(name => !string.IsNullOrEmpty(name)).ToList();
                 foreach (var role in roles)
-                    claims.Add(new Claim(ClaimTypes.Role, role));
+                    claims.Add(new Claim(ClaimTypes.Role, role!));
 
-                var permissions = user.UserRoles
-                .SelectMany(ur => ur.Role.RolePermissions)
-                .Select(rp => rp.Permission.Code)
-                .Distinct();
+                // ✅ OPTIMIZED: Load permissions separately to avoid massive joins
+                var roleIds = user.UserRoles?.Select(ur => ur.RoleId).ToList() ?? new List<int>();
+                _logger.LogInformation("User roles: {RoleIds}", string.Join(",", roleIds));
+                
+                List<string> permissions = new List<string>();
+                List<int> categoryIds = new List<int>();
+                List<int> productIds = new List<int>();
+                List<int> subCategoryIds = new List<int>();
 
-                foreach (var permission in permissions)
-                    claims.Add(new Claim("Permission", permission));
+                try
+                {
+                    permissions = await _context.RolePermissions
+                        .Where(rp => roleIds.Contains(rp.RoleId))
+                        .Include(rp => rp.Permission)
+                        .Select(rp => rp.Permission!.Code)
+                        .Distinct()
+                        .ToListAsync();
+                    _logger.LogInformation("Permissions loaded: {Count}", permissions.Count);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning("Failed to load permissions: {Error}", ex.Message);
+                }
 
-                // ✅ RoleCategories
-                var categoryIds = user.UserRoles
-                    .SelectMany(ur => ur.Role.RoleCategories)
-                    .Select(rc => rc.CategoryId)
-                    .Distinct();
+                try
+                {
+                    categoryIds = await _context.RoleCategories
+                        .Where(rc => roleIds.Contains(rc.RoleId))
+                        .Select(rc => rc.CategoryId)
+                        .Distinct()
+                        .ToListAsync();
+                    _logger.LogInformation("Categories loaded: {Count}", categoryIds.Count);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning("Failed to load categories: {Error}", ex.Message);
+                }
 
-                foreach (var categoryId in categoryIds)
-                    claims.Add(new Claim("Category", categoryId.ToString()));
+                try
+                {
+                    productIds = await _context.RoleProducts
+                        .Where(rp => roleIds.Contains(rp.RoleId))
+                        .Select(rp => rp.ProductId)
+                        .Distinct()
+                        .ToListAsync();
+                    _logger.LogInformation("Products loaded: {Count}", productIds.Count);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning("Failed to load products: {Error}", ex.Message);
+                }
 
-                // ✅ RoleProducts
-                var productIds = user.UserRoles
-                    .SelectMany(ur => ur.Role.RoleProducts)
-                    .Select(rp => rp.ProductId)
-                    .Distinct();
+                try
+                {
+                    subCategoryIds = await _context.RoleSubCategories
+                        .Where(rsc => roleIds.Contains(rsc.RoleId))
+                        .Select(rsc => rsc.SubCategoryId)
+                        .Distinct()
+                        .ToListAsync();
+                    _logger.LogInformation("SubCategories loaded: {Count}", subCategoryIds.Count);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning("Failed to load subcategories: {Error}", ex.Message);
+                }
 
-                foreach (var productId in productIds)
-                    claims.Add(new Claim("Product", productId.ToString()));
+                // ✅ Add claims with size limits to prevent token explosion
+                claims.Add(new Claim("Permission", string.Join(",", permissions.Take(100) ?? new List<string>()))); // Limit to 100 permissions
+                claims.Add(new Claim("Category", string.Join(",", categoryIds.Take(1000) ?? new List<int>()))); // Limit to 1000 categories
+                claims.Add(new Claim("Product", string.Join(",", productIds.Take(5000) ?? new List<int>()))); // Limit to 5000 products
+                claims.Add(new Claim("SubCategory", string.Join(",", subCategoryIds.Take(1000) ?? new List<int>()))); // Limit to 1000 subcategories
 
+                // ✅ Add special claim for admin users to indicate they have all permissions
+                if (user.Username.Equals("admin"))
+                {
+                    claims.Add(new Claim("IsAdmin", "true"));
+                }
+
+                _logger.LogInformation("Generating JWT token with {ClaimsCount} claims", claims.Count);
                 var helper = new HelperClass(_config);
                 var token = helper.GenerateJwtToken(claims.ToArray());
+                _logger.LogInformation("JWT token generated successfully for user: {Username}", user.Username);
                 return new LoginResult { Success = true, Token = token };
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error occurred during login for user: {Username}", dto.Username);
-                return new LoginResult { Success = false, ErrorMessage = "An error occurred while processing the request." };
+                _logger.LogError(ex, "Error occurred during login for user: {Username}. Error: {ErrorMessage}", dto.Username, ex.Message);
+                return new LoginResult { Success = false, ErrorMessage = $"An error occurred while processing the request: {ex.Message}" };
             }
         }
 

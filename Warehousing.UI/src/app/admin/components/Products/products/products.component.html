@@ -46,136 +46,101 @@
   </div>
 
   <!-- Products Grid -->
-  <div *ngIf="(products$ | async) as products" class="mb-12">
-    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-      <div class="bg-white border-0 shadow-sm rounded-lg h-full" *ngFor="let product of products.products">
+  <div *ngIf="(products$ | async) as products" class="mb-8">
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+      <div class="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 overflow-hidden border border-gray-100 group" *ngFor="let product of products.products">
 
         <!-- Product Image -->
-        <div class="w-full h-48 bg-gray-100 rounded-t-lg overflow-hidden">
+        <div class="relative w-full h-56 bg-gradient-to-br from-gray-50 to-gray-100 overflow-hidden">
           <app-image-uploader [initialImageUrl]="serverUrl + product.imagePath" [readonly]="true">
           </app-image-uploader>
-        </div>
-
-        <!-- Card Body -->
-        <div class="p-4 flex flex-col h-full">
-          <!-- Name and Category Badge -->
-          <h6 class="font-bold text-blue-600 mb-1 text-lg">
-            <!-- {{ lang.currentLang === 'ar' ? product.nameAr : product.nameEn }} -->
-              {{ product.nameAr }}
-          </h6>
-          <span class="inline-block bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded-full mb-2 self-start">
-            <!-- {{ lang.currentLang === 'ar' ? product?.category?.nameAr : product?.category?.nameEn }} -->
+          
+          <!-- Category Badge -->
+          <div class="absolute top-3 right-3">
+            <span class="bg-white bg-opacity-90 backdrop-blur-sm text-gray-700 text-xs px-3 py-1 rounded-full font-medium shadow-sm">
               {{ product?.subCategory?.nameAr }}
-          </span>
-
-          <!-- Description -->
-          <p class="text-gray-500 text-sm mb-2 flex-grow" [title]="product.description">
-            {{ product.description | slice:0:50 }}{{ (product.description?.length || 0) > 50 ? '...' : '' }}
-          </p>
-
-          <!-- Price -->
-          <div class="flex justify-between items-center mt-auto">
-            <span class="font-semibold text-green-600 text-lg">{{ product.sellingPrice | currency
-              }}</span>
-
-            <!-- Edit Button -->
-            <button class="px-2 py-1 border border-gray-300 text-gray-700 bg-white rounded hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors" 
-              (click)="openForm(product.id)">
-              <i class="bi bi-pencil-fill"></i>
+            </span>
+          </div>
+          
+          <!-- Edit Button -->
+          <div class="absolute top-3 left-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+            <button class="w-10 h-10 bg-white bg-opacity-90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg hover:bg-opacity-100 transition-all duration-200" 
+              (click)="openForm(product.id)"
+              title="تعديل المنتج">
+              <i class="bi bi-pencil-fill text-gray-700 text-sm"></i>
             </button>
           </div>
+        </div>
 
-          <!-- Unit & Stock Info -->
-          <div class="mt-3 pt-3 border-t border-gray-200 text-sm">
-            <div class="flex justify-between">
-              <!-- <span class="text-gray-500">{{ 'PRODUCTS.CODE' | translate }}</span> -->
-              <span class="text-gray-500">{{ 'PRODUCTS.CODE' | translate }}</span>
-              <strong class="text-gray-900">{{ product?.code }}</strong>
+        <!-- Card Content -->
+        <div class="p-5">
+          <!-- Product Name -->
+          <h3 class="font-bold text-gray-900 text-lg mb-2 line-clamp-2 group-hover:text-blue-600 transition-colors">
+            {{ product.nameAr }}
+          </h3>
+
+          <!-- Price -->
+          <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center space-x-2">
+              <span class="text-2xl font-bold text-green-600">{{ product.sellingPrice | currency:'د.أ':'symbol':'1.2-2' }}</span>
             </div>
-            <div class="flex justify-between">
-              <span class="text-gray-500">{{ 'UNIT.TITLE' | translate }}</span>
-              <strong class="text-gray-900">
-                <!-- {{ lang.currentLang === 'ar' ? product?.unit?.nameAr : product?.unit?.nameEn }} -->
-                  {{ product?.unit?.nameAr }}
-              </strong>
+            
+            <!-- Stock Status -->
+            <div class="flex items-center space-x-2">
+              <div class="w-3 h-3 rounded-full" 
+                   [class]="getTotalStock(product) > 0 ? 'bg-green-500' : 'bg-red-500'"></div>
+              <span class="text-sm font-medium" 
+                    [class]="getTotalStock(product) > 0 ? 'text-green-600' : 'text-red-600'">
+                {{ getTotalStock(product) > 0 ? getTotalStock(product) : 'نفد' }}
+              </span>
             </div>
-            <!-- Unified Stock & Variants Display -->
-            <div class="mt-2">
-              <!-- Main Product Stock (if no variants or variants have no stock) -->
-              <div *ngIf="!product.variants || product.variants.length === 0 || !hasVariantStock(product)" class="mb-2">
-                <div class="flex justify-between items-center mb-1">
-                  <span class="text-gray-500 text-xs font-semibold">{{ 'ORDER.MAIN_STOCK' | translate }}</span>
-                </div>
-                <div class="space-y-2">
-                  <div *ngFor="let inventory of getMainProductInventories(product)" 
-                       class="bg-gray-50 p-2 rounded-lg">
-                    <div class="flex justify-between items-center">
-                      <div class="flex items-center">
-                        <i class="bi bi-building text-blue-600 mr-2"></i>
-                        <div>
-                          <div class="text-xs font-semibold text-gray-900">{{ inventory.store?.nameAr }}</div>
-                          <div class="text-gray-500 text-xs">{{ inventory.store?.code }}</div>
-                        </div>
-                      </div>
-                      <span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">{{ inventory.quantity }} {{ product?.unit?.nameAr }}</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
+          </div>
 
-              <!-- Variants with Store Display (unified) -->
-              <div *ngIf="product.variants && product.variants.length > 0 && hasVariantStock(product)" class="mb-2">
-                <div class="flex justify-between items-center mb-1">
-                  <span class="text-gray-500 text-xs font-semibold">{{ 'ORDER.VARIANTS' | translate }}</span>
-                  <span class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">{{ getTotalVariantsWithStock(product) }}</span>
-                </div>
-                <div class="space-y-2">
-                  <div *ngFor="let variant of product.variants" 
-                       class="bg-blue-50 p-2 rounded-lg">
-                    <div class="flex justify-between items-center mb-1">
-                      <div class="flex items-center">
-                        <i class="bi bi-tag text-blue-600 mr-2"></i>
-                        <span class="text-xs font-semibold text-gray-900">{{ variant.name }}</span>
-                      </div>
-                      <button class="px-2 py-1 text-xs border border-blue-300 text-blue-700 bg-white rounded hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors" 
-                              (click)="manageVariantStock(product.id, variant.id!)"
-                              title="إدارة مخزون المتغير">
-                        <i class="bi bi-gear"></i>
-                      </button>
-                    </div>
-                    
-                    <!-- Stores for this variant -->
-                    <div class="space-y-1">
-                      <div *ngFor="let store of getStoresForVariant(product.id, variant.id!)" 
-                           class="flex justify-between items-center p-1 bg-white rounded">
-                        <div class="flex items-center">
-                          <i class="bi bi-building text-blue-600 mr-1"></i>
-                          <span class="text-xs text-gray-900">{{ store.nameAr }}</span>
-                        </div>
-                        <span class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">
-                          {{ getVariantStockForStore(product.id, variant.id!, store.id) }} {{ product?.unit?.nameAr }}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- No Stock Message -->
-              <div *ngIf="(!product.inventories || product.inventories.length === 0) && (!product.variants || product.variants.length === 0)" 
-                   class="text-center p-2 bg-yellow-50 rounded-lg">
-                <i class="bi bi-exclamation-triangle text-yellow-600"></i>
-                <span class="text-yellow-600 text-xs ml-1">{{ 'ORDER.NO_STOCK' | translate }}</span>
+          <!-- Product Info -->
+          <div class="space-y-2 text-sm">
+            <div class="flex justify-between items-center">
+              <span class="text-gray-500">الكود:</span>
+              <span class="font-medium text-gray-900">{{ product?.code }}</span>
+            </div>
+            
+            <div class="flex justify-between items-center">
+              <span class="text-gray-500">الوحدة:</span>
+              <span class="font-medium text-gray-900">{{ product?.unit?.nameAr }}</span>
+            </div>
+            
+            <!-- Total Stock Display -->
+            <div class="flex justify-between items-center pt-2 border-t border-gray-100">
+              <span class="text-gray-500">إجمالي المخزون:</span>
+              <div class="flex items-center space-x-1">
+                <i class="bi bi-boxes text-blue-500"></i>
+                <span class="font-bold text-blue-600">{{ getTotalStock(product) }} {{ product?.unit?.nameAr }}</span>
               </div>
             </div>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="mt-4 flex space-x-2">
+            <button *ngIf="hasAnyPermission(permissionsEnum.EDIT_PRODUCT)" 
+                    class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors text-sm font-medium" 
+                    (click)="openForm(product.id)">
+              <i class="bi bi-pencil-fill mr-2"></i>
+              تعديل
+            </button>
+            
+            <button *ngIf="hasAnyPermission(permissionsEnum.VIEW_INVENTORY_MANAGEMENT)" 
+                    class="px-4 py-2 border border-gray-300 text-gray-700 bg-white rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors" 
+                    (click)="manageInventory(product.id)"
+                    title="إدارة المخزون">
+              <i class="bi bi-boxes"></i>
+            </button>
           </div>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Pagination - Completely separate container with large top margin -->
-  <div *ngIf="(products$ | async) as products" class="w-full mt-48">
+  <!-- Pagination - Proper spacing -->
+  <div *ngIf="(products$ | async) as products" class="w-full mt-12">
     <div class="flex justify-center pt-8 border-t border-gray-200">
       <nav aria-label="Page navigation">
         <ul class="flex items-center space-x-1">

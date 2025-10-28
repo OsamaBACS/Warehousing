@@ -6,6 +6,7 @@ import { ProductsService } from '../../../services/products.service';
 import { InventoryTransactionsService } from '../../../services/inventory-transactions.service';
 import { LanguageService } from '../../../../core/services/language.service';
 import { PrintService } from '../../../../shared/services/print.service';
+import { AuthService } from '../../../../core/services/auth.service';
 import { Product, ProductPagination } from '../../../models/product';
 import { Store } from '../../../models/store';
 
@@ -24,6 +25,7 @@ export class InventoryReportComponent implements OnInit {
     private printService: PrintService,
     private toastr: ToastrService,
     private route: ActivatedRoute,
+    private authService: AuthService,
   ) { 
     this.stores = this.route.snapshot.data['StoresResolver'];
   }
@@ -81,8 +83,47 @@ export class InventoryReportComponent implements OnInit {
       tap(res => {
         this.totalPages = Math.ceil(res.totals / this.pageSize);
         this.totalPagesArray = Array.from({ length: this.totalPages }, (_, i) => i + 1);
+      }),
+      map(res => {
+        // Filter products based on user permissions
+        const filteredProducts = res.products.filter(product => this.authService.hasProduct(product.id!));
+        return {
+          ...res,
+          products: filteredProducts,
+          totals: filteredProducts.length
+        };
       })
     );
+  }
+
+  getTotalQuantity(product: any): number {
+    if (!product.inventories || product.inventories.length === 0) {
+      return 0;
+    }
+    
+    // If store filter is applied, only sum quantities from that store
+    if (this.storeId > 0) {
+      return product.inventories
+        .filter((inv: any) => inv.storeId === this.storeId)
+        .reduce((sum: number, inv: any) => sum + (inv.quantity || 0), 0);
+    }
+    
+    // Otherwise, sum all quantities across all stores
+    return product.inventories.reduce((sum: number, inv: any) => sum + (inv.quantity || 0), 0);
+  }
+
+  getStoreName(storeId: number): string {
+    const store = this.stores.find(s => s.id === storeId);
+    if (!store) return 'غير محدد';
+    
+    const name = this.lang.currentLang === 'ar' ? store.nameAr : (store.nameEn || store.nameAr);
+    return name || 'غير محدد';
+  }
+
+  getFilteredProducts(): any[] {
+    // This method can be used to filter products based on store selection
+    // For now, we'll return all products and let getTotalQuantity handle the filtering
+    return [];
   }
 
   changePage(page: number): void {
@@ -117,7 +158,9 @@ export class InventoryReportComponent implements OnInit {
     // Load all products from API
     this.productService.GetProducts().subscribe({
       next: (allProducts) => {
-        this.currentPrintData = allProducts;
+        // Filter products based on user permissions
+        const filteredProducts = allProducts.filter(product => this.authService.hasProduct(product.id!));
+        this.currentPrintData = filteredProducts;
 
         // Wait for DOM to update
         setTimeout(() => {
@@ -249,7 +292,11 @@ export class InventoryReportComponent implements OnInit {
 
   onFilterChange(): void {
     // Reload the current active tab when filters change
-    this.setActiveTab(this.activeTab);
+    if (this.activeTab === 'inventory') {
+      this.loadProducts();
+    } else {
+      this.setActiveTab(this.activeTab);
+    }
   }
 
   onFromDateChange(dateString: string): void {

@@ -1,0 +1,233 @@
+<div class="min-h-screen bg-gray-50 py-8" dir="rtl">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <!-- Header -->
+    <div class="bg-white rounded-2xl shadow-lg p-6 mb-8">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center">
+          <div class="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl flex items-center justify-center mr-4">
+            <i class="bi bi-boxes text-white text-xl"></i>
+          </div>
+          <div>
+            <h1 class="text-3xl font-bold text-gray-900">إعداد المخزون الابتدائي</h1>
+            <p class="text-gray-600 mt-1">إنشاء المخزون الابتدائي للمنتجات في المستودعات</p>
+          </div>
+        </div>
+        <div class="flex items-center space-x-3 space-x-reverse">
+          <button class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200 transform hover:scale-105 shadow-lg"
+                  (click)="loadProducts()">
+            <i class="bi bi-arrow-clockwise mr-2"></i>
+            تحديث القائمة
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Single Product Initial Stock Setup -->
+    <div class="bg-white rounded-2xl shadow-xl overflow-hidden mb-8">
+      <div class="bg-gradient-to-r from-green-500 to-emerald-600 px-6 py-4">
+        <h2 class="text-xl font-bold text-white flex items-center">
+          <i class="bi bi-plus-circle mr-3"></i>
+          إضافة مخزون ابتدائي لمنتج واحد
+        </h2>
+      </div>
+      
+      <div class="p-6">
+        <form [formGroup]="initialStockForm" (ngSubmit)="addInitialStock()">
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <!-- Product Selection -->
+            <div class="space-y-2">
+              <label class="block text-sm font-semibold text-gray-700">
+                <i class="bi bi-box mr-2 text-green-600"></i>
+                المنتج *
+              </label>
+              <select class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors" 
+                formControlName="productId">
+                <option value="">اختر المنتج</option>
+                <option *ngFor="let product of products" [value]="product.id">
+                  {{ product.nameAr }} ({{ product.code }})
+                </option>
+              </select>
+              <div *ngIf="productId?.invalid && productId?.touched" class="text-red-500 text-sm flex items-center">
+                <i class="bi bi-exclamation-circle mr-1"></i>
+                المنتج مطلوب
+              </div>
+            </div>
+
+            <!-- Store Selection -->
+            <div class="space-y-2">
+              <label class="block text-sm font-semibold text-gray-700">
+                <i class="bi bi-building mr-2 text-green-600"></i>
+                المستودع *
+              </label>
+              <select class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors" 
+                formControlName="storeId">
+                <option value="">اختر المستودع</option>
+                <option *ngFor="let store of stores" [value]="store.id">
+                  {{ store.nameAr }}
+                </option>
+              </select>
+              <div *ngIf="storeId?.invalid && storeId?.touched" class="text-red-500 text-sm flex items-center">
+                <i class="bi bi-exclamation-circle mr-1"></i>
+                المستودع مطلوب
+              </div>
+            </div>
+
+            <!-- Quantity -->
+            <div class="space-y-2">
+              <label class="block text-sm font-semibold text-gray-700">
+                <i class="bi bi-123 mr-2 text-green-600"></i>
+                الكمية *
+              </label>
+              <div class="relative">
+                <input type="number" step="0.01" class="w-full px-4 py-3 pl-10 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors" 
+                  formControlName="quantity" placeholder="0.00" />
+                <span class="absolute left-3 top-3 text-gray-500">كمية</span>
+              </div>
+              <div *ngIf="quantity?.invalid && quantity?.touched" class="text-red-500 text-sm flex items-center">
+                <i class="bi bi-exclamation-circle mr-1"></i>
+                الكمية مطلوبة ويجب أن تكون أكبر من صفر
+              </div>
+            </div>
+          </div>
+
+          <!-- Submit Button -->
+          <div class="mt-6 flex justify-end">
+            <button type="submit" 
+              [disabled]="initialStockForm.invalid || loading"
+              class="px-8 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl font-semibold hover:from-green-600 hover:to-emerald-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-all duration-200 transform hover:scale-105 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none">
+              <i class="bi bi-plus-circle mr-2" *ngIf="!loading"></i>
+              <i class="bi bi-hourglass-split mr-2 animate-spin" *ngIf="loading"></i>
+              {{ loading ? 'جاري الحفظ...' : 'إضافة المخزون الابتدائي' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Bulk Initial Stock Setup -->
+    <div class="bg-white rounded-2xl shadow-xl overflow-hidden">
+      <div class="bg-gradient-to-r from-blue-500 to-indigo-600 px-6 py-4">
+        <h2 class="text-xl font-bold text-white flex items-center">
+          <i class="bi bi-layers mr-3"></i>
+          إضافة مخزون ابتدائي مجمع
+        </h2>
+      </div>
+      
+      <div class="p-6">
+        <!-- Bulk Controls -->
+        <div class="mb-6 p-4 bg-blue-50 rounded-xl">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-semibold text-blue-900">التحكم في الاختيار</h3>
+            <div class="flex space-x-2 space-x-reverse">
+              <button type="button" 
+                class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors text-sm"
+                (click)="selectAllProducts()">
+                <i class="bi bi-check-all mr-1"></i>
+                اختيار الكل
+              </button>
+              <button type="button" 
+                class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors text-sm"
+                (click)="clearSelection()">
+                <i class="bi bi-x-circle mr-1"></i>
+                مسح الاختيار
+              </button>
+            </div>
+          </div>
+          
+          <div class="text-sm text-blue-700">
+            <i class="bi bi-info-circle mr-2"></i>
+            تم اختيار {{ selectedProducts.length }} من أصل {{ products.length }} منتج
+          </div>
+        </div>
+
+        <!-- Bulk Settings -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+          <!-- Store Selection -->
+          <div class="space-y-2">
+            <label class="block text-sm font-semibold text-gray-700">
+              <i class="bi bi-building mr-2 text-blue-600"></i>
+              المستودع للمخزون المجمع *
+            </label>
+            <select class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors" 
+              [(ngModel)]="bulkStoreId">
+              <option [ngValue]="null">اختر المستودع</option>
+              <option *ngFor="let store of stores" [ngValue]="store.id">
+                {{ store.nameAr }}
+              </option>
+            </select>
+          </div>
+
+          <!-- Bulk Quantity -->
+          <div class="space-y-2">
+            <label class="block text-sm font-semibold text-gray-700">
+              <i class="bi bi-123 mr-2 text-blue-600"></i>
+              الكمية للمنتجات المختارة *
+            </label>
+            <div class="relative">
+              <input type="number" step="0.01" class="w-full px-4 py-3 pl-10 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors" 
+                [(ngModel)]="bulkQuantity" placeholder="0.00" />
+              <span class="absolute left-3 top-3 text-gray-500">كمية</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bulk Submit Button -->
+        <div class="flex justify-end mb-6">
+          <button type="button" 
+            [disabled]="selectedProducts.length === 0 || !bulkStoreId || bulkQuantity <= 0 || loading"
+            (click)="bulkCreateInitialStock()"
+            class="px-8 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-xl font-semibold hover:from-blue-600 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200 transform hover:scale-105 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none">
+            <i class="bi bi-layers mr-2" *ngIf="!loading"></i>
+            <i class="bi bi-hourglass-split mr-2 animate-spin" *ngIf="loading"></i>
+            {{ loading ? 'جاري الحفظ...' : 'إضافة المخزون المجمع (' + selectedProducts.length + ' منتج)' }}
+          </button>
+        </div>
+
+        <!-- Products List -->
+        <div class="border-t border-gray-200 pt-6">
+          <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+            <i class="bi bi-list-ul mr-2 text-gray-600"></i>
+            قائمة المنتجات
+          </h3>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div *ngFor="let product of products" 
+              class="p-4 border border-gray-200 rounded-xl hover:border-blue-300 transition-colors cursor-pointer"
+              [class.bg-blue-50]="isProductSelected(product)"
+              [class.border-blue-300]="isProductSelected(product)"
+              (click)="toggleProductSelection(product)">
+              
+              <div class="flex items-start justify-between">
+                <div class="flex-1">
+                  <h4 class="font-semibold text-gray-900 mb-1">{{ product.nameAr }}</h4>
+                  <p class="text-sm text-gray-600 mb-2">{{ product.code }}</p>
+                  <div class="flex items-center space-x-2 space-x-reverse text-sm">
+                    <span class="text-green-600 font-medium">{{ product.sellingPrice | currency:'د.أ':'symbol':'1.2-2' }}</span>
+                    <span class="text-gray-400">•</span>
+                    <span class="text-gray-500">{{ product.unit?.nameAr }}</span>
+                  </div>
+                </div>
+                
+                <div class="ml-3">
+                  <div class="w-5 h-5 rounded border-2 flex items-center justify-center"
+                    [class.bg-blue-600]="isProductSelected(product)"
+                    [class.border-blue-600]="isProductSelected(product)"
+                    [class.border-gray-300]="!isProductSelected(product)">
+                    <i class="bi bi-check text-white text-xs" *ngIf="isProductSelected(product)"></i>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div *ngIf="products.length === 0" class="text-center py-8 text-gray-500">
+            <i class="bi bi-box text-4xl mb-2"></i>
+            <p>لا توجد منتجات متاحة</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+

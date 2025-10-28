@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { InventoryService } from '../../../services/inventory.service';
 import { StoreService } from '../../../services/store.service';
 import { ProductsService } from '../../../services/products.service';
+import { AuthService } from '../../../../core/services/auth.service';
 import { Inventory } from '../../../models/Inventory';
 import { Store } from '../../../models/store';
 import { Product } from '../../../models/product';
@@ -25,7 +26,8 @@ export class InventoryManagementComponent implements OnInit {
   constructor(
     private inventoryService: InventoryService,
     private storeService: StoreService,
-    private productService: ProductsService
+    private productService: ProductsService,
+    private authService: AuthService
   ) {}
 
   ngOnInit(): void {
@@ -43,7 +45,10 @@ export class InventoryManagementComponent implements OnInit {
 
   loadProducts(): void {
     this.productService.GetProducts().subscribe({
-      next: (products) => this.products = products,
+      next: (products) => {
+        // Filter products based on user permissions
+        this.products = products.filter(product => this.authService.hasProduct(product.id!));
+      },
       error: (err) => console.error('Error loading products:', err)
     });
   }

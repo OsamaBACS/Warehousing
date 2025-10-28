@@ -42,6 +42,18 @@ export class InventoryService {
   BulkAdjustInventory(adjustments: any[]) {
     return this.http.post<any>(`${this.url}BulkAdjustInventory`, adjustments);
   }
+
+  InitialStockSetup(data: any) {
+    return this.http.post<any>(`${this.url}initial-stock-setup`, data);
+  }
+
+  BulkInitialStockSetup(data: any) {
+    return this.http.post<any>(`${this.url}bulk-initial-stock-setup`, data);
+  }
+
+  SingleInitialStockSetup(data: any) {
+    return this.http.post<any>(`${this.url}single-initial-stock-setup`, data);
+  }
 }
 
 

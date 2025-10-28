@@ -44,6 +44,7 @@ import { OrderListComponent } from "./components/Orders/order-list/order-list.co
 import { OrderItemsListComponent } from "./components/Orders/order-items-list/order-items-list.component";
 import { StoreTransferFormComponent } from "./components/StoreTransfers/store-transfer-form/store-transfer-form.component";
 import { InventoryManagementComponent } from "./components/Inventory/inventory-management/inventory-management.component";
+import { InitialStockSetupComponent } from "./components/Inventory/initial-stock-setup/initial-stock-setup.component";
 import { InitialStockComponent } from "./components/initial-stock/initial-stock.component";
 import { ModifierManagementComponent } from "./components/Products/modifier-management/modifier-management.component";
 
@@ -55,8 +56,18 @@ const routes: Routes = [
     canActivate: [AuthGuard],
     children: [
       { path: '', redirectTo: 'main', pathMatch: 'full' },
-      { path: 'main', component: MainComponent },
-      { path: 'dashboard', component: Dashboard },
+      { 
+        path: 'main', 
+        component: MainComponent,
+        canActivate: [PermissionGuard],
+        data: { permission: [PermissionsEnum.VIEW_ADMIN] }
+      },
+      { 
+        path: 'dashboard', 
+        component: Dashboard,
+        canActivate: [PermissionGuard],
+        data: { permission: [PermissionsEnum.VIEW_ADMIN] }
+      },
       {
         path: 'products',
         component: ProductsComponent,
@@ -116,7 +127,8 @@ const routes: Routes = [
         resolve: {
           categoriesResolver: CategoriesResolver,
           productsResolver: ProductsResolver,
-          permissionsResolver: PermissionsResolver
+          permissionsResolver: PermissionsResolver,
+          subCategoriesResolver: SubCategoriesResolver
         },
       },
       // { path: 'permissions', component: Permissions },
@@ -202,9 +214,17 @@ const routes: Routes = [
         path: 'inventory-report',
         component: InventoryReportComponent,
         canActivate: [PermissionGuard],
-        data: { permission: [PermissionsEnum.VIEW_INVENTORY_REPORT, PermissionsEnum.PRINT_INVENTORY_REPORT] }
+        data: { permission: [PermissionsEnum.VIEW_INVENTORY_REPORT, PermissionsEnum.PRINT_INVENTORY_REPORT] },
+        resolve: {
+          StoresResolver: StoresResolver
+        }
       },
-      { path: 'transaction/:id', component: TransactionsComponent },
+      { 
+        path: 'transaction/:id', 
+        component: TransactionsComponent,
+        canActivate: [PermissionGuard],
+        data: { permission: [PermissionsEnum.VIEW_INVENTORY_REPORT] }
+      },
       { 
         path: 'store', 
         component: StoreComponent,
@@ -234,14 +254,14 @@ const routes: Routes = [
         path: 'sub-category', 
         component: SubCategoryComponent,
         canActivate: [PermissionGuard],
-        data: { permission: [PermissionsEnum.VIEW_CATEGORIES, PermissionsEnum.ADD_CATEGORY, PermissionsEnum.EDIT_CATEGORY] }
+        data: { permission: [PermissionsEnum.VIEW_SUBCATEGORIES, PermissionsEnum.ADD_SUBCATEGORY, PermissionsEnum.EDIT_SUBCATEGORY] }
       },
       { 
         path: 
         'sub-category-form', 
         component: SubCategoryFormComponent,
         canActivate: [PermissionGuard],
-        data: { permission: [PermissionsEnum.VIEW_CATEGORIES, PermissionsEnum.ADD_CATEGORY, PermissionsEnum.EDIT_CATEGORY] },
+        data: { permission: [PermissionsEnum.VIEW_SUBCATEGORIES, PermissionsEnum.ADD_SUBCATEGORY, PermissionsEnum.EDIT_SUBCATEGORY] },
         resolve: {
           categoriesResolver: CategoriesResolver
         },
@@ -287,6 +307,12 @@ const routes: Routes = [
           StoresResolver: StoresResolver,
           productsResolver: ProductsResolver
         }
+      },
+      {
+        path: 'initial-stock-setup',
+        component: InitialStockSetupComponent,
+        canActivate: [PermissionGuard],
+        data: { permission: [PermissionsEnum.VIEW_INVENTORY_MANAGEMENT, PermissionsEnum.MANAGE_INVENTORY] }
       },
       {
         path: 'initial-stock',

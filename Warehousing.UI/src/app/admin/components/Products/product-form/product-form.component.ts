@@ -81,7 +81,6 @@ export class ProductFormComponent implements OnInit {
       nameEn: [product?.nameEn || ''],
       nameAr: [product?.nameAr || '', Validators.required],
       description: [product?.description || ''],
-      openingBalance: [product?.openingBalance || 0],
       reorderLevel: [product?.reorderLevel || 0],
       costPrice: [product?.costPrice, Validators.required],
       sellingPrice: [product?.sellingPrice, Validators.required],
@@ -89,7 +88,6 @@ export class ProductFormComponent implements OnInit {
       isActive: [product?.isActive ?? true],
       subCategoryId: [product?.subCategoryId || null, Validators.required],
       unitId: [product?.unitId || null, Validators.required],
-      storeId: [product?.storeId || null],
     });
     if(product) {
       this.initialImageUrl = this.url + product.imagePath;
@@ -133,11 +131,9 @@ export class ProductFormComponent implements OnInit {
       formData.append('nameAr', this.nameAr.value);
       formData.append('nameEn', this.nameEn.value);
       formData.append('description', this.description.value);
-      formData.append('openingBalance', this.openingBalance.value);
       formData.append('reorderLevel', this.reorderLevel.value);
       formData.append('costPrice', this.costPrice.value);
       formData.append('sellingPrice', this.sellingPrice.value);
-      formData.append('storeId', this.storeId.value);
 
       const file = this.image.value;
 
@@ -189,9 +185,6 @@ export class ProductFormComponent implements OnInit {
   get description(): FormControl {
     return this.productForm.get('description') as FormControl;
   }
-  get openingBalance(): FormControl {
-    return this.productForm.get('openingBalance') as FormControl;
-  }
   get reorderLevel(): FormControl {
     return this.productForm.get('reorderLevel') as FormControl;
   }
@@ -212,9 +205,6 @@ export class ProductFormComponent implements OnInit {
   }
   get unitId(): FormControl {
     return this.productForm.get('unitId') as FormControl;
-  }
-  get storeId(): FormControl {
-    return this.productForm.get('storeId') as FormControl;
   }
 
   // Handle variants and modifiers updates

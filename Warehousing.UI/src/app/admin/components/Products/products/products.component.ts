@@ -9,7 +9,7 @@ import { ToastrService } from 'ngx-toastr';
 import { AuthService } from '../../../../core/services/auth.service';
 import { Category } from '../../../models/category';
 import { Unit } from '../../../models/unit';
-import { Observable, tap } from 'rxjs';
+import { Observable, tap, map } from 'rxjs';
 import { Product, ProductPagination } from '../../../models/product';
 import { PermissionsEnum } from '../../../constants/enums/permissions.enum';
 import { Store } from '../../../models/store';
@@ -214,6 +214,15 @@ export class ProductsComponent implements OnInit {
           
           // Load variant stock data for all products
           this.loadVariantStockData(res.products);
+        }),
+        map(res => {
+          // Filter products based on user permissions
+          const filteredProducts = res.products.filter(product => this.authService.hasProduct(product.id!));
+          return {
+            ...res,
+            products: filteredProducts,
+            totals: filteredProducts.length
+          };
         })
       );
     }
@@ -227,6 +236,15 @@ export class ProductsComponent implements OnInit {
           tap(res => {
             this.totalPages = Math.ceil(res.totals / this.pageSize);
             this.totalPagesArray = Array.from({ length: this.totalPages }, (_, i) => i + 1);
+          }),
+          map(res => {
+            // Filter products based on user permissions
+            const filteredProducts = res.products.filter(product => this.authService.hasProduct(product.id!));
+            return {
+              ...res,
+              products: filteredProducts,
+              totals: filteredProducts.length
+            };
           })
         );
     }
@@ -260,5 +278,33 @@ export class ProductsComponent implements OnInit {
 
   get keyword(): FormControl {
     return this.searchForm.get('keyword') as FormControl;
+  }
+
+  // Get total stock for a product across all stores and variants
+  getTotalStock(product: any): number {
+    let totalStock = 0;
+    
+    // Add main product inventory
+    if (product.inventories && product.inventories.length > 0) {
+      totalStock += product.inventories.reduce((sum: number, inv: any) => sum + (inv.quantity || 0), 0);
+    }
+    
+    // Add variant inventories
+    if (product.variants && product.variants.length > 0) {
+      product.variants.forEach((variant: any) => {
+        if (variant.inventories && variant.inventories.length > 0) {
+          totalStock += variant.inventories.reduce((sum: number, inv: any) => sum + (inv.quantity || 0), 0);
+        }
+      });
+    }
+    
+    return totalStock;
+  }
+
+  // Navigate to inventory management for a specific product
+  manageInventory(productId: number): void {
+    this.router.navigate(['/admin/inventory-management'], { 
+      queryParams: { productId: productId } 
+    });
   }
 }

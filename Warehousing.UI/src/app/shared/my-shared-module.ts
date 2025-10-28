@@ -59,7 +59,8 @@ import { SupplierFormPopupComponent } from './components/supplier-form-popup/sup
     CompanyFooterComponent,
     BreadcrumbComponent,
     ReactiveFormsModule,
-    RouterModule
+    RouterModule,
+    TranslateModule
   ]
 })
 export class MySharedModule { }

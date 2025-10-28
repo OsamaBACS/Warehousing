@@ -21,12 +21,30 @@
             حالة الطلب
           </span>
           
-          <!-- Print Button -->
-          <button class="inline-flex items-center px-4 py-2 bg-gray-600 text-white rounded-xl font-semibold hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-all duration-200 transform hover:scale-105 shadow-lg"
-                  (click)="printOrder()">
-            <i class="bi bi-printer mr-2"></i>
-            طباعة
-          </button>
+          <!-- Print Dropdown -->
+          <div class="relative">
+            <button class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-semibold hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200 transform hover:scale-105 shadow-lg"
+                    (click)="printOrder()">
+              <i class="bi bi-printer mr-2"></i>
+              طباعة سريعة
+            </button>
+            
+            <!-- PDF Options -->
+            <div class="absolute top-full left-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-10">
+              <div class="py-2">
+                <button class="w-full text-right px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
+                        (click)="printOrderPDF()">
+                  <i class="bi bi-file-pdf mr-2 text-red-600"></i>
+                  طباعة PDF
+                </button>
+                <button class="w-full text-right px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
+                        (click)="downloadOrderPDF()">
+                  <i class="bi bi-download mr-2 text-green-600"></i>
+                  تحميل PDF
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -83,7 +101,7 @@
             عناصر الطلب
           </h2>
           <div class="text-sm text-gray-500">
-            إجمالي العناصر: {{ order.items?.length || 0 }}
+            إجمالي العناصر: {{ order.items.length || 0 }}
           </div>
         </div>
       </div>
@@ -175,16 +193,100 @@
             <i class="bi bi-arrow-right mr-2"></i>
             العودة
           </button>
-          <button type="button" 
-                  class="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-semibold hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200 transform hover:scale-105 shadow-lg"
-                  (click)="printOrder()">
-            <i class="bi bi-printer mr-2"></i>
-            طباعة الطلب
-          </button>
+          <!-- Print Options -->
+          <div class="flex space-x-3 space-x-reverse">
+            <button type="button" 
+                    class="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-semibold hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200 transform hover:scale-105 shadow-lg"
+                    (click)="printOrder()">
+              <i class="bi bi-printer mr-2"></i>
+              طباعة سريعة
+            </button>
+            
+            <button type="button" 
+                    class="px-6 py-3 bg-gradient-to-r from-red-600 to-pink-600 text-white rounded-xl font-semibold hover:from-red-700 hover:to-pink-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-all duration-200 transform hover:scale-105 shadow-lg"
+                    (click)="printOrderPDF()">
+              <i class="bi bi-file-pdf mr-2"></i>
+              طباعة PDF
+            </button>
+            
+            <button type="button" 
+                    class="px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl font-semibold hover:from-green-700 hover:to-emerald-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-all duration-200 transform hover:scale-105 shadow-lg"
+                    (click)="downloadOrderPDF()">
+              <i class="bi bi-download mr-2"></i>
+              تحميل PDF
+            </button>
+          </div>
         </div>
       </div>
     </div>
   </div>
 </div>
 
+<!-- Print Section (Hidden) -->
+<div #printSection class="print-section" style="display: none;">
+  <div class="print-container" dir="rtl" style="font-family: 'Arial', sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; background: white;">
+    <!-- Print Header -->
+    <div class="print-header" style="text-align: center; margin-bottom: 30px; border-bottom: 2px solid #333; padding-bottom: 20px;">
+      <h1 style="color: #333; margin: 0; font-size: 28px; font-weight: bold;">
+        {{ (order$ | async)?.orderTypeId == 1 ? 'تفاصيل طلب الشراء' : 'تفاصيل طلب البيع' }}
+      </h1>
+      <p style="color: #666; margin: 10px 0 0 0; font-size: 16px;">
+        رقم الطلب: {{ (order$ | async)?.id }} | التاريخ: {{ (order$ | async)?.orderDate | date:'yyyy-MM-dd' }}
+      </p>
+    </div>
+
+    <!-- Order Information -->
+    <div class="print-order-info" style="margin-bottom: 30px;">
+      <h2 style="color: #333; font-size: 20px; margin-bottom: 15px; border-bottom: 1px solid #ddd; padding-bottom: 10px;">
+        معلومات الطلب
+      </h2>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+        <div>
+          <strong>الزبون:</strong> {{ getCustomerName((order$ | async)?.customerId || null) }}
+        </div>
+        <div>
+          <strong>المبلغ الإجمالي:</strong> {{ (order$ | async)?.totalAmount | currency:'JOD':'symbol':'1.2-2':'ar' }}
+        </div>
+      </div>
+    </div>
+
+    <!-- Items Table -->
+    <div class="print-items">
+      <h2 style="color: #333; font-size: 20px; margin-bottom: 15px; border-bottom: 1px solid #ddd; padding-bottom: 10px;">
+        عناصر الطلب
+      </h2>
+      <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+        <thead>
+          <tr style="background-color: #f8f9fa;">
+            <th style="border: 1px solid #ddd; padding: 12px; text-align: right; font-weight: bold;">#</th>
+            <th style="border: 1px solid #ddd; padding: 12px; text-align: right; font-weight: bold;">التصنيف</th>
+            <th style="border: 1px solid #ddd; padding: 12px; text-align: right; font-weight: bold;">الكود</th>
+            <th style="border: 1px solid #ddd; padding: 12px; text-align: right; font-weight: bold;">المنتج</th>
+            <th style="border: 1px solid #ddd; padding: 12px; text-align: right; font-weight: bold;">الوحدة</th>
+            <th style="border: 1px solid #ddd; padding: 12px; text-align: right; font-weight: bold;">الكمية</th>
+            <th style="border: 1px solid #ddd; padding: 12px; text-align: right; font-weight: bold;">سعر البيع</th>
+            <th style="border: 1px solid #ddd; padding: 12px; text-align: right; font-weight: bold;">المجموع</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let item of (order$ | async)?.items; let i = index" style="border-bottom: 1px solid #eee;">
+            <td style="border: 1px solid #ddd; padding: 10px; text-align: center;">{{ i + 1 }}</td>
+            <td style="border: 1px solid #ddd; padding: 10px;">{{ getCategoryName(item.product?.subCategoryId) }}</td>
+            <td style="border: 1px solid #ddd; padding: 10px;">{{ item.product?.code }}</td>
+            <td style="border: 1px solid #ddd; padding: 10px;">{{ item.product?.nameAr }}</td>
+            <td style="border: 1px solid #ddd; padding: 10px;">{{ getUnitName(item.product?.unitId) }}</td>
+            <td style="border: 1px solid #ddd; padding: 10px; text-align: center;">{{ item.quantity }}</td>
+            <td style="border: 1px solid #ddd; padding: 10px; text-align: left;">{{ item.unitPrice | currency:'JOD':'symbol':'1.2-2':'ar' }}</td>
+            <td style="border: 1px solid #ddd; padding: 10px; text-align: left; font-weight: bold;">{{ (item.quantity * item.unitPrice) | currency:'JOD':'symbol':'1.2-2':'ar' }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Print Footer -->
+    <div class="print-footer" style="margin-top: 40px; padding-top: 20px; border-top: 2px solid #333; text-align: center; color: #666; font-size: 14px;">
+      <p style="margin: 0;">تم إنشاء هذا التقرير في {{ currentDate | date:'yyyy-MM-dd HH:mm' }}</p>
+    </div>
+  </div>
+</div>
 

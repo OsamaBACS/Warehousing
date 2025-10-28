@@ -6,13 +6,13 @@ import { AbstractControl, FormBuilder, FormControl, FormGroup } from '@angular/f
 import { BreadcrumbService } from '../../shared/services/breadcrumb.service';
 import { OrderBreadcrumbService } from '../services/order-breadcrumb.service';
 import { Product } from '../../admin/models/product';
-import { Observable } from 'rxjs';
-import { tap } from 'rxjs/operators';
+import { Observable, map, tap } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { SubCategory } from '../../admin/models/SubCategory';
 import { StoreSimple } from '../../admin/models/StoreSimple';
 import { OrderDto } from '../../admin/models/OrderDto';
 import { OrderItemDto } from '../../admin/models/OrderItemDto';
+import { AuthService } from '../../core/services/auth.service';
 // Removed unnecessary imports since we navigate to detail page
 
 @Component({
@@ -31,6 +31,7 @@ export class OrderProductsComponent implements OnInit {
     private fb: FormBuilder,
     private breadcrumbService: BreadcrumbService,
     private orderBreadcrumbService: OrderBreadcrumbService,
+    private authService: AuthService,
     // Removed unnecessary services since we navigate to detail page
   ) {
     this.subCategories = this.route.snapshot.data['subCategoriesResolver'];
@@ -92,6 +93,10 @@ export class OrderProductsComponent implements OnInit {
       tap(products => {
         // Load variant stock data for all products
         this.loadVariantStockData(products);
+      }),
+      map(products => {
+        // Filter products based on user permissions
+        return products.filter(product => this.authService.hasProduct(product.id!));
       })
     );
     // Set the selected subcategory for display

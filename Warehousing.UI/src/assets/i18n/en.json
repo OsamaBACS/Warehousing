@@ -14,6 +14,52 @@
       "COMPANIES": "Companies"
     }
   },
+  "HOME": {
+    "TITLE": "Building Materials Management System",
+    "SUBTITLE": "Choose the required service to start",
+    "ADMIN_TITLE": "Administration",
+    "ADMIN_DESCRIPTION": "System, users and settings management",
+    "PURCHASE_TITLE": "Purchase",
+    "PURCHASE_DESCRIPTION": "Purchase orders and suppliers management",
+    "SALE_TITLE": "Sale",
+    "SALE_DESCRIPTION": "Sale orders and customers management"
+  },
+  "COMMON": {
+    "PURCHASE_PRICE": "Purchase Price",
+    "SELLING_PRICE": "Selling Price",
+    "PURCHASE_ORDERS": "Purchase Orders",
+    "SALE_ORDERS": "Sale Orders",
+    "PURCHASE_ORDER_DETAILS": "Purchase Order Details",
+    "SALE_ORDER_DETAILS": "Sale Order Details",
+    "ALL_PRODUCTS": "All Products",
+    "ALL_CUSTOMERS": "All Customers",
+    "SEARCH_PRODUCTS": "Search in products...",
+    "MANAGE_PRODUCTS": "Product categories management",
+    "MANAGE_CUSTOMERS": "Customer data management",
+    "MANAGE_UNITS": "Product measurement units management",
+    "MANAGE_STORES": "Warehouses and product stores management",
+    "ADMIN_DASHBOARD": "Admin Dashboard",
+    "CHOOSE_CATEGORY": "Choose the appropriate category to browse products",
+    "CHOOSE_SUBCATEGORY": "Choose the appropriate subcategory to browse products",
+    "ADD_EDIT_PRODUCTS": "Add / Edit Products",
+    "PRODUCTS": "Products",
+    "CUSTOMERS": "Customers",
+    "MOST_MOVING_PRODUCTS": "Most Moving Products",
+    "PRODUCT_COUNT": "Product Count",
+    "SALE_VALUE": "Sale Value",
+    "MOST_MOVING_PRODUCTS_REPORT": "Most Moving Products Report",
+    "MANAGE_TRANSFERS": "Product transfers between warehouses management",
+    "ADD_ITEM_PROMPT": "Click \"Add Item\" to start adding products",
+    "CHOOSE_PRODUCTS_ACCESS": "Choose products that this role can access:",
+    "PURCHASE_PRICE_REQUIRED": "Purchase price is required",
+    "SELLING_PRICE_REQUIRED": "Selling price is required"
+  },
+  "LANGUAGE": {
+    "TOGGLE": "Toggle Language",
+    "CURRENT": "Current Language",
+    "ARABIC": "Arabic",
+    "ENGLISH": "English"
+  },
   "SHARED": {
     "TITLE": "Shared",
     "UNIT": "Unit",
@@ -305,6 +351,7 @@
     "VARIANT_MANAGEMENT": "Variant Management",
     "MODIFIER_MANAGEMENT": "Modifier Management",
     "INITIAL_STOCK": "Initial Stock",
+    "INITIAL_STOCK_SETUP": "Initial Stock Setup",
     "PENDING_ORDERS": "Pending Orders",
     "STORE_TRANSFERS": "Store Transfers",
     "USER_DEVICES": "User Devices"

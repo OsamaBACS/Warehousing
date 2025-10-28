@@ -26,11 +26,22 @@ namespace Warehousing.Api.Controllers
         {
             try
             {
+                // ✅ OPTIMIZED: Load only basic role information to prevent massive data loading
                 var rolesQuery = _unitOfWork.RoleRepo
                     .GetAll()
-                    .Include(r => r.RoleProducts).ThenInclude(p => p.Product)
-                    .Include(r => r.RoleCategories).ThenInclude(c => c.Category)
-                    .Include(r => r.RolePermissions).ThenInclude(rp => rp.Permission);
+                    .Select(r => new
+                    {
+                        r.Id,
+                        r.Code,
+                        r.NameEn,
+                        r.NameAr,
+                        r.IsActive,
+                        // Load counts instead of full data to prevent performance issues
+                        PermissionCount = r.RolePermissions.Count,
+                        CategoryCount = r.RoleCategories.Count,
+                        ProductCount = r.RoleProducts.Count,
+                        SubCategoryCount = r.RoleSubCategories.Count
+                    });
 
                 if (rolesQuery == null)
                     return StatusCode(500, "Roles source is null.");
@@ -51,42 +62,65 @@ namespace Warehousing.Api.Controllers
         {
             try
             {
+                // ✅ OPTIMIZED: Load role with only essential data to prevent performance issues
                 var role = await _unitOfWork.RoleRepo.GetByCondition(u => u.Id == Id)
-                        .Include(r => r.RoleProducts)
-                        .Include(r => r.RoleCategories)
-                        .Include(r => r.RolePermissions)
-                        .ThenInclude(rp => rp.Permission)
-                        .FirstOrDefaultAsync();
+                    .FirstOrDefaultAsync();
+                    
                 if (role == null)
                 {
                     return NotFound("Role Not Found!");
                 }
-                else
-                {
-                    var roleDto = new RoleDto
+
+                // ✅ OPTIMIZED: Load permissions separately with limit
+                var permissions = await _unitOfWork.RolePermissionRepo
+                    .GetByCondition(rp => rp.RoleId == Id)
+                    .Include(rp => rp.Permission)
+                    .Select(rp => new RolePermissionDto
                     {
-                        Id = role.Id,
-                        Code = role.Code,
-                        NameAr = role.NameAr,
-                        NameEn = role.NameEn,
-                        Permissions = role.RolePermissions?
-                            .Where(rp => rp.Permission != null)
-                            .Select(rp => new RolePermissionDto
-                            {
-                                Id = rp.Id,
-                                RoleId = rp.RoleId,
-                                PermissionId = rp.PermissionId,
-                                NameEn = rp.Permission.NameEn,
-                                NameAr = rp.Permission.NameAr,
-                                Code = rp.Permission.Code,
-                            }).ToList() ?? new List<RolePermissionDto>(),
-                        CategoryIds = role.RoleCategories?
-                            .Select(rc => rc.CategoryId).ToList(),
-                        ProductIds = role.RoleProducts?
-                            .Select(rp => rp.ProductId).ToList()
-                    };
-                    return Ok(roleDto);
-                }
+                        Id = rp.Id,
+                        RoleId = rp.RoleId,
+                        PermissionId = rp.PermissionId,
+                        NameEn = rp.Permission!.NameEn,
+                        NameAr = rp.Permission!.NameAr,
+                        Code = rp.Permission!.Code,
+                    })
+                    .Take(100) // Limit to 100 permissions to prevent massive responses
+                    .ToListAsync();
+
+                // ✅ OPTIMIZED: Load category IDs separately (not full category objects)
+                var categoryIds = await _unitOfWork.RoleCategoryRepo
+                    .GetByCondition(rc => rc.RoleId == Id)
+                    .Select(rc => rc.CategoryId)
+                    .Take(1000) // Limit to 1000 categories
+                    .ToListAsync();
+
+                // ✅ OPTIMIZED: Load product IDs separately (not full product objects)
+                var productIds = await _unitOfWork.RoleProductRepo
+                    .GetByCondition(rp => rp.RoleId == Id)
+                    .Select(rp => rp.ProductId)
+                    .Take(5000) // Limit to 5000 products
+                    .ToListAsync();
+
+                // ✅ OPTIMIZED: Load subcategory IDs separately (not full subcategory objects)
+                var subCategoryIds = await _unitOfWork.RoleSubCategoryRepo
+                    .GetByCondition(rsc => rsc.RoleId == Id)
+                    .Select(rsc => rsc.SubCategoryId)
+                    .Take(1000) // Limit to 1000 subcategories
+                    .ToListAsync();
+
+                var roleDto = new RoleDto
+                {
+                    Id = role.Id,
+                    Code = role.Code,
+                    NameAr = role.NameAr,
+                    NameEn = role.NameEn,
+                    Permissions = permissions,
+                    CategoryIds = categoryIds,
+                    ProductIds = productIds,
+                    SubCategoryIds = subCategoryIds
+                };
+
+                return Ok(roleDto);
             }
             catch (Exception ex)
             {
@@ -120,6 +154,7 @@ namespace Warehousing.Api.Controllers
                         .Include(r => r.RolePermissions)
                         .Include(r => r.RoleCategories)
                         .Include(r => r.RoleProducts)
+                        .Include(r => r.RoleSubCategories)
                         .FirstOrDefaultAsync(r => r.Id == dto.Id);
 
                     if (roleToUpdate == null)
@@ -132,7 +167,7 @@ namespace Warehousing.Api.Controllers
 
                     // Get permission IDs from DTO
                     var permissionIds = await _unitOfWork.PermissionRepo.GetAll()
-                        .Where(p => dto.RolePermissionIds.Contains(p.Id))
+                        .Where(p => dto.PermissionCodes.Contains(p.Code))
                         .Select(p => p.Id)
                         .ToListAsync();
 
@@ -151,6 +186,12 @@ namespace Warehousing.Api.Controllers
                     // 🔁 Sync RoleProducts
                     await SyncRoleProducts(roleToUpdate, productIds);
 
+                    // Get sub-category IDs from DTO
+                    var subCategoryIds = dto.SubCategoryIds ?? new List<int>();
+
+                    // 🔁 Sync RoleSubCategories
+                    await SyncRoleSubCategories(roleToUpdate, subCategoryIds);
+
                     // Save changes
                     await _unitOfWork.RoleRepo.UpdateAsync(roleToUpdate);
                     await _unitOfWork.SaveAsync();
@@ -167,10 +208,10 @@ namespace Warehousing.Api.Controllers
                     };
 
                     // Add permissions
-                    if (dto.RolePermissionIds?.Any() == true)
+                    if (dto.PermissionCodes?.Any() == true)
                     {
                         var permissions = await _unitOfWork.PermissionRepo.GetAll()
-                            .Where(p => dto.RolePermissionIds.Contains(p.Id))
+                            .Where(p => dto.PermissionCodes.Contains(p.Code))
                             .ToListAsync();
 
                         role.RolePermissions = permissions.Select(p => new RolePermission
@@ -194,6 +235,15 @@ namespace Warehousing.Api.Controllers
                         role.RoleProducts = dto.ProductIds.Select(p => new RoleProduct
                         {
                             ProductId = p
+                        }).ToList();
+                    }
+
+                    // Add sub-categories
+                    if (dto.SubCategoryIds?.Any() == true)
+                    {
+                        role.RoleSubCategories = dto.SubCategoryIds.Select(sc => new RoleSubCategory
+                        {
+                            SubCategoryId = sc
                         }).ToList();
                     }
 
@@ -346,6 +396,37 @@ namespace Warehousing.Api.Controllers
             if (toRemove.Any())
             {
                 await _unitOfWork.RoleProductRepo.DeleteRange(toRemove);
+            }
+        }
+
+        private async Task SyncRoleSubCategories(Role role, List<int> newSubCategoryIds)
+        {
+            var existingSubCategories = role.RoleSubCategories.Select(rsc => rsc.SubCategoryId).ToList();
+
+            var toAdd = newSubCategoryIds
+                .Where(id => !existingSubCategories.Contains(id))
+                .ToList();
+
+            var toRemove = role.RoleSubCategories
+                .Where(rsc => !newSubCategoryIds.Contains(rsc.SubCategoryId))
+                .ToList();
+
+            // Add new sub-categories
+            if (toAdd.Any())
+            {
+                var newRoleSubCategories = toAdd.Select(id => new RoleSubCategory
+                {
+                    RoleId = role.Id,
+                    SubCategoryId = id
+                }).ToList();
+
+                role.RoleSubCategories.AddRange(newRoleSubCategories);
+            }
+
+            // Remove outdated sub-categories
+            if (toRemove.Any())
+            {
+                await _unitOfWork.RoleSubCategoryRepo.DeleteRange(toRemove);
             }
         }
     }

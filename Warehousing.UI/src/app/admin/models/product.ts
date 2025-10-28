@@ -13,7 +13,6 @@ export interface Product {
     nameEn: string | null;
     nameAr: string;
     description: string | null;
-    openingBalance: number | null;
     reorderLevel: number | null;
     imagePath: string | null;
     isActive: boolean;
@@ -25,8 +24,6 @@ export interface Product {
     subCategoryId: number | null;
     unitId: number | null;
     unit: Unit | null;
-    storeId: number | null;
-    store: Store | null;
     inventories: Inventory[];
     transactions: InventoryTransaction[];
     orderItems: OrderItemDto[];

@@ -4,7 +4,8 @@ import { LanguageService } from '../../core/services/language.service';
 import { ActivatedRoute, Router } from '@angular/router';
 import { BreadcrumbService } from '../../shared/services/breadcrumb.service';
 import { OrderBreadcrumbService } from '../services/order-breadcrumb.service';
-import { Observable } from 'rxjs';
+import { AuthService } from '../../core/services/auth.service';
+import { Observable, map } from 'rxjs';
 import { Category } from '../../admin/models/category';
 import { environment } from '../../../environments/environment';
 
@@ -22,7 +23,8 @@ export class OrderCategoriesComponent implements OnInit {
     private router: Router,
     private route: ActivatedRoute,
     private breadcrumbService: BreadcrumbService,
-    private orderBreadcrumbService: OrderBreadcrumbService
+    private orderBreadcrumbService: OrderBreadcrumbService,
+    private authService: AuthService
   ) { }
   ngOnInit(): void {
     this.route.parent?.paramMap.subscribe(params => {
@@ -39,7 +41,12 @@ export class OrderCategoriesComponent implements OnInit {
   serverUrl: string = environment.resourcesUrl;
 
   loadCategories() {
-    this.categories$ = this.categoriesService.GetActiveCategories();
+    this.categories$ = this.categoriesService.GetActiveCategories().pipe(
+      map(categories => {
+        // Filter categories based on user permissions
+        return categories.filter(category => this.authService.hasCategory(category.id!));
+      })
+    );
   }
 
   onCardClick(categoryId: number) {

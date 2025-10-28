@@ -153,7 +153,7 @@ namespace Warehousing.Api.Controllers
                         IsDefault = v.IsDefault,
                         DisplayOrder = v.DisplayOrder,
                         Inventories = _mapper.Map<List<InventoryDto>>(v.Inventories),
-                        OrderItems = _mapper.Map<List<OrderItemDto>>(v.OrderItems)
+                        OrderItems = _mapper.Map<List<Warehousing.Repo.Dtos.OrderItemDto>>(v.OrderItems)
                         // No Product navigation property to prevent circular reference
                     }).ToList(),
                 }).ToList();

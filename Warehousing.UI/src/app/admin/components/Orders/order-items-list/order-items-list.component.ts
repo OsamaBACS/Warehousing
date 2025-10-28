@@ -1,7 +1,10 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef } from '@angular/core';
 import { OrderService } from '../../../services/order.service';
 import { ActivatedRoute, Router } from '@angular/router';
 import { LanguageService } from '../../../../core/services/language.service';
+import { PrintService } from '../../../../shared/services/print.service';
+import { PdfPrintService } from '../../../../shared/services/pdf-print.service';
+import { ToastrService } from 'ngx-toastr';
 import { Observable } from 'rxjs';
 import { Status } from '../../../models/status';
 import { Customer } from '../../../models/customer';
@@ -24,7 +27,10 @@ export class OrderItemsListComponent implements OnInit {
     private orderService: OrderService,
     private route: ActivatedRoute,
     private router: Router,
-    public lang: LanguageService
+    public lang: LanguageService,
+    private printService: PrintService,
+    private pdfPrintService: PdfPrintService,
+    private toastr: ToastrService
   ) {
     this.subCategories = this.route.snapshot.data['subCategoriesResolver'];
     this.products = this.route.snapshot.data['productsResolver'];
@@ -45,6 +51,7 @@ export class OrderItemsListComponent implements OnInit {
   }
 
   //#region Variables
+  @ViewChild('printSection', { static: false }) printSection!: ElementRef;
   order$!: Observable<OrderDto>;
   orderId: number = 0;
   statuses: Status[] = []
@@ -54,6 +61,7 @@ export class OrderItemsListComponent implements OnInit {
   subCategories!: SubCategory[];
   statusEnum = Statuses;
   units: Unit[] = [];
+  currentDate = new Date();
   //#endregion
 
   //#region Methods
@@ -92,7 +100,72 @@ export class OrderItemsListComponent implements OnInit {
   }
 
   printOrder() {
-    window.print();
+    if (this.printSection) {
+      const documentTitle = `طلب رقم ${this.orderId}`;
+      this.printService.printHtml(this.printSection.nativeElement.innerHTML, documentTitle);
+    } else {
+      console.error("Print section not found");
+      this.toastr.error('خطأ في الطباعة', 'خطأ');
+    }
+  }
+
+  async printOrderPDF() {
+    try {
+      if (!this.printSection) {
+        console.error("Print section not found");
+        this.toastr.error('خطأ في الطباعة', 'خطأ');
+        return;
+      }
+
+      const documentTitle = `طلب رقم ${this.orderId}`;
+      
+      // Check if PDF service is available
+      const isAvailable = await this.pdfPrintService.isServiceAvailable();
+      
+      if (isAvailable) {
+        // Use PDF service for better quality
+        await this.pdfPrintService.printPDF(
+          this.printSection.nativeElement.innerHTML, 
+          documentTitle, 
+          'order'
+        );
+      } else {
+        // Fallback to regular print service
+        this.printOrder();
+      }
+    } catch (error) {
+      console.error('Error printing PDF:', error);
+      this.toastr.error('خطأ في طباعة PDF', 'خطأ');
+      // Fallback to regular print service
+      this.printOrder();
+    }
+  }
+
+  async downloadOrderPDF() {
+    try {
+      if (!this.printSection) {
+        console.error("Print section not found");
+        this.toastr.error('خطأ في الطباعة', 'خطأ');
+        return;
+      }
+
+      const documentTitle = `طلب رقم ${this.orderId}`;
+      
+      const isAvailable = await this.pdfPrintService.isServiceAvailable();
+      
+      if (isAvailable) {
+        await this.pdfPrintService.downloadPDF(
+          this.printSection.nativeElement.innerHTML, 
+          documentTitle, 
+          'order'
+        );
+      } else {
+        this.toastr.warning('خدمة PDF غير متاحة حالياً', 'تحذير');
+      }
+    } catch (error) {
+      console.error('Error downloading PDF:', error);
+      this.toastr.error('خطأ في تحميل PDF', 'خطأ');
+    }
   }
   //#endregion
 }

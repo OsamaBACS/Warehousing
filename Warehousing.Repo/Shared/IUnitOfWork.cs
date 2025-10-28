@@ -26,6 +26,7 @@ namespace Warehousing.Repo.Shared
         IUserDeviceRepo UserDeviceRepo{ get; }
         IRoleCategoryRepo RoleCategoryRepo{ get; }
         IRoleProductRepo RoleProductRepo{ get; }
+        IRoleSubCategoryRepo RoleSubCategoryRepo{ get; }
         ISubCategoryRepo SubCategoryRepo{ get; }
         IInventoryRepo InventoryRepo { get; }
         IStoreTransferRepo StoreTransferRepo { get; }

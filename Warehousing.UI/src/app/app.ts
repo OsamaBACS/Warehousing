@@ -56,6 +56,14 @@ export class App implements OnInit {
     this.languageService.setLanguage(this.currentLang === 'en' ? 'ar' : 'en');
   }
 
+  getLanguageTooltip(): string {
+    if (this.currentLang === 'ar') {
+      return 'تبديل اللغة: الإنجليزية';
+    } else {
+      return 'Toggle Language: Arabic';
+    }
+  }
+
   toggleDarkMode(): void {
     this.theme.toggle();
   }

@@ -586,6 +586,7 @@ namespace Warehousing.Data.Context
         public DbSet<Company> Companies { get; set; }
         public DbSet<RoleCategory> RoleCategories { get; set; }
         public DbSet<RoleProduct> RoleProducts { get; set; }
+        public DbSet<RoleSubCategory> RoleSubCategories { get; set; }
         
         // Variants and Modifiers
         public DbSet<ProductVariant> ProductVariants { get; set; }

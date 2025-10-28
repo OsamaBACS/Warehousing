@@ -4,7 +4,7 @@ import { LanguageService } from '../../core/services/language.service';
 import { ActivatedRoute, ParamMap, Router } from '@angular/router';
 import { BreadcrumbService } from '../../shared/services/breadcrumb.service';
 import { AuthService } from '../../core/services/auth.service';
-import { Observable } from 'rxjs';
+import { Observable, map } from 'rxjs';
 import { SubCategory } from '../../admin/models/SubCategory';
 import { Category } from '../../admin/models/category';
 import { environment } from '../../../environments/environment';
@@ -57,7 +57,12 @@ export class OrderSubCategoriesComponent implements OnInit {
 
 
   loadSubCategories(categoryId: number) {
-    this.subCategories$ = this.subCategoryService.GetSubCategoryByCategoryId(categoryId);
+    this.subCategories$ = this.subCategoryService.GetSubCategoryByCategoryId(categoryId).pipe(
+      map(subCategories => {
+        // Filter sub-categories based on user permissions
+        return subCategories.filter(subCategory => this.authService.hasSubCategory(subCategory.id!));
+      })
+    );
   }
 
   getCategoryName(categoryId: number): string {

@@ -61,6 +61,9 @@ namespace Warehousing.Repo.Shared
         public IRoleCategoryRepo RoleCategoryRepo => new RoleCategoryRepo(_context, _loggerFactory.CreateLogger<RoleCategoryRepo>(), _config);
 
         public IRoleProductRepo RoleProductRepo => new RoleProductRepo(_context, _loggerFactory.CreateLogger<RoleProductRepo>(), _config);
+        
+        public IRoleSubCategoryRepo RoleSubCategoryRepo => new RoleSubCategoryRepo(_context, _loggerFactory.CreateLogger<RoleSubCategoryRepo>(), _config);
+        
         public ISubCategoryRepo SubCategoryRepo => new SubCategoryRepo(_context, _loggerFactory.CreateLogger<SubCategoryRepo>(), _config);
 
         public IInventoryRepo InventoryRepo => new InventoryRepo(_context, _loggerFactory.CreateLogger<InventoryRepo>(), _config);

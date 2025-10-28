@@ -12,5 +12,6 @@ namespace Warehousing.Data.Entities
 
         public List<RoleCategory> RoleCategories { get; set; } = new();
         public List<RoleProduct> RoleProducts { get; set; } = new();
+        public List<RoleSubCategory> RoleSubCategories { get; set; } = new();
     }
 }

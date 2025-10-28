@@ -51,9 +51,7 @@ namespace Warehousing.Repo.Classes
                 product.UnitId = dto.UnitId;
                 product.CostPrice = dto.CostPrice;
                 product.SellingPrice = dto.SellingPrice;
-                
-                // Products are global - inventory is managed separately through Inventory table
-                // No need to create inventory records during product creation
+                product.ReorderLevel = dto.ReorderLevel;
 
                 var createdProduct = await CreateAsync(product);
 

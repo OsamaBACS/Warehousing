@@ -2,8 +2,8 @@
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
     <!-- Header -->
     <div class="text-center mb-16">
-      <h1 class="text-4xl font-bold text-gray-900 mb-4">نظام إدارة مواد البناء</h1>
-      <p class="text-xl text-gray-600">اختر الخدمة المطلوبة للبدء</p>
+      <h1 class="text-4xl font-bold text-gray-900 mb-4">{{ 'HOME.TITLE' | translate }}</h1>
+      <p class="text-xl text-gray-600">{{ 'HOME.SUBTITLE' | translate }}</p>
     </div>
 
     <!-- Cards Grid -->
@@ -11,23 +11,23 @@
       
       <!-- الإدارة -->
       <div *ngIf="authService.hasPermission('VIEW_ADMIN')" class="group">
-        <a routerLink="/admin" class="block">
-          <div class="bg-white rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-500 transform hover:scale-105 overflow-hidden border border-gray-100">
+        <a routerLink="/admin" class="block h-full">
+          <div class="bg-white rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-500 transform hover:scale-105 overflow-hidden border border-gray-100 h-full flex flex-col">
             <!-- Gradient Header -->
             <div class="h-2 bg-gradient-to-r from-blue-500 via-blue-600 to-indigo-600"></div>
             
             <!-- Card Content -->
-            <div class="p-8 text-center">
+            <div class="p-8 text-center flex flex-col flex-grow">
               <div class="w-20 h-20 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl mx-auto mb-6 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
                 <i class="bi bi-speedometer2 text-white text-3xl"></i>
               </div>
               
               <h3 class="text-2xl font-bold text-gray-900 mb-3 group-hover:text-blue-600 transition-colors">
-                {{ 'BREADCRUMB.ADMIN' | translate }}
+                {{ 'HOME.ADMIN_TITLE' | translate }}
               </h3>
               
-              <p class="text-gray-600 text-sm leading-relaxed">
-                إدارة النظام والمستخدمين والإعدادات
+              <p class="text-gray-600 text-sm leading-relaxed flex-grow">
+                {{ 'HOME.ADMIN_DESCRIPTION' | translate }}
               </p>
               
               <!-- Arrow Icon -->
@@ -41,23 +41,23 @@
 
       <!-- الشراء -->
       <div *ngIf="authService.hasPermission('VIEW_PURCHASE_ORDERS')" class="group">
-        <a routerLink="/order/1" class="block">
-          <div class="bg-white rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-500 transform hover:scale-105 overflow-hidden border border-gray-100">
+        <a routerLink="/order/1" class="block h-full">
+          <div class="bg-white rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-500 transform hover:scale-105 overflow-hidden border border-gray-100 h-full flex flex-col">
             <!-- Gradient Header -->
             <div class="h-2 bg-gradient-to-r from-green-500 via-green-600 to-emerald-600"></div>
             
             <!-- Card Content -->
-            <div class="p-8 text-center">
+            <div class="p-8 text-center flex flex-col flex-grow">
               <div class="w-20 h-20 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl mx-auto mb-6 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
                 <i class="bi bi-cart-check text-white text-3xl"></i>
               </div>
               
               <h3 class="text-2xl font-bold text-gray-900 mb-3 group-hover:text-green-600 transition-colors">
-                الشراء
+                {{ 'HOME.PURCHASE_TITLE' | translate }}
               </h3>
               
-              <p class="text-gray-600 text-sm leading-relaxed">
-                إدارة طلبات الشراء والموردين
+              <p class="text-gray-600 text-sm leading-relaxed flex-grow">
+                {{ 'HOME.PURCHASE_DESCRIPTION' | translate }}
               </p>
               
               <!-- Arrow Icon -->
@@ -71,23 +71,23 @@
 
       <!-- البيع -->
       <div *ngIf="authService.hasPermission('VIEW_SALE_ORDERS')" class="group">
-        <a routerLink="/order/2" class="block">
-          <div class="bg-white rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-500 transform hover:scale-105 overflow-hidden border border-gray-100">
+        <a routerLink="/order/2" class="block h-full">
+          <div class="bg-white rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-500 transform hover:scale-105 overflow-hidden border border-gray-100 h-full flex flex-col">
             <!-- Gradient Header -->
             <div class="h-2 bg-gradient-to-r from-yellow-500 via-orange-500 to-red-500"></div>
             
             <!-- Card Content -->
-            <div class="p-8 text-center">
+            <div class="p-8 text-center flex flex-col flex-grow">
               <div class="w-20 h-20 bg-gradient-to-br from-yellow-500 to-orange-500 rounded-2xl mx-auto mb-6 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
                 <i class="bi bi-cash text-white text-3xl"></i>
               </div>
               
               <h3 class="text-2xl font-bold text-gray-900 mb-3 group-hover:text-orange-600 transition-colors">
-                البيع
+                {{ 'HOME.SALE_TITLE' | translate }}
               </h3>
               
-              <p class="text-gray-600 text-sm leading-relaxed">
-                إدارة طلبات البيع والعملاء
+              <p class="text-gray-600 text-sm leading-relaxed flex-grow">
+                {{ 'HOME.SALE_DESCRIPTION' | translate }}
               </p>
               
               <!-- Arrow Icon -->

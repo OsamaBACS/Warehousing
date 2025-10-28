@@ -11,6 +11,7 @@ namespace Warehousing.Repo.Dtos
         public string? Description { get; set; } = string.Empty;
         public decimal CostPrice { get; set; }
         public decimal SellingPrice { get; set; }
+        public decimal? ReorderLevel { get; set; }
         public bool IsActive { get; set; }
         public SubCategoryDto? SubCategory { get; set; }
         public int? SubCategoryId { get; set; }

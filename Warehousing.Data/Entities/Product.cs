@@ -11,6 +11,7 @@ namespace Warehousing.Data.Entities
         public bool IsActive { get; set; } = true;
         public decimal CostPrice { get; set; }
         public decimal SellingPrice { get; set; }
+        public decimal? ReorderLevel { get; set; }
 
         // FKs
         public SubCategory? SubCategory { get; set; }

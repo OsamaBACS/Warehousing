@@ -2,7 +2,8 @@ import { Component, OnInit } from '@angular/core';
 import { CategoriesService } from '../../../services/categories.service';
 import { ActivatedRoute, Router } from '@angular/router';
 import { LanguageService } from '../../../../core/services/language.service';
-import { Observable } from 'rxjs';
+import { AuthService } from '../../../../core/services/auth.service';
+import { Observable, map } from 'rxjs';
 import { Category } from '../../../models/category';
 
 @Component({
@@ -17,7 +18,8 @@ export class CategoryComponent implements OnInit {
     private categoriesService: CategoriesService,
     private router: Router,
     private route: ActivatedRoute,
-    public lang: LanguageService
+    public lang: LanguageService,
+    public authService: AuthService
   ){}
 
   ngOnInit(): void {
@@ -29,7 +31,12 @@ export class CategoryComponent implements OnInit {
   serverUrl = '';
 
   loadcategorys() {
-    this.categorys$ = this.categoriesService.GetCategories();
+    this.categorys$ = this.categoriesService.GetCategories().pipe(
+      map(categories => {
+        // Filter categories based on user permissions
+        return categories.filter(category => this.authService.hasCategory(category.id!));
+      })
+    );
   }
 
   onEdit(categoryId: number | null): void {

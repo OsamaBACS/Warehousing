@@ -18,6 +18,7 @@ import { AuthService } from '../../../core/services/auth.service';
 import { SubCategory } from '../../../admin/models/SubCategory';
 import { Unit } from '../../../admin/models/unit';
 import { PrintService } from '../../services/print.service';
+import { PdfPrintService, OrderPrintRequest, OrderItemDto as PdfOrderItemDto } from '../../services/pdf-print.service';
 import { OrderItemDto } from '../../../admin/models/OrderItemDto';
 import { Subject } from 'rxjs';
 import { CustomerFormPopupComponent } from '../customer-form-popup/customer-form-popup.component';
@@ -45,6 +46,7 @@ export class CartComponent implements OnInit, OnDestroy {
     private dialog: MatDialog,
     private authService: AuthService,
     private printService: PrintService,
+    private pdfPrintService: PdfPrintService,
     private customerService: CustomersService,
     private supplierService: SupplierService,
   ) {
@@ -67,11 +69,18 @@ export class CartComponent implements OnInit, OnDestroy {
     setTimeout(() => {
       this.orderTypeId = this.cartService.orderTypeId;
 
+      // Load cart items from the service
+      if (this.cartService.cartForm && this.cartService.cartItems) {
+        this.cartItems = this.cartService.cartItems.controls as unknown as OrderItemDto[];
+      }
+
       this.calculateAndSetTotalAmount();
 
       // Optional: Also recalculate if cart items change dynamically
       this.cartService.cartItems.valueChanges.subscribe(() => {
         this.calculateAndSetTotalAmount();
+        // Update cart items array when form changes
+        this.cartItems = this.cartService.cartItems.controls as unknown as OrderItemDto[];
       });
 
       // Hide loading indicator
@@ -547,9 +556,70 @@ export class CartComponent implements OnInit, OnDestroy {
 
   printOrder() {
     if (this.printSection) {
-      this.printService.printHtml(this.printSection.nativeElement.innerHTML);
+      const documentTitle = this.cartService.orderTypeId === 1 ? 
+        'وثيقة الشراء' : 'وثيقة البيع';
+      this.printService.printHtml(this.printSection.nativeElement.innerHTML, documentTitle);
     } else {
       console.error("Print section not found");
+    }
+  }
+
+  // Enhanced PDF printing methods
+  async printOrderPDF() {
+    try {
+      if (!this.printSection) {
+        console.error("Print section not found");
+        return;
+      }
+
+      const documentTitle = this.cartService.orderTypeId === 1 ? 
+        'وثيقة الشراء' : 'وثيقة البيع';
+      
+      // Check if PDF service is available
+      const isAvailable = await this.pdfPrintService.isServiceAvailable();
+      
+      if (isAvailable) {
+        // Use PDF service for better quality
+        await this.pdfPrintService.printPDF(
+          this.printSection.nativeElement.innerHTML, 
+          documentTitle, 
+          'order'
+        );
+      } else {
+        // Fallback to regular print service
+        this.printOrder();
+      }
+    } catch (error) {
+      console.error('Error printing PDF:', error);
+      // Fallback to regular print service
+      this.printOrder();
+    }
+  }
+
+  async downloadOrderPDF() {
+    try {
+      if (!this.printSection) {
+        console.error("Print section not found");
+        return;
+      }
+
+      const documentTitle = this.cartService.orderTypeId === 1 ? 
+        'وثيقة الشراء' : 'وثيقة البيع';
+      
+      const isAvailable = await this.pdfPrintService.isServiceAvailable();
+      
+      if (isAvailable) {
+        await this.pdfPrintService.downloadPDF(
+          this.printSection.nativeElement.innerHTML, 
+          documentTitle, 
+          'order'
+        );
+      } else {
+        this.toastr.warning('خدمة PDF غير متاحة حالياً', 'تحذير');
+      }
+    } catch (error) {
+      console.error('Error downloading PDF:', error);
+      this.toastr.error('خطأ في تحميل PDF', 'خطأ');
     }
   }
 
@@ -595,5 +665,78 @@ export class CartComponent implements OnInit, OnDestroy {
         this.toastr.success('تم إضافة المورد الجديد واختياره', 'نجح');
       }
     });
+  }
+
+  // Company Information Methods
+  getCompanyName(): string {
+    const companyInfo = localStorage.getItem('companyInfo');
+    if (companyInfo) {
+      const company = JSON.parse(companyInfo);
+      return company.nameAr || 'اسم الشركة';
+    }
+    return 'اسم الشركة';
+  }
+
+  getCompanyAddress(): string {
+    const companyInfo = localStorage.getItem('companyInfo');
+    if (companyInfo) {
+      const company = JSON.parse(companyInfo);
+      return company.address || 'العنوان';
+    }
+    return 'العنوان';
+  }
+
+  getCompanyPhone(): string {
+    const companyInfo = localStorage.getItem('companyInfo');
+    if (companyInfo) {
+      const company = JSON.parse(companyInfo);
+      return company.phone || 'رقم الهاتف';
+    }
+    return 'رقم الهاتف';
+  }
+
+  getCompanyEmail(): string {
+    const companyInfo = localStorage.getItem('companyInfo');
+    if (companyInfo) {
+      const company = JSON.parse(companyInfo);
+      return company.email || 'البريد الإلكتروني';
+    }
+    return 'البريد الإلكتروني';
+  }
+
+  // User Print Settings Methods
+  getUserPrintHeader(): string {
+    const userInfo = localStorage.getItem('userInfo');
+    if (userInfo) {
+      const user = JSON.parse(userInfo);
+      return user.printHeader || '';
+    }
+    return '';
+  }
+
+  getUserPrintFooter(): string {
+    const userInfo = localStorage.getItem('userInfo');
+    if (userInfo) {
+      const user = JSON.parse(userInfo);
+      return user.printFooter || '';
+    }
+    return '';
+  }
+
+  // Utility Methods
+  getCurrentDateTime(): string {
+    return new Date().toLocaleString('ar-SA', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  }
+
+  // Product Information Methods for Print
+  getProductSubCategory(productId: number): string {
+    const product = this.products?.find(p => p.id === productId);
+    return product?.subCategory?.nameAr || 'غير محدد';
   }
 }

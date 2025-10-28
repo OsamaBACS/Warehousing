@@ -3,6 +3,7 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Permission } from '../../../models/permission';
 import { Category } from '../../../models/category';
 import { Product } from '../../../models/product';
+import { SubCategory } from '../../../models/SubCategory';
 import { RoleService } from '../../../services/role.service';
 import { PermissionService } from '../../../services/permission.service';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -22,6 +23,7 @@ export class RolesFormComponent implements OnInit {
   permissions!: Permission[];
   categories!: Category[];
   products!: Product[];
+  subCategories!: SubCategory[];
 
   constructor(
     private fb: FormBuilder,
@@ -35,6 +37,7 @@ export class RolesFormComponent implements OnInit {
     this.categories = this.route.snapshot.data['categoriesResolver'];
     this.products = this.route.snapshot.data['productsResolver'];
     this.permissions = this.route.snapshot.data['permissionsResolver'];
+    this.subCategories = this.route.snapshot.data['subCategoriesResolver'];
   }
 
   ngOnInit(): void {
@@ -52,7 +55,8 @@ export class RolesFormComponent implements OnInit {
                 nameEn: res.nameEn,
                 rolePermissionIds: res?.permissions.map(p => p.permissionId),
                 categoryIds: res?.categoryIds || [],
-                productIds: res?.productIds || []
+                productIds: res?.productIds || [],
+                subCategoryIds: res?.subCategoryIds || []
               };
               this.initializingForm(roleDtoForAdd)
             },
@@ -72,7 +76,8 @@ export class RolesFormComponent implements OnInit {
       nameAr: [role?.nameAr || '', Validators.required],
       rolePermissionIds: [role?.rolePermissionIds || []],
       categoryIds: [role?.categoryIds || []],
-      productIds: [role?.productIds || []]
+      productIds: [role?.productIds || []],
+      subCategoryIds: [role?.subCategoryIds || []]
     });
   }
 
@@ -109,9 +114,73 @@ export class RolesFormComponent implements OnInit {
     }
   }
 
+  onSubCategoryChange(id: number, event: Event): void {
+    const isChecked = (event.target as HTMLInputElement).checked;
+    const currentSubCats = this.roleForm.get('subCategoryIds')?.value || [];
+
+    if (isChecked) {
+      this.roleForm.get('subCategoryIds')?.setValue([...currentSubCats, id]);
+    } else {
+      this.roleForm.get('subCategoryIds')?.setValue(currentSubCats.filter((sc: number) => sc !== id));
+    }
+  }
+
+  // Select All methods
+  selectAllPermissions(): void {
+    const allPermissionIds = this.permissions.map(p => p.id);
+    this.roleForm.get('rolePermissionIds')?.setValue(allPermissionIds);
+  }
+
+  deselectAllPermissions(): void {
+    this.roleForm.get('rolePermissionIds')?.setValue([]);
+  }
+
+  selectAllCategories(): void {
+    const allCategoryIds = this.categories.map(c => c.id);
+    this.roleForm.get('categoryIds')?.setValue(allCategoryIds);
+  }
+
+  deselectAllCategories(): void {
+    this.roleForm.get('categoryIds')?.setValue([]);
+  }
+
+  selectAllSubCategories(): void {
+    const allSubCategoryIds = this.subCategories.map(sc => sc.id);
+    this.roleForm.get('subCategoryIds')?.setValue(allSubCategoryIds);
+  }
+
+  deselectAllSubCategories(): void {
+    this.roleForm.get('subCategoryIds')?.setValue([]);
+  }
+
+  selectAllProducts(): void {
+    const allProductIds = this.products.map(p => p.id);
+    this.roleForm.get('productIds')?.setValue(allProductIds);
+  }
+
+  deselectAllProducts(): void {
+    this.roleForm.get('productIds')?.setValue([]);
+  }
+
   save(): void {
     if (this.roleForm.valid) {
-      this.roleService.saveRole(this.roleForm.value).subscribe({
+      // Map permission IDs to permission codes
+      const permissionCodes = this.permissions
+        .filter(p => this.roleForm.get('rolePermissionIds')?.value.includes(p.id))
+        .map(p => p.code);
+
+      const roleData = {
+        id: this.roleForm.get('id')?.value,
+        code: this.roleForm.get('code')?.value,
+        nameEn: this.roleForm.get('nameEn')?.value,
+        nameAr: this.roleForm.get('nameAr')?.value,
+        permissionCodes: permissionCodes,
+        categoryIds: this.roleForm.get('categoryIds')?.value || [],
+        productIds: this.roleForm.get('productIds')?.value || [],
+        subCategoryIds: this.roleForm.get('subCategoryIds')?.value || []
+      };
+
+      this.roleService.saveRole(roleData).subscribe({
         next: (res) => {
           if (res) {
             this.toastr.success('Successfully saved', 'Roles');
