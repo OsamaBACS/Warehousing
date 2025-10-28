@@ -1,6 +1,7 @@
 using System.Text;
 using Warehousing.Api.middlewares;
 using Warehousing.Data.Context;
+using Warehousing.Data.Services;
 using Warehousing.Repo.Shared;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -41,6 +42,7 @@ builder.Services.AddDbContext<WarehousingContext>(options =>
 
 builder.Services.AddAutoMapper(typeof(AutoMapperProfile).Assembly);
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+builder.Services.AddScoped<SeedingService>();
 
 builder.Services.AddAuthentication(opt =>
 {
@@ -64,6 +66,13 @@ builder.Services.AddAuthentication(opt =>
 builder.Services.AddAuthorization();
 
 var app = builder.Build();
+
+// Seed data on startup
+using (var scope = app.Services.CreateScope())
+{
+    var seedingService = scope.ServiceProvider.GetRequiredService<SeedingService>();
+    await seedingService.SeedDataAsync();
+}
 
 // Configure HTTP pipeline
 if (app.Environment.IsDevelopment())
