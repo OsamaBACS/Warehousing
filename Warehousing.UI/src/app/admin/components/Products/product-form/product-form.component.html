@@ -222,6 +222,71 @@
         </div>
       </div>
 
+      <!-- Inventory/Allocation Section -->
+      <div *ngIf="productForm.get('id')?.value > 0 && isAdmin" class="bg-white rounded-2xl shadow-xl overflow-hidden mt-6">
+        <div class="bg-gradient-to-r from-yellow-500 to-orange-400 px-6 py-4">
+          <h2 class="text-xl font-bold text-white flex items-center">
+            <i class="bi bi-database mr-3"></i>
+            إدارة الجرد والكمية
+          </h2>
+        </div>
+        <div class="p-6">
+          <div class="mb-4 flex flex-col gap-4 md:flex-row md:gap-12">
+            <div>
+              <div class="font-semibold text-gray-700">كمية بدون متغير (عام):
+                <span class="text-lg text-blue-700 mx-2">{{ generalQuantity }}</span>
+              </div>
+            </div>
+            <div>
+              <div class="font-semibold text-gray-700">كميات المتغيرات:</div>
+              <ul class="text-blue-800 text-sm font-bold ml-4">
+                <li *ngFor="let v of variantQuantities" class="flex items-center gap-3 py-1">
+                  <span class="min-w-40">{{ v.name }}:</span>
+                  <span class="text-green-700">{{ v.quantity }}</span>
+                  <div class="flex items-center gap-2 ml-4">
+                    <input type="number" class="w-20 form-input border rounded p-1" min="1" [max]="v.quantity" [(ngModel)]="recallAmountByVariant[v.id]" name="recall_{{v.id}}">
+                    <button type="button" class="px-2 py-1 rounded bg-gray-600 text-white text-xs hover:bg-gray-700 disabled:opacity-40"
+                            [disabled]="!recallAmountByVariant[v.id] || recallAmountByVariant[v.id] < 1 || recallAmountByVariant[v.id] > v.quantity"
+                            (click)="recallFromVariant(v.id)">استرجاع للعام</button>
+                  </div>
+                </li>
+              </ul>
+            </div>
+            <div class="md:ml-auto">
+              <div class="font-semibold text-gray-700">إجمالي المتغيرات:
+                <span class="text-lg text-purple-700 mx-2">{{ variantsTotal }}</span>
+              </div>
+              <div class="font-semibold text-gray-700">الإجمالي الكلي:
+                <span class="text-lg text-emerald-700 mx-2">{{ overallTotal }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Allocation UI -->
+          <div class="border-t border-gray-200 pt-4 mt-4">
+            <div class="font-bold mb-2 text-gray-600">توزيع الكمية العامة على المتغيرات</div>
+            <form (ngSubmit)="allocateToVariant()" class="flex flex-col md:flex-row gap-3 md:items-end">
+              <div class="flex-1">
+                <label class="block text-sm text-gray-600">اختر المتغير</label>
+                <select [(ngModel)]="allocation.variantId" name="variant" required class="form-select w-full border rounded p-2">
+                  <option [ngValue]="null" disabled selected>اختر متغير</option>
+                  <option *ngFor="let v of variantQuantities" [ngValue]="v.id">{{ v.name }}</option>
+                </select>
+              </div>
+              <div class="flex-1">
+                <label class="block text-sm text-gray-600">الكمية</label>
+                <input type="number" min="1" [max]="generalQuantity" required [(ngModel)]="allocation.amount" name="amount"
+                  class="form-input w-full border rounded p-2" [disabled]="generalQuantity == 0">
+              </div>
+              <button type="submit" class="px-4 py-2 rounded bg-yellow-600 text-white font-bold hover:bg-yellow-700 disabled:opacity-40" 
+                    [disabled]="!allocation.variantId || allocation.amount < 1 || allocation.amount > generalQuantity">توزيع</button>
+            </form>
+            <div *ngIf="allocationMsg" class="text-sm mt-2 font-semibold" [class.text-green-700]="allocationSuccess" [class.text-red-700]="!allocationSuccess">{{ allocationMsg }}</div>
+          </div>
+        </div>
+      </div>
+      <!-- End Allocation Section -->
+
       <!-- Variants and Modifiers Section -->
       <div *ngIf="productForm.get('id')?.value > 0" class="bg-white rounded-2xl shadow-xl overflow-hidden">
         <div class="bg-gradient-to-r from-indigo-500 to-purple-600 px-6 py-4">

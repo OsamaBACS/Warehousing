@@ -30,6 +30,7 @@ export class OrderCategoriesComponent implements OnInit {
     this.route.parent?.paramMap.subscribe(params => {
       const orderTypeIdParam = params.get('orderTypeId');
       this.orderTypeId = orderTypeIdParam !== null ? Number(orderTypeIdParam) : 1; // default 1 if null
+      
       // Set breadcrumbs using the order breadcrumb service
       this.orderBreadcrumbService.setOrderCategoriesBreadcrumbs(this.orderTypeId);
       this.loadCategories();

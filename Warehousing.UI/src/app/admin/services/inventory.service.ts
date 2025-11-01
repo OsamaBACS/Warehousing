@@ -9,30 +9,30 @@ import { Inventory } from '../models/Inventory';
 export class InventoryService {
 
   constructor(private http: HttpClient) { }
-  url = environment.baseUrl + '/Inventory/';
+  url = environment.baseUrl + '/Inventory';
 
   GetAllInventory() {
-    return this.http.get<Inventory[]>(`${this.url}GetAllInventory`);
+    return this.http.get<Inventory[]>(`${this.url}`);
   }
 
   GetInventoryByStore(storeId: number) {
-    return this.http.get<Inventory[]>(`${this.url}GetInventoryByStore?storeId=${storeId}`);
+    return this.http.get<Inventory[]>(`${this.url}/by-store/${storeId}`);
   }
 
   GetInventoryByProduct(productId: number) {
-    return this.http.get<Inventory[]>(`${this.url}GetInventoryByProduct?productId=${productId}`);
+    return this.http.get<Inventory[]>(`${this.url}/by-product/${productId}`);
   }
 
   GetInventorySummary() {
-    return this.http.get<any>(`${this.url}GetInventorySummary`);
+    return this.http.get<any>(`${this.url}/summary`);
   }
 
   GetLowStockItems() {
-    return this.http.get<Inventory[]>(`${this.url}GetLowStockItems`);
+    return this.http.get<Inventory[]>(`${this.url}/low-stock`);
   }
 
   AdjustInventory(inventoryId: number, newQuantity: number, notes: string) {
-    return this.http.post<any>(`${this.url}AdjustInventory`, {
+    return this.http.post<any>(`${this.url}/AdjustInventory`, {
       inventoryId,
       newQuantity,
       notes
@@ -40,19 +40,19 @@ export class InventoryService {
   }
 
   BulkAdjustInventory(adjustments: any[]) {
-    return this.http.post<any>(`${this.url}BulkAdjustInventory`, adjustments);
+    return this.http.post<any>(`${this.url}/BulkAdjustInventory`, adjustments);
   }
 
   InitialStockSetup(data: any) {
-    return this.http.post<any>(`${this.url}initial-stock-setup`, data);
+    return this.http.post<any>(`${this.url}/initial-stock-setup`, data);
   }
 
   BulkInitialStockSetup(data: any) {
-    return this.http.post<any>(`${this.url}bulk-initial-stock-setup`, data);
+    return this.http.post<any>(`${this.url}/bulk-initial-stock-setup`, data);
   }
 
   SingleInitialStockSetup(data: any) {
-    return this.http.post<any>(`${this.url}single-initial-stock-setup`, data);
+    return this.http.post<any>(`${this.url}/single-initial-stock-setup`, data);
   }
 }
 

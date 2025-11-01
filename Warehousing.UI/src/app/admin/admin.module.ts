@@ -31,7 +31,6 @@ import { getQuantityChangedSum } from "./pipes/get-quantity-changed-sum-pipe-pip
 import { ProductsComponent } from "./components/Products/products/products.component";
 import { SubCategoryComponent } from './components/SubCategories/sub-category/sub-category.component';
 import { SubCategoryFormComponent } from './components/SubCategories/sub-category-form/sub-category-form.component';
-import { UserDevicesComponent } from './components/Users/user-devices/user-devices.component';
 import { OrderListComponent } from './components/Orders/order-list/order-list.component';
 import { OrderItemsListComponent } from './components/Orders/order-items-list/order-items-list.component';
 import { StoreTransferFormComponent } from './components/StoreTransfers/store-transfer-form/store-transfer-form.component';
@@ -41,6 +40,9 @@ import { ProductVariantsComponent } from './components/Products/product-variants
 import { ProductModifiersComponent } from './components/Products/product-modifiers/product-modifiers';
 import { ProductFormComponent } from './components/Products/product-form/product-form.component';
 import { ModifierManagementComponent } from './components/Products/modifier-management/modifier-management.component';
+// Standalone components are imported via 'imports' array, not declared
+import { ActivityLogsComponent } from './components/ActivityLogs/activity-logs.component';
+import { WorkingHoursComponent } from './components/WorkingHours/working-hours.component';
 
 
 
@@ -72,7 +74,6 @@ import { ModifierManagementComponent } from './components/Products/modifier-mana
     ProductsComponent,
     SubCategoryComponent,
     SubCategoryFormComponent,
-    UserDevicesComponent,
     OrderListComponent,
     OrderItemsListComponent,
     StoreTransferFormComponent,
@@ -90,7 +91,9 @@ import { ModifierManagementComponent } from './components/Products/modifier-mana
     ProductVariantsComponent,
     ProductModifiersComponent,
     ProductFormComponent,
-    ModifierManagementComponent
+    ModifierManagementComponent,
+    ActivityLogsComponent,
+    WorkingHoursComponent
   ],
   providers: [
     CurrencyPipe,

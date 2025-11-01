@@ -135,67 +135,100 @@ namespace Warehousing.Api.Controllers
         {
             try
             {
+                Console.WriteLine($"[DEBUG] SaveRole called with ID: {dto?.Id}");
+                
                 if (dto == null)
                 {
+                    Console.WriteLine("[DEBUG] DTO is null");
                     return BadRequest("Role Model is null!");
                 }
 
+                Console.WriteLine($"[DEBUG] DTO received - PermissionCodes: {dto.PermissionCodes?.Count ?? 0}, CategoryIds: {dto.CategoryIds?.Count ?? 0}, ProductIds: {dto.ProductIds?.Count ?? 0}, SubCategoryIds: {dto.SubCategoryIds?.Count ?? 0}");
+
                 // Check if role exists
+                Console.WriteLine("[DEBUG] Checking if role exists...");
                 var isRoleExist = await _unitOfWork.RoleRepo
                     .GetByCondition(r => (r.Code.Equals(dto.Code) || r.NameEn.Equals(dto.NameEn) || r.NameAr.Equals(dto.NameAr)) && r.Id != dto.Id)
                     .FirstOrDefaultAsync();
                 if (isRoleExist != null)
+                {
+                    Console.WriteLine("[DEBUG] Role already exists");
                     return BadRequest("Role already exists.");
+                }
 
                 if (dto.Id > 0)
                 {
+                    Console.WriteLine("[DEBUG] Updating existing role...");
                     var roleToUpdate = await _unitOfWork.RoleRepo
                         .GetAll()
-                        .Include(r => r.RolePermissions)
-                        .Include(r => r.RoleCategories)
-                        .Include(r => r.RoleProducts)
-                        .Include(r => r.RoleSubCategories)
                         .FirstOrDefaultAsync(r => r.Id == dto.Id);
 
                     if (roleToUpdate == null)
+                    {
+                        Console.WriteLine("[DEBUG] Role not found");
                         return NotFound("This role is not exist!");
+                    }
+
+                    Console.WriteLine($"[DEBUG] Role found - ID: {roleToUpdate.Id}, Code: {roleToUpdate.Code}");
 
                     // Update basic role info
                     roleToUpdate.Code = dto.Code;
                     roleToUpdate.NameEn = dto.NameEn;
                     roleToUpdate.NameAr = dto.NameAr;
 
-                    // Get permission IDs from DTO
-                    var permissionIds = await _unitOfWork.PermissionRepo.GetAll()
-                        .Where(p => dto.PermissionCodes.Contains(p.Code))
-                        .Select(p => p.Id)
-                        .ToListAsync();
+                    // ✅ OPTIMIZED: Get permission IDs from DTO with null check and performance optimization
+                    Console.WriteLine("[DEBUG] Getting permission IDs...");
+                    var permissionIds = new List<int>();
+                    if (dto.PermissionCodes != null && dto.PermissionCodes.Any())
+                    {
+                        // Use HashSet for faster Contains() operations
+                        var permissionCodeSet = new HashSet<string>(dto.PermissionCodes);
+                        permissionIds = await _unitOfWork.PermissionRepo.GetAll()
+                            .Where(p => permissionCodeSet.Contains(p.Code))
+                            .Select(p => p.Id)
+                            .ToListAsync();
+                    }
+                    Console.WriteLine($"[DEBUG] Found {permissionIds.Count} permission IDs");
 
-                    // 🔁 Sync RolePermissions
-                    await SyncRolePermissions(roleToUpdate, permissionIds);
-
-                    // Get category IDs from DTO
+                    // ✅ OPTIMIZED: Use direct SQL for large datasets to avoid EF overhead
                     var categoryIds = dto.CategoryIds ?? new List<int>();
-
-                    // 🔁 Sync RoleCategories
-                    await SyncRoleCategories(roleToUpdate, categoryIds);
-
-                    // Get product IDs from DTO
                     var productIds = dto.ProductIds ?? new List<int>();
-
-                    // 🔁 Sync RoleProducts
-                    await SyncRoleProducts(roleToUpdate, productIds);
-
-                    // Get sub-category IDs from DTO
                     var subCategoryIds = dto.SubCategoryIds ?? new List<int>();
 
-                    // 🔁 Sync RoleSubCategories
-                    await SyncRoleSubCategories(roleToUpdate, subCategoryIds);
+                    // Check if we have large datasets that need SQL optimization
+                    bool useSqlOptimization = permissionIds.Count > 50 || categoryIds.Count > 50 || 
+                                            productIds.Count > 50 || subCategoryIds.Count > 50;
 
-                    // Save changes
-                    await _unitOfWork.RoleRepo.UpdateAsync(roleToUpdate);
-                    await _unitOfWork.SaveAsync();
+                    Console.WriteLine($"[DEBUG] Use SQL optimization: {useSqlOptimization} (permissions: {permissionIds.Count}, categories: {categoryIds.Count}, products: {productIds.Count}, subcategories: {subCategoryIds.Count})");
 
+                    if (useSqlOptimization)
+                    {
+                        Console.WriteLine("[DEBUG] Using SQL optimization for large datasets...");
+                        // Use direct SQL operations for large datasets
+                        await SyncRolePermissionsWithSql(roleToUpdate.Id, permissionIds);
+                        Console.WriteLine("[DEBUG] Permissions synced with SQL");
+                        await SyncRoleCategoriesWithSql(roleToUpdate.Id, categoryIds);
+                        Console.WriteLine("[DEBUG] Categories synced with SQL");
+                        await SyncRoleProductsWithSql(roleToUpdate.Id, productIds);
+                        Console.WriteLine("[DEBUG] Products synced with SQL");
+                        await SyncRoleSubCategoriesWithSql(roleToUpdate.Id, subCategoryIds);
+                        Console.WriteLine("[DEBUG] SubCategories synced with SQL");
+                    }
+                    else
+                    {
+                        Console.WriteLine("[DEBUG] Using EF for small datasets...");
+                        // Use EF for small datasets - pass roleId instead of role object
+                        await SyncRolePermissionsWithId(roleToUpdate.Id, permissionIds);
+                        await SyncRoleCategoriesWithId(roleToUpdate.Id, categoryIds);
+                        await SyncRoleProductsWithId(roleToUpdate.Id, productIds);
+                        await SyncRoleSubCategoriesWithId(roleToUpdate.Id, subCategoryIds);
+                        
+                        // Save changes
+                        await _unitOfWork.SaveAsync();
+                        Console.WriteLine("[DEBUG] Changes saved with EF");
+                    }
+
+                    Console.WriteLine("[DEBUG] SaveRole completed successfully");
                     return Ok(roleToUpdate);
                 }
                 else
@@ -306,19 +339,153 @@ namespace Warehousing.Api.Controllers
 
 
         //---------------Helpers
-        private async Task SyncRolePermissions(Role role, List<int> newPermissionIds)
+        // ✅ NEW: EF-based sync methods that work with role ID (no Include needed)
+        private async Task SyncRolePermissionsWithId(int roleId, List<int> newPermissionIds)
         {
-            var existingPermissions = role.RolePermissions.Select(rp => rp.PermissionId).ToList();
+            // Get current permission IDs directly from database
+            var currentPermissionIds = await _unitOfWork.Context.RolePermissions
+                .Where(rp => rp.RoleId == roleId)
+                .Select(rp => rp.PermissionId)
+                .ToListAsync();
 
-            var toAdd = newPermissionIds
-                .Where(id => !existingPermissions.Contains(id))
-                .ToList();
-
-            var toRemove = role.RolePermissions
-                .Where(rp => !newPermissionIds.Contains(rp.PermissionId))
-                .ToList();
+            // Find permissions to add and remove
+            var toAdd = newPermissionIds.Except(currentPermissionIds).ToList();
+            var toRemove = currentPermissionIds.Except(newPermissionIds).ToList();
 
             // Add new permissions
+            if (toAdd.Any())
+            {
+                var newRolePermissions = toAdd.Select(permissionId => new RolePermission
+                {
+                    RoleId = roleId,
+                    PermissionId = permissionId
+                }).ToList();
+                _unitOfWork.Context.RolePermissions.AddRange(newRolePermissions);
+            }
+
+            // Remove old permissions
+            if (toRemove.Any())
+            {
+                var toRemoveEntities = await _unitOfWork.Context.RolePermissions
+                    .Where(rp => rp.RoleId == roleId && toRemove.Contains(rp.PermissionId))
+                    .ToListAsync();
+                _unitOfWork.Context.RolePermissions.RemoveRange(toRemoveEntities);
+            }
+        }
+
+        private async Task SyncRoleCategoriesWithId(int roleId, List<int> newCategoryIds)
+        {
+            // Get current category IDs directly from database
+            var currentCategoryIds = await _unitOfWork.Context.RoleCategories
+                .Where(rc => rc.RoleId == roleId)
+                .Select(rc => rc.CategoryId)
+                .ToListAsync();
+
+            // Find categories to add and remove
+            var toAdd = newCategoryIds.Except(currentCategoryIds).ToList();
+            var toRemove = currentCategoryIds.Except(newCategoryIds).ToList();
+
+            // Add new categories
+            if (toAdd.Any())
+            {
+                var newRoleCategories = toAdd.Select(categoryId => new RoleCategory
+                {
+                    RoleId = roleId,
+                    CategoryId = categoryId
+                }).ToList();
+                _unitOfWork.Context.RoleCategories.AddRange(newRoleCategories);
+            }
+
+            // Remove old categories
+            if (toRemove.Any())
+            {
+                var toRemoveEntities = await _unitOfWork.Context.RoleCategories
+                    .Where(rc => rc.RoleId == roleId && toRemove.Contains(rc.CategoryId))
+                    .ToListAsync();
+                _unitOfWork.Context.RoleCategories.RemoveRange(toRemoveEntities);
+            }
+        }
+
+        private async Task SyncRoleProductsWithId(int roleId, List<int> newProductIds)
+        {
+            // Get current product IDs directly from database
+            var currentProductIds = await _unitOfWork.Context.RoleProducts
+                .Where(rp => rp.RoleId == roleId)
+                .Select(rp => rp.ProductId)
+                .ToListAsync();
+
+            // Find products to add and remove
+            var toAdd = newProductIds.Except(currentProductIds).ToList();
+            var toRemove = currentProductIds.Except(newProductIds).ToList();
+
+            // Add new products
+            if (toAdd.Any())
+            {
+                var newRoleProducts = toAdd.Select(productId => new RoleProduct
+                {
+                    RoleId = roleId,
+                    ProductId = productId
+                }).ToList();
+                _unitOfWork.Context.RoleProducts.AddRange(newRoleProducts);
+            }
+
+            // Remove old products
+            if (toRemove.Any())
+            {
+                var toRemoveEntities = await _unitOfWork.Context.RoleProducts
+                    .Where(rp => rp.RoleId == roleId && toRemove.Contains(rp.ProductId))
+                    .ToListAsync();
+                _unitOfWork.Context.RoleProducts.RemoveRange(toRemoveEntities);
+            }
+        }
+
+        private async Task SyncRoleSubCategoriesWithId(int roleId, List<int> newSubCategoryIds)
+        {
+            // Get current subcategory IDs directly from database
+            var currentSubCategoryIds = await _unitOfWork.Context.RoleSubCategories
+                .Where(rsc => rsc.RoleId == roleId)
+                .Select(rsc => rsc.SubCategoryId)
+                .ToListAsync();
+
+            // Find subcategories to add and remove
+            var toAdd = newSubCategoryIds.Except(currentSubCategoryIds).ToList();
+            var toRemove = currentSubCategoryIds.Except(newSubCategoryIds).ToList();
+
+            // Add new subcategories
+            if (toAdd.Any())
+            {
+                var newRoleSubCategories = toAdd.Select(subCategoryId => new RoleSubCategory
+                {
+                    RoleId = roleId,
+                    SubCategoryId = subCategoryId
+                }).ToList();
+                _unitOfWork.Context.RoleSubCategories.AddRange(newRoleSubCategories);
+            }
+
+            // Remove old subcategories
+            if (toRemove.Any())
+            {
+                var toRemoveEntities = await _unitOfWork.Context.RoleSubCategories
+                    .Where(rsc => rsc.RoleId == roleId && toRemove.Contains(rsc.SubCategoryId))
+                    .ToListAsync();
+                _unitOfWork.Context.RoleSubCategories.RemoveRange(toRemoveEntities);
+            }
+        }
+
+        // ✅ OLD: EF-based sync methods that require loaded related entities (kept for backward compatibility)
+        private Task SyncRolePermissions(Role role, List<int> newPermissionIds)
+        {
+            // ✅ OPTIMIZED: Use HashSet for O(1) lookups instead of O(n) Contains()
+            var existingPermissionIds = new HashSet<int>(role.RolePermissions.Select(rp => rp.PermissionId));
+            var newPermissionIdSet = new HashSet<int>(newPermissionIds);
+
+            // Find permissions to add (in new set but not in existing)
+            var toAdd = newPermissionIds.Where(id => !existingPermissionIds.Contains(id)).ToList();
+
+            // Find permissions to remove (in existing but not in new set)
+            var toRemove = role.RolePermissions.Where(rp => !newPermissionIdSet.Contains(rp.PermissionId)).ToList();
+
+            // Add new permissions in batch
             if (toAdd.Any())
             {
                 var newRolePermissions = toAdd.Select(id => new RolePermission
@@ -333,23 +500,30 @@ namespace Warehousing.Api.Controllers
             // Remove outdated permissions
             if (toRemove.Any())
             {
-                await _unitOfWork.RolePermissionRepo.DeleteRange(toRemove);
+                // ✅ OPTIMIZED: Remove from collection first, then mark for deletion
+                foreach (var item in toRemove)
+                {
+                    role.RolePermissions.Remove(item);
+                }
+                // Mark entities for deletion without calling SaveChangesAsync
+                _unitOfWork.Context.RolePermissions.RemoveRange(toRemove);
             }
+            return Task.CompletedTask;
         }
 
-        private async Task SyncRoleCategories(Role role, List<int> newCategoryIds)
+        private Task SyncRoleCategories(Role role, List<int> newCategoryIds)
         {
-            var existingCategories = role.RoleCategories.Select(rc => rc.CategoryId).ToList();
+            // ✅ OPTIMIZED: Use HashSet for O(1) lookups instead of O(n) Contains()
+            var existingCategoryIds = new HashSet<int>(role.RoleCategories.Select(rc => rc.CategoryId));
+            var newCategoryIdSet = new HashSet<int>(newCategoryIds);
 
-            var toAdd = newCategoryIds
-                .Where(id => !existingCategories.Contains(id))
-                .ToList();
+            // Find categories to add (in new set but not in existing)
+            var toAdd = newCategoryIds.Where(id => !existingCategoryIds.Contains(id)).ToList();
 
-            var toRemove = role.RoleCategories
-                .Where(rc => !newCategoryIds.Contains(rc.CategoryId))
-                .ToList();
+            // Find categories to remove (in existing but not in new set)
+            var toRemove = role.RoleCategories.Where(rc => !newCategoryIdSet.Contains(rc.CategoryId)).ToList();
 
-            // Add new categories
+            // Add new categories in batch
             if (toAdd.Any())
             {
                 var newRoleCategories = toAdd.Select(id => new RoleCategory
@@ -364,23 +538,30 @@ namespace Warehousing.Api.Controllers
             // Remove outdated categories
             if (toRemove.Any())
             {
-                await _unitOfWork.RoleCategoryRepo.DeleteRange(toRemove);
+                // ✅ OPTIMIZED: Remove from collection first, then mark for deletion
+                foreach (var item in toRemove)
+                {
+                    role.RoleCategories.Remove(item);
+                }
+                // Mark entities for deletion without calling SaveChangesAsync
+                _unitOfWork.Context.RoleCategories.RemoveRange(toRemove);
             }
+            return Task.CompletedTask;
         }
 
-        private async Task SyncRoleProducts(Role role, List<int> newProductIds)
+        private Task SyncRoleProducts(Role role, List<int> newProductIds)
         {
-            var existingProducts = role.RoleProducts.Select(rp => rp.ProductId).ToList();
+            // ✅ OPTIMIZED: Use HashSet for O(1) lookups instead of O(n) Contains()
+            var existingProductIds = new HashSet<int>(role.RoleProducts.Select(rp => rp.ProductId));
+            var newProductIdSet = new HashSet<int>(newProductIds);
 
-            var toAdd = newProductIds
-                .Where(id => !existingProducts.Contains(id))
-                .ToList();
+            // Find products to add (in new set but not in existing)
+            var toAdd = newProductIds.Where(id => !existingProductIds.Contains(id)).ToList();
 
-            var toRemove = role.RoleProducts
-                .Where(rp => !newProductIds.Contains(rp.ProductId))
-                .ToList();
+            // Find products to remove (in existing but not in new set)
+            var toRemove = role.RoleProducts.Where(rp => !newProductIdSet.Contains(rp.ProductId)).ToList();
 
-            // Add new products
+            // Add new products in batch
             if (toAdd.Any())
             {
                 var newRoleProducts = toAdd.Select(id => new RoleProduct
@@ -395,23 +576,30 @@ namespace Warehousing.Api.Controllers
             // Remove outdated products
             if (toRemove.Any())
             {
-                await _unitOfWork.RoleProductRepo.DeleteRange(toRemove);
+                // ✅ OPTIMIZED: Remove from collection first, then mark for deletion
+                foreach (var item in toRemove)
+                {
+                    role.RoleProducts.Remove(item);
+                }
+                // Mark entities for deletion without calling SaveChangesAsync
+                _unitOfWork.Context.RoleProducts.RemoveRange(toRemove);
             }
+            return Task.CompletedTask;
         }
 
-        private async Task SyncRoleSubCategories(Role role, List<int> newSubCategoryIds)
+        private Task SyncRoleSubCategories(Role role, List<int> newSubCategoryIds)
         {
-            var existingSubCategories = role.RoleSubCategories.Select(rsc => rsc.SubCategoryId).ToList();
+            // ✅ OPTIMIZED: Use HashSet for O(1) lookups instead of O(n) Contains()
+            var existingSubCategoryIds = new HashSet<int>(role.RoleSubCategories.Select(rsc => rsc.SubCategoryId));
+            var newSubCategoryIdSet = new HashSet<int>(newSubCategoryIds);
 
-            var toAdd = newSubCategoryIds
-                .Where(id => !existingSubCategories.Contains(id))
-                .ToList();
+            // Find sub-categories to add (in new set but not in existing)
+            var toAdd = newSubCategoryIds.Where(id => !existingSubCategoryIds.Contains(id)).ToList();
 
-            var toRemove = role.RoleSubCategories
-                .Where(rsc => !newSubCategoryIds.Contains(rsc.SubCategoryId))
-                .ToList();
+            // Find sub-categories to remove (in existing but not in new set)
+            var toRemove = role.RoleSubCategories.Where(rsc => !newSubCategoryIdSet.Contains(rsc.SubCategoryId)).ToList();
 
-            // Add new sub-categories
+            // Add new sub-categories in batch
             if (toAdd.Any())
             {
                 var newRoleSubCategories = toAdd.Select(id => new RoleSubCategory
@@ -426,7 +614,154 @@ namespace Warehousing.Api.Controllers
             // Remove outdated sub-categories
             if (toRemove.Any())
             {
-                await _unitOfWork.RoleSubCategoryRepo.DeleteRange(toRemove);
+                // ✅ OPTIMIZED: Remove from collection first, then mark for deletion
+                foreach (var item in toRemove)
+                {
+                    role.RoleSubCategories.Remove(item);
+                }
+                // Mark entities for deletion without calling SaveChangesAsync
+                _unitOfWork.Context.RoleSubCategories.RemoveRange(toRemove);
+            }
+            return Task.CompletedTask;
+        }
+
+        // ✅ SQL-based sync methods for large datasets
+        private async Task SyncRolePermissionsWithSql(int roleId, List<int> newPermissionIds)
+        {
+            Console.WriteLine($"[DEBUG] SyncRolePermissionsWithSql called with roleId: {roleId}, permissionCount: {newPermissionIds.Count}");
+
+            using var transaction = await _unitOfWork.Context.Database.BeginTransactionAsync();
+            try
+            {
+                Console.WriteLine("[DEBUG] Deleting existing permissions...");
+                // Always delete existing permissions first
+                await _unitOfWork.Context.Database.ExecuteSqlRawAsync(
+                    "DELETE FROM RolePermissions WHERE RoleId = {0}", roleId);
+
+                // Only insert new permissions if there are any
+                if (newPermissionIds.Any())
+                {
+                    Console.WriteLine("[DEBUG] Inserting new permissions in batches...");
+                    // Insert new permissions in batches to avoid SQL parameter limits
+                    const int batchSize = 1000;
+                    for (int i = 0; i < newPermissionIds.Count; i += batchSize)
+                    {
+                        var batch = newPermissionIds.Skip(i).Take(batchSize);
+                        var values = string.Join(",", batch.Select(id => $"({roleId}, {id})"));
+                        await _unitOfWork.Context.Database.ExecuteSqlRawAsync(
+                            $"INSERT INTO RolePermissions (RoleId, PermissionId) VALUES {values}");
+                        Console.WriteLine($"[DEBUG] Inserted batch {i / batchSize + 1} of {(newPermissionIds.Count + batchSize - 1) / batchSize}");
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("[DEBUG] No permissions to insert");
+                }
+
+                await transaction.CommitAsync();
+                Console.WriteLine("[DEBUG] Permissions sync completed successfully");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[DEBUG] Error in SyncRolePermissionsWithSql: {ex.Message}");
+                await transaction.RollbackAsync();
+                throw;
+            }
+        }
+
+        private async Task SyncRoleCategoriesWithSql(int roleId, List<int> newCategoryIds)
+        {
+            using var transaction = await _unitOfWork.Context.Database.BeginTransactionAsync();
+            try
+            {
+                // Always delete existing categories first
+                await _unitOfWork.Context.Database.ExecuteSqlRawAsync(
+                    "DELETE FROM RoleCategories WHERE RoleId = {0}", roleId);
+
+                // Only insert new categories if there are any
+                if (newCategoryIds.Any())
+                {
+                    // Insert new categories in batches
+                    const int batchSize = 1000;
+                    for (int i = 0; i < newCategoryIds.Count; i += batchSize)
+                    {
+                        var batch = newCategoryIds.Skip(i).Take(batchSize);
+                        var values = string.Join(",", batch.Select(id => $"({roleId}, {id})"));
+                        await _unitOfWork.Context.Database.ExecuteSqlRawAsync(
+                            $"INSERT INTO RoleCategories (RoleId, CategoryId) VALUES {values}");
+                    }
+                }
+
+                await transaction.CommitAsync();
+            }
+            catch
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
+        }
+
+        private async Task SyncRoleProductsWithSql(int roleId, List<int> newProductIds)
+        {
+            using var transaction = await _unitOfWork.Context.Database.BeginTransactionAsync();
+            try
+            {
+                // Always delete existing products first
+                await _unitOfWork.Context.Database.ExecuteSqlRawAsync(
+                    "DELETE FROM RoleProducts WHERE RoleId = {0}", roleId);
+
+                // Only insert new products if there are any
+                if (newProductIds.Any())
+                {
+                    // Insert new products in batches
+                    const int batchSize = 1000;
+                    for (int i = 0; i < newProductIds.Count; i += batchSize)
+                    {
+                        var batch = newProductIds.Skip(i).Take(batchSize);
+                        var values = string.Join(",", batch.Select(id => $"({roleId}, {id})"));
+                        await _unitOfWork.Context.Database.ExecuteSqlRawAsync(
+                            $"INSERT INTO RoleProducts (RoleId, ProductId) VALUES {values}");
+                    }
+                }
+
+                await transaction.CommitAsync();
+            }
+            catch
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
+        }
+
+        private async Task SyncRoleSubCategoriesWithSql(int roleId, List<int> newSubCategoryIds)
+        {
+            using var transaction = await _unitOfWork.Context.Database.BeginTransactionAsync();
+            try
+            {
+                // Always delete existing sub-categories first
+                await _unitOfWork.Context.Database.ExecuteSqlRawAsync(
+                    "DELETE FROM RoleSubCategories WHERE RoleId = {0}", roleId);
+
+                // Only insert new sub-categories if there are any
+                if (newSubCategoryIds.Any())
+                {
+                    // Insert new sub-categories in batches
+                    const int batchSize = 1000;
+                    for (int i = 0; i < newSubCategoryIds.Count; i += batchSize)
+                    {
+                        var batch = newSubCategoryIds.Skip(i).Take(batchSize);
+                        var values = string.Join(",", batch.Select(id => $"({roleId}, {id})"));
+                        await _unitOfWork.Context.Database.ExecuteSqlRawAsync(
+                            $"INSERT INTO RoleSubCategories (RoleId, SubCategoryId) VALUES {values}");
+                    }
+                }
+
+                await transaction.CommitAsync();
+            }
+            catch
+            {
+                await transaction.RollbackAsync();
+                throw;
             }
         }
     }

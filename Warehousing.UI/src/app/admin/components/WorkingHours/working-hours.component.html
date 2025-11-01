@@ -1,0 +1,317 @@
+<div class="working-hours-container">
+  <!-- Header Section -->
+  <div class="page-header">
+    <div class="header-content">
+      <div class="header-info">
+        <h1 class="page-title">
+          <i class="bi bi-calendar-check"></i>
+          {{ 'BREADCRUMB.WORKING_HOURS' | translate }}
+        </h1>
+        <p class="page-subtitle">{{ 'COMMON.CONFIGURE_WORKING_HOURS' | translate }}</p>
+      </div>
+      <div class="header-actions">
+        <button class="btn btn-outline-light" (click)="loadWorkingHours()">
+          <i class="bi bi-arrow-clockwise"></i>
+          {{ 'COMMON.REFRESH' | translate }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Status Overview -->
+  <div class="status-overview" *ngIf="workingHours">
+    <div class="status-card clickable" 
+         [ngClass]="isWorkingHoursActive ? 'status-active' : 'status-inactive'"
+         (click)="onStatusClick()"
+         title="Click to edit working hours">
+      <div class="status-indicator">
+        <i [ngClass]="isWorkingHoursActive ? 'bi bi-check-circle-fill' : 'bi bi-x-circle-fill'"></i>
+      </div>
+      <div class="status-content">
+        <h3 [ngClass]="currentStatusClass">{{ currentStatusMessage }}</h3>
+        <div class="status-details">
+          <div class="status-item">
+            <i class="bi bi-clock"></i>
+            <span>{{ 'COMMON.CURRENT_TIME' | translate }}: {{ currentTime | date:'medium' }}</span>
+          </div>
+          <div class="status-item" *ngIf="workingHours">
+            <i class="bi bi-calendar-range"></i>
+            <span>{{ 'COMMON.WORKING_DAYS' | translate }}: {{ getDayName(workingHours.startDay) }} - {{ getDayName(workingHours.endDay) }}</span>
+          </div>
+          <div class="status-item" *ngIf="workingHours">
+            <i class="bi bi-clock-history"></i>
+            <span>{{ 'COMMON.WORKING_HOURS' | translate }}: {{ workingHours.startTime }} - {{ workingHours.endTime }}</span>
+          </div>
+        </div>
+        <div class="click-hint">
+          <i class="bi bi-cursor"></i>
+          <span>{{ 'COMMON.CLICK_TO_EDIT' | translate }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Working Hours Configuration -->
+  <div class="config-section" *ngIf="workingHours && !loading">
+    <div class="config-card">
+      <div class="card-header">
+        <h3>
+          <i class="bi bi-gear"></i>
+          {{ 'COMMON.WORKING_HOURS_CONFIGURATION' | translate }}
+        </h3>
+      </div>
+      <div class="card-body">
+        <form [formGroup]="workingHoursForm" (ngSubmit)="saveWorkingHours()">
+          <div class="form-grid">
+            <!-- Basic Information -->
+            <div class="form-section">
+              <h4>{{ 'COMMON.BASIC_INFORMATION' | translate }}</h4>
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label">
+                    <i class="bi bi-tag"></i>
+                    {{ 'COMMON.CONFIGURATION_NAME' | translate }}
+                  </label>
+                  <input type="text" class="form-control" formControlName="name" [placeholder]="'COMMON.ENTER_NAME' | translate">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">
+                    <i class="bi bi-file-text"></i>
+                    {{ 'COMMON.DESCRIPTION' | translate }}
+                  </label>
+                  <input type="text" class="form-control" formControlName="description" [placeholder]="'COMMON.ENTER_DESCRIPTION' | translate">
+                </div>
+              </div>
+            </div>
+
+            <!-- Working Schedule -->
+            <div class="form-section">
+              <h4>{{ 'COMMON.WORKING_SCHEDULE' | translate }}</h4>
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label">
+                    <i class="bi bi-calendar-range"></i>
+                    {{ 'COMMON.WORKING_DAYS' | translate }}
+                  </label>
+                  <div class="day-selector">
+                    <select class="form-control" formControlName="startDay">
+                      <option *ngFor="let day of dayOfWeekOptions" [value]="day.value">{{ day.name }}</option>
+                    </select>
+                    <span class="day-separator">{{ 'COMMON.TO' | translate }}</span>
+                    <select class="form-control" formControlName="endDay">
+                      <option *ngFor="let day of dayOfWeekOptions" [value]="day.value">{{ day.name }}</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">
+                    <i class="bi bi-clock"></i>
+                    {{ 'COMMON.WORKING_HOURS' | translate }}
+                  </label>
+                  <div class="time-selector">
+                    <input type="time" class="form-control" formControlName="startTime">
+                    <span class="time-separator">{{ 'COMMON.TO' | translate }}</span>
+                    <input type="time" class="form-control" formControlName="endTime">
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Options -->
+            <div class="form-section">
+              <h4>{{ 'COMMON.OPTIONS' | translate }}</h4>
+              <div class="options-grid">
+                <div class="option-item">
+                  <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" formControlName="isActive" id="isActive">
+                    <label class="form-check-label" for="isActive">
+                      <i class="bi bi-power"></i>
+                      {{ 'COMMON.ACTIVE_CONFIGURATION' | translate }}
+                    </label>
+                  </div>
+                </div>
+                <div class="option-item">
+                  <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" formControlName="allowWeekends" id="allowWeekends">
+                    <label class="form-check-label" for="allowWeekends">
+                      <i class="bi bi-calendar-week"></i>
+                      {{ 'COMMON.ALLOW_WEEKENDS' | translate }}
+                    </label>
+                  </div>
+                </div>
+                <div class="option-item">
+                  <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" formControlName="allowHolidays" id="allowHolidays">
+                    <label class="form-check-label" for="allowHolidays">
+                      <i class="bi bi-calendar-x"></i>
+                      {{ 'COMMON.ALLOW_HOLIDAYS' | translate }}
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Save Button -->
+          <div class="form-actions">
+            <button type="submit" class="btn btn-primary btn-lg" [disabled]="workingHoursForm.invalid || loading">
+              <i class="bi bi-check-circle" *ngIf="!loading"></i>
+              <span class="spinner-border spinner-border-sm me-2" *ngIf="loading"></span>
+              {{ loading ? ('COMMON.SAVING' | translate) : ('COMMON.SAVE_CONFIGURATION' | translate) }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Exceptions Management -->
+  <div class="exceptions-section" *ngIf="workingHours && !loading">
+    <div class="exceptions-card">
+      <div class="card-header">
+        <div class="header-content">
+          <h3>
+            <i class="bi bi-calendar-x"></i>
+            Working Hours Exceptions
+          </h3>
+          <button class="btn btn-primary" (click)="toggleExceptionForm()">
+            <i class="bi bi-plus-circle"></i>
+            Add Exception
+          </button>
+        </div>
+      </div>
+      <div class="card-body">
+        <!-- Exception Form -->
+        <div class="exception-form" *ngIf="showExceptionForm">
+          <div class="form-header">
+            <h4>
+              <i class="bi bi-plus-circle"></i>
+              {{ editingException ? 'Edit Exception' : 'Add New Exception' }}
+            </h4>
+          </div>
+          <form [formGroup]="exceptionForm" (ngSubmit)="editingException ? updateException() : addException()">
+            <div class="form-grid">
+              <div class="form-group">
+                <label class="form-label">Exception Date</label>
+                <input type="date" class="form-control" formControlName="exceptionDate">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Start Time (Optional)</label>
+                <input type="time" class="form-control" formControlName="startTime">
+              </div>
+              <div class="form-group">
+                <label class="form-label">End Time (Optional)</label>
+                <input type="time" class="form-control" formControlName="endTime">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Reason</label>
+                <input type="text" class="form-control" formControlName="reason" placeholder="Enter reason">
+              </div>
+              <div class="form-group full-width">
+                <div class="form-check form-switch">
+                  <input class="form-check-input" type="checkbox" formControlName="isWorkingDay" id="isWorkingDay">
+                  <label class="form-check-label" for="isWorkingDay">
+                    <i class="bi bi-calendar-check"></i>
+                    Is Working Day (uncheck for holidays/closures)
+                  </label>
+                </div>
+              </div>
+            </div>
+            <div class="form-actions">
+              <button type="submit" class="btn btn-success" [disabled]="exceptionForm.invalid">
+                <i class="bi bi-check-circle"></i>
+                {{ editingException ? 'Update Exception' : 'Add Exception' }}
+              </button>
+              <button type="button" class="btn btn-outline-secondary" (click)="resetExceptionForm()">
+                <i class="bi bi-x-circle"></i>
+                Cancel
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Exceptions List -->
+        <div class="exceptions-list" *ngIf="workingHours && workingHours.exceptions && workingHours.exceptions.length > 0; else noExceptions">
+          <div class="exceptions-table">
+            <div class="table-header">
+              <div class="header-cell">Date</div>
+              <div class="header-cell">Start Time</div>
+              <div class="header-cell">End Time</div>
+              <div class="header-cell">Reason</div>
+              <div class="header-cell">Type</div>
+              <div class="header-cell">Actions</div>
+            </div>
+            <div class="table-body">
+              <div class="table-row" *ngFor="let exception of workingHours.exceptions; trackBy: trackByExceptionId">
+                <div class="table-cell">
+                  <div class="date-info">
+                    <i class="bi bi-calendar-date"></i>
+                    <span>{{ exception.exceptionDate | date:'MMM dd, yyyy' }}</span>
+                  </div>
+                </div>
+                <div class="table-cell">
+                  <span *ngIf="exception.startTime; else noTime" class="time-badge">
+                    {{ exception.startTime }}
+                  </span>
+                  <ng-template #noTime>
+                    <span class="no-data">-</span>
+                  </ng-template>
+                </div>
+                <div class="table-cell">
+                  <span *ngIf="exception.endTime; else noTime" class="time-badge">
+                    {{ exception.endTime }}
+                  </span>
+                  <ng-template #noTime>
+                    <span class="no-data">-</span>
+                  </ng-template>
+                </div>
+                <div class="table-cell">
+                  <span class="reason-text">{{ exception.reason }}</span>
+                </div>
+                <div class="table-cell">
+                  <span class="type-badge" [ngClass]="exception.isWorkingDay ? 'working-day' : 'closed-day'">
+                    <i [ngClass]="exception.isWorkingDay ? 'bi bi-check-circle' : 'bi bi-x-circle'"></i>
+                    {{ exception.isWorkingDay ? 'Working Day' : 'Closed Day' }}
+                  </span>
+                </div>
+                <div class="table-cell">
+                  <div class="action-buttons">
+                    <button class="btn btn-sm btn-outline-primary" (click)="editException(exception)" title="Edit">
+                      <i class="bi bi-pencil"></i>
+                    </button>
+                    <button class="btn btn-sm btn-outline-danger" (click)="deleteException(exception)" title="Delete">
+                      <i class="bi bi-trash"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <ng-template #noExceptions>
+          <div class="empty-state">
+            <i class="bi bi-calendar-x"></i>
+            <h4>No exceptions configured</h4>
+            <p>Add exceptions for holidays, maintenance days, or special working hours.</p>
+            <button class="btn btn-primary" (click)="toggleExceptionForm()">
+              <i class="bi bi-plus-circle"></i>
+              Add First Exception
+            </button>
+          </div>
+        </ng-template>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div class="loading-section" *ngIf="loading">
+    <div class="loading-card">
+      <div class="loading-content">
+        <div class="spinner"></div>
+        <h4>Loading working hours configuration...</h4>
+        <p>Please wait while we fetch the latest settings.</p>
+      </div>
+    </div>
+  </div>
+</div>

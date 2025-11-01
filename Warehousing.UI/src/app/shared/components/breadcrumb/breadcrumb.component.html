@@ -1,25 +1,36 @@
 <nav aria-label="breadcrumb" class="mb-6" *ngIf="breadcrumbs.length > 0" dir="rtl">
-  <ol class="flex items-center space-x-1 space-x-reverse">
+  <ol class="flex items-center flex-wrap gap-2">
     <li *ngFor="let breadcrumb of breadcrumbs; let last = last; let i = index" 
         class="flex items-center">
-      <!-- Breadcrumb Item -->
-      <div class="flex items-center">
-        <a *ngIf="!last && breadcrumb.route" 
-           [routerLink]="breadcrumb.route" 
-           class="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-all duration-200 group">
-          <i class="bi bi-house mr-2 text-gray-400 group-hover:text-gray-600 transition-colors" *ngIf="i === 0"></i>
+      <!-- Clickable Breadcrumb Item (not last) -->
+      <a *ngIf="!last && breadcrumb.route" 
+         [routerLink]="breadcrumb.route" 
+         class="group inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-gradient-to-l hover:from-blue-50 hover:to-indigo-50 rounded-xl transition-all duration-300 shadow-sm hover:shadow-md border border-transparent hover:border-blue-200">
+        <i *ngIf="i === 0" class="bi bi-house-door text-base text-gray-500 group-hover:text-blue-600 transition-colors"></i>
+        <span class="relative">
           {{ breadcrumb.label }}
-        </a>
-        <span *ngIf="last || !breadcrumb.route" 
-              class="inline-flex items-center px-3 py-2 text-sm font-semibold text-gray-900 bg-blue-50 rounded-lg">
-          <i class="bi bi-chevron-left mr-2 text-blue-600" *ngIf="i > 0"></i>
-          {{ breadcrumb.label }}
+          <span class="absolute bottom-0 right-0 w-0 h-0.5 bg-gradient-to-r from-blue-500 to-indigo-500 group-hover:w-full transition-all duration-300"></span>
         </span>
-      </div>
+      </a>
       
-      <!-- Separator -->
-      <div *ngIf="!last" class="flex items-center mx-2">
-        <i class="bi bi-chevron-left text-gray-400 text-sm"></i>
+      <!-- Current/Last Breadcrumb Item (non-clickable) -->
+      <span *ngIf="last || !breadcrumb.route" 
+            class="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl shadow-lg ring-2 ring-blue-200 ring-opacity-50">
+        <i *ngIf="i > 0" class="bi bi-check-circle text-base opacity-90"></i>
+        <span>{{ breadcrumb.label }}</span>
+      </span>
+      
+      <!-- Beautiful Separator with Animation -->
+      <div *ngIf="!last" class="flex items-center mx-1">
+        <svg class="w-5 h-5 text-gray-400 transform rotate-180 transition-transform duration-200" 
+             fill="none" 
+             stroke="currentColor" 
+             viewBox="0 0 24 24">
+          <path stroke-linecap="round" 
+                stroke-linejoin="round" 
+                stroke-width="2" 
+                d="M9 5l7 7-7 7"></path>
+        </svg>
       </div>
     </li>
   </ol>

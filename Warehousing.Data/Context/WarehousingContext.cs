@@ -4,6 +4,9 @@ using Warehousing.Data.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Http;
 using System.Security.Claims;
+using Microsoft.EntityFrameworkCore.Design;
+using Microsoft.Extensions.Configuration;
+using System.IO;
 
 
 namespace Warehousing.Data.Context
@@ -117,6 +120,20 @@ namespace Warehousing.Data.Context
                 .HasForeignKey(oi => oi.VariantId)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            // User Activity Log Configuration
+            modelBuilder.Entity<UserActivityLog>()
+                .HasOne(ual => ual.User)
+                .WithMany()
+                .HasForeignKey(ual => ual.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Working Hours Configuration
+            modelBuilder.Entity<WorkingHoursException>()
+                .HasOne(whe => whe.WorkingHours)
+                .WithMany(wh => wh.Exceptions)
+                .HasForeignKey(whe => whe.WorkingHoursId)
+                .OnDelete(DeleteBehavior.Cascade);
+
             // Inventory Variants Configuration
             modelBuilder.Entity<Inventory>()
                 .HasOne(i => i.Variant)
@@ -169,6 +186,13 @@ namespace Warehousing.Data.Context
         public DbSet<ProductModifierOption> ProductModifierOptions { get; set; }
         public DbSet<ProductModifierGroup> ProductModifierGroups { get; set; }
         public DbSet<OrderItemModifier> OrderItemModifiers { get; set; }
+        
+        // User Activity Logging
+        public DbSet<UserActivityLog> UserActivityLogs { get; set; }
+        
+        // Working Hours Configuration
+        public DbSet<WorkingHours> WorkingHours { get; set; }
+        public DbSet<WorkingHoursException> WorkingHoursExceptions { get; set; }
 
 
         private string HashPassword(string password)
@@ -199,6 +223,27 @@ namespace Warehousing.Data.Context
                 }
             }
             return base.SaveChangesAsync(cancellationToken);
+        }
+    }
+
+    public class WarehousingContextFactory : IDesignTimeDbContextFactory<WarehousingContext>
+    {
+        public WarehousingContext CreateDbContext(string[] args)
+        {
+            var solutionDir = Directory.GetCurrentDirectory();
+            // Attempt to locate the API project's appsettings for connection strings
+            var apiProjectPath = Path.Combine(solutionDir, "..", "Warehousing.Api");
+            var configBuilder = new ConfigurationBuilder()
+                .SetBasePath(apiProjectPath)
+                .AddJsonFile("appsettings.json", optional: true)
+                .AddJsonFile("appsettings.Development.json", optional: true);
+
+            var config = configBuilder.Build();
+
+            var builder = new DbContextOptionsBuilder<WarehousingContext>();
+            var connectionString = config.GetConnectionString("DefaultConnection");
+            builder.UseSqlServer(connectionString);
+            return new WarehousingContext(builder.Options, null!);
         }
     }
 }

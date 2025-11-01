@@ -1,9 +1,9 @@
 <div class="min-h-screen bg-gray-50 py-8">
   <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
     <!-- Header -->
-    <div class="text-center mb-8">
-      <h1 class="text-3xl font-bold text-gray-900 mb-2">سلة الطلبات</h1>
-      <div class="w-24 h-1 bg-gradient-to-r from-blue-600 to-indigo-600 mx-auto rounded-full"></div>
+    <div class="text-center mb-6 sm:mb-8 px-4">
+      <h1 class="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 mb-2">سلة الطلبات</h1>
+      <div class="w-16 sm:w-24 h-1 bg-gradient-to-r from-blue-600 to-indigo-600 mx-auto rounded-full"></div>
     </div>
 
     <!-- Loading Indicator -->
@@ -14,43 +14,45 @@
 
     <div [formGroup]="cartService.cartForm" *ngIf="!isLoading">
       <!-- Supplier / Customer Selection -->
-      <div class="bg-white rounded-2xl shadow-lg p-6 mb-6">
+      <div class="bg-white rounded-2xl shadow-lg p-4 sm:p-6 mb-6">
         <div class="flex justify-center">
           <div class="w-full max-w-2xl" *ngIf="cartService.orderTypeId == 1">
-            <div class="flex items-end gap-4">
-              <div class="flex-1">
+            <div class="flex flex-col sm:flex-row items-end gap-3 sm:gap-4">
+              <div class="flex-1 w-full">
                 <div class="relative">
-                  <select class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200" 
+                  <select class="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-sm sm:text-base" 
                           id="supplierId" formControlName="supplierId">
                     <option value="">اختر المورد</option>
                     <option *ngFor="let supplier of suppliers" [value]="supplier.id">{{ supplier.name }}</option>
                   </select>
-                  <label class="absolute left-4 -top-2.5 text-sm text-gray-600 bg-white px-1">المورد</label>
+                  <label class="absolute left-3 sm:left-4 -top-2.5 text-xs sm:text-sm text-gray-600 bg-white px-1">المورد</label>
                 </div>
               </div>
-              <button class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl text-sm font-semibold hover:from-green-600 hover:to-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-all duration-200 transform hover:scale-105 shadow-lg" 
+              <button class="inline-flex items-center px-4 sm:px-6 py-2 sm:py-3 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl text-xs sm:text-sm font-semibold hover:from-green-600 hover:to-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-all duration-200 transform hover:scale-105 shadow-lg w-full sm:w-auto" 
                       (click)="openSupplierForm()">
-                <i class="bi bi-plus-circle mr-2 text-lg"></i>
-                إضافة مورد جديد
+                <i class="bi bi-plus-circle mr-1 sm:mr-2 text-sm sm:text-lg"></i>
+                <span class="hidden sm:inline">إضافة مورد جديد</span>
+                <span class="sm:hidden">إضافة مورد</span>
               </button>
             </div>
           </div>
           <div class="w-full max-w-2xl" *ngIf="cartService.orderTypeId == 2">
-            <div class="flex items-end gap-4">
-              <div class="flex-1">
+            <div class="flex flex-col sm:flex-row items-end gap-3 sm:gap-4">
+              <div class="flex-1 w-full">
                 <div class="relative">
-                  <select class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200" 
+                  <select class="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-sm sm:text-base" 
                           id="customerId" formControlName="customerId">
                     <option value="">اختر العميل</option>
                     <option *ngFor="let customer of customers" [value]="customer.id">{{ customer.nameAr }}</option>
                   </select>
-                  <label class="absolute left-4 -top-2.5 text-sm text-gray-600 bg-white px-1">العميل</label>
+                  <label class="absolute left-3 sm:left-4 -top-2.5 text-xs sm:text-sm text-gray-600 bg-white px-1">العميل</label>
                 </div>
               </div>
-              <button class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl text-sm font-semibold hover:from-blue-600 hover:to-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200 transform hover:scale-105 shadow-lg" 
+              <button class="inline-flex items-center px-4 sm:px-6 py-2 sm:py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl text-xs sm:text-sm font-semibold hover:from-blue-600 hover:to-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200 transform hover:scale-105 shadow-lg w-full sm:w-auto" 
                       (click)="openCustomerForm()">
-                <i class="bi bi-plus-circle mr-2 text-lg"></i>
-                إضافة عميل جديد
+                <i class="bi bi-plus-circle mr-1 sm:mr-2 text-sm sm:text-lg"></i>
+                <span class="hidden sm:inline">إضافة عميل جديد</span>
+                <span class="sm:hidden">إضافة عميل</span>
               </button>
             </div>
           </div>
@@ -135,7 +137,9 @@
                          class="w-20 px-3 py-2 text-center border-0 focus:outline-none focus:ring-0" 
                          [max]="getMaxQuantityForItem(item)"
                          min="0"
-                         (change)="onQuantityChange(item)" />
+                         (input)="onQuantityInput(item, $event)"
+                         (change)="onQuantityChange(item)"
+                         (blur)="onQuantityBlur(item)" />
                   
                   <button class="px-3 py-2 text-green-600 hover:bg-green-50 rounded-l-lg transition-colors" 
                           (click)="increaseQuantity(item.get('productId')?.value)"
@@ -196,7 +200,8 @@
               حفظ
             </button>
             
-            <button class="w-full bg-red-600 text-white py-3 px-6 rounded-xl font-semibold hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-all duration-200 transform hover:scale-105" 
+            <button *ngIf="hasAnyPermission(permissionsEnum.CANCEL_SALE_ORDER, permissionsEnum.CANCEL_PURCHASE_ORDER)"
+                    class="w-full bg-red-600 text-white py-3 px-6 rounded-xl font-semibold hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-all duration-200 transform hover:scale-105" 
                     (click)="onCancel()">
               <i class="bi bi-x-circle mr-2"></i>
               إلغاء
@@ -224,20 +229,22 @@
           
           <!-- Approve Order -->
           <ng-container *ngIf="
-              hasAnyPermission(permissionsEnum.PRINT_SALE_ORDER) 
+              hasAnyPermission(permissionsEnum.APPROVE_SALE_ORDER, permissionsEnum.APPROVE_PURCHASE_ORDER, permissionsEnum.CANCEL_SALE_ORDER, permissionsEnum.CANCEL_PURCHASE_ORDER) 
               && cartService.cartItems.length > 0
               && cartService.cartForm.get('statusId')?.value != '6'
               && cartService.cartForm.get('statusId')?.value != '11'
               && cartService.cartForm.get('statusId')?.value != '8'
               && cartService.cartForm.get('statusId')?.value != null
             ">
-            <button class="w-full bg-red-600 text-white py-3 px-6 rounded-xl font-semibold hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-all duration-200 transform hover:scale-105" 
+            <button *ngIf="hasAnyPermission(permissionsEnum.CANCEL_SALE_ORDER, permissionsEnum.CANCEL_PURCHASE_ORDER)"
+                    class="w-full bg-red-600 text-white py-3 px-6 rounded-xl font-semibold hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-all duration-200 transform hover:scale-105" 
                     (click)="onCancel()">
               <i class="bi bi-x-circle mr-2"></i>
               إلغاء
             </button>
             
-            <button class="w-full bg-green-600 text-white py-3 px-6 rounded-xl font-semibold hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-all duration-200 transform hover:scale-105" 
+            <button *ngIf="hasAnyPermission(permissionsEnum.APPROVE_SALE_ORDER, permissionsEnum.APPROVE_PURCHASE_ORDER)"
+                    class="w-full bg-green-600 text-white py-3 px-6 rounded-xl font-semibold hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-all duration-200 transform hover:scale-105" 
                     (click)="onConfirm(cartService.cartForm.get('id')?.value)">
               <i class="bi bi-check-circle mr-2"></i>
               اعتماد الطلب
@@ -246,16 +253,17 @@
           
           <!-- Order Management -->
           <ng-container *ngIf="
-              hasAnyPermission(permissionsEnum.PRINT_SALE_ORDER) 
-              && cartService.cartItems.length > 0
+              cartService.cartItems.length > 0
               && cartService.cartForm.get('statusId')?.value == '8'
             ">
+            <!-- Clear Cart - Always available for all users -->
             <button class="w-full bg-gray-600 text-white py-3 px-6 rounded-xl font-semibold hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-all duration-200 transform hover:scale-105" 
                     (click)="cartService.clearCart()">
               <i class="bi bi-trash mr-2"></i>
               إفراغ السلة
             </button>
             
+            <!-- Edit Order - Only for users with EDIT_APPROVED_INVOICE permission -->
             <button *ngIf="hasAnyPermission(permissionsEnum.EDIT_APPROVED_INVOICE)"
                     class="w-full bg-blue-600 text-white py-3 px-6 rounded-xl font-semibold hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200 transform hover:scale-105" 
                     (click)="onEdit(cartService.cartForm.get('id')?.value)">
@@ -263,7 +271,8 @@
               {{ 'CART_DETAILS.EDIT_ORDER' | translate }}
             </button>
             
-            <button *ngIf="hasAnyPermission(permissionsEnum.EDIT_APPROVED_INVOICE)"
+            <!-- Cancel Order - Only for users with CANCEL permissions -->
+            <button *ngIf="hasAnyPermission(permissionsEnum.CANCEL_SALE_ORDER, permissionsEnum.CANCEL_PURCHASE_ORDER)"
                     class="w-full bg-red-600 text-white py-3 px-6 rounded-xl font-semibold hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-all duration-200 transform hover:scale-105" 
                     (click)="onEdit(cartService.cartForm.get('id')?.value)">
               <i class="bi bi-x-circle mr-2"></i>
@@ -429,7 +438,7 @@
               </span>
             </div>
           </td>
-          <td style="padding: 12px; border: 1px solid #dee2e6; vertical-align: top;">{{ cartService.orderObject.items[i].product?.unit?.nameAr }}</td>
+          <td style="padding: 12px; border: 1px solid #dee2e6; vertical-align: top;">{{ cartService.orderObject?.items?.[i]?.product?.unit?.nameAr || 'غير محدد' }}</td>
           <td style="padding: 12px; border: 1px solid #dee2e6; vertical-align: top; text-align: center;">{{ item.get('quantity')?.value }}</td>
           <td style="padding: 12px; border: 1px solid #dee2e6; vertical-align: top; text-align: center;">
             {{ 

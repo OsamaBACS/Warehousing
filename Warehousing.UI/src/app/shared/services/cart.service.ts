@@ -29,13 +29,31 @@ export class CartService {
   orderObject!: OrderDto;
   stores: Store[] = [];
 
+  // Ensure cartForm is always initialized
+  private ensureCartFormInitialized(): void {
+    if (!this.cartForm) {
+      this.cartForm = this.createCartForm();
+    }
+    // Always ensure orderTypeId is in sync
+    this.syncOrderTypeId();
+  }
+
+  // Sync orderTypeId between service and form
+  private syncOrderTypeId(): void {
+    if (this.cartForm && this.cartForm.get('orderTypeId')) {
+      const formOrderTypeId = this.cartForm.get('orderTypeId')?.value;
+      if (formOrderTypeId !== this.orderTypeId) {
+        this.cartForm.patchValue({ orderTypeId: this.orderTypeId });
+      }
+    }
+  }
+
   // Method to set orderTypeId and update form
   setOrderTypeId(orderTypeId: number): void {
     this.orderTypeId = orderTypeId;
-    if (this.cartForm) {
-      this.cartForm.patchValue({ orderTypeId: orderTypeId });
-      this.saveCartToLocalStorage();
-    }
+    this.ensureCartFormInitialized();
+    this.cartForm.patchValue({ orderTypeId: orderTypeId });
+    this.saveCartToLocalStorage();
   }
 
   // Load stores from service
@@ -59,14 +77,24 @@ export class CartService {
 
   private loadCart(): void {
     const savedcartForm = localStorage.getItem('cartForm');
+    
     if (savedcartForm) {
       const parsed = JSON.parse(savedcartForm);
-      this.orderTypeId = parsed.orderTypeId || this.orderTypeId; // Update the service property
+      
+      // Handle orderTypeId: if it's null/undefined/0, use default (1)
+      // Only use saved value if it's a valid order type (1 or 2)
+      const savedOrderTypeId = parsed.orderTypeId;
+      if (savedOrderTypeId === 1 || savedOrderTypeId === 2) {
+        this.orderTypeId = savedOrderTypeId;
+      } else {
+        this.orderTypeId = 1; // Default to Purchase
+      }
+      
       this.cartForm = this.fb.group({
         id: [parsed.id || 0],
         orderDate: [parsed.orderDate || this.formatDate(new Date().toString())],
         totalAmount: [parsed.totalAmount || 0],
-        orderTypeId: [parsed.orderTypeId || this.orderTypeId],
+        orderTypeId: [this.orderTypeId], // Use the validated orderTypeId
         customerId: [parsed?.customerId || null],
         supplierId: [parsed?.supplierId || null],
         statusId: [parsed.statusId || null],
@@ -77,8 +105,20 @@ export class CartService {
     } else {
       this.cartForm = this.createCartForm();
     }
-    if (savedcartForm) {
+    
+    // Only set cart count to 1 if there are actual items in the cart
+    // Check if cart has items before setting count
+    const hasItems = this.cartItems && this.cartItems.length > 0;
+    if (hasItems) {
       this.cartCount$.next(1);
+    } else {
+      this.cartCount$.next(0);
+      // If cart form exists but has no items, clear it
+      if (savedcartForm) {
+        console.log('Cart form exists but has no items, clearing...');
+        localStorage.removeItem('cartForm');
+        this.cartForm = this.createCartForm();
+      }
     }
   }
 
@@ -135,7 +175,18 @@ export class CartService {
 
   // Save cart to localStorage
   saveCartToLocalStorage(): void {
+    this.ensureCartFormInitialized();
     const cart = this.cartForm.value;
+    
+    // Ensure orderTypeId is always valid (1 or 2) before saving
+    if (!cart.orderTypeId || (cart.orderTypeId !== 1 && cart.orderTypeId !== 2)) {
+      cart.orderTypeId = this.orderTypeId; // Use service's orderTypeId
+    }
+    // Also ensure service's orderTypeId matches form's orderTypeId
+    if (cart.orderTypeId && (cart.orderTypeId === 1 || cart.orderTypeId === 2)) {
+      this.orderTypeId = cart.orderTypeId;
+    }
+    
     localStorage.setItem('cartForm', JSON.stringify(cart));
   }
 
@@ -155,10 +206,15 @@ export class CartService {
       return;
     }
 
+    // Ensure orderTypeId is valid before proceeding
+    this.ensureCartFormInitialized();
+
     const index = itemsArray.controls.findIndex(
       ctrl => ctrl.value.productId === product.id && 
                ctrl.value.storeId === storeId && 
-               ctrl.value.variantId === variantId
+               (ctrl.value.variantId === variantId || 
+                (ctrl.value.variantId === null && variantId === undefined) ||
+                (ctrl.value.variantId === undefined && variantId === null))
     );
 
     if (index > -1) {
@@ -353,6 +409,7 @@ export class CartService {
 
   // Calculate total
   calculateTotal(): void {
+    this.ensureCartFormInitialized(); // Ensure form is initialized and orderTypeId is synced
     const itemsArray = this.cartItems;
     const totalAmountControl = this.cartForm.get('totalAmount');
 
@@ -411,7 +468,8 @@ export class CartService {
 
       if (itemsArray.length <= 0) {
         this.cartCount$.next(0);
-        this.orderTypeId = 0; // Reset orderTypeId when cart becomes empty
+        // Don't reset orderTypeId to 0 - keep the current order type
+        // this.orderTypeId = 0; // This was causing the foreign key constraint error
       }
     }
   }
@@ -419,12 +477,13 @@ export class CartService {
   // Clear cart
   clearCart(): void {
     this.cartItems.clear();
-    this.orderTypeId = 0; // Reset orderTypeId first
+    // Don't reset orderTypeId to 0 - keep the current order type
+    // this.orderTypeId = 0; // This was causing the foreign key constraint error
     this.cartForm.reset({
       id: 0,
       orderDate: this.formatDate(new Date().toString()),
       totalAmount: 0,
-      orderTypeId: 0, // Use 0 instead of this.orderTypeId
+      orderTypeId: this.orderTypeId, // Use current orderTypeId instead of 0
       customerId: null,
       supplierId: null,
       statusId: null
@@ -460,7 +519,12 @@ export class CartService {
 
   // Helper methods
   get cartItems(): FormArray {
-    return this.cartForm.get('items') as FormArray;
+    if (!this.cartForm) {
+      // Initialize cartForm if it's not initialized yet
+      this.cartForm = this.createCartForm();
+    }
+    const items = this.cartForm?.get('items') as FormArray;
+    return items || this.fb.array([]); // Return empty FormArray if items is null/undefined
   }
 
   private formatDate(dateString: string): string {
@@ -510,7 +574,8 @@ export class CartService {
       
       if (itemsArray.length <= 0) {
         this.cartCount$.next(0);
-        this.orderTypeId = 0;
+        // Don't reset orderTypeId to 0 - keep the current order type
+        // this.orderTypeId = 0; // This was causing the foreign key constraint error
       }
     }
   }

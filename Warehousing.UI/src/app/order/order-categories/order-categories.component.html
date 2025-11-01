@@ -1,13 +1,13 @@
 <div class="min-h-screen bg-gray-50 py-8">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
     <!-- Header -->
-    <div class="text-center mb-12">
-      <h1 class="text-3xl font-bold text-gray-900 mb-4">اختر التصنيف</h1>
-      <p class="text-lg text-gray-600">اختر التصنيف المناسب لتصفح المنتجات</p>
+    <div class="text-center mb-8 sm:mb-12 px-4">
+      <h1 class="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 mb-2 sm:mb-4">اختر التصنيف</h1>
+      <p class="text-sm sm:text-base lg:text-lg text-gray-600">اختر التصنيف المناسب لتصفح المنتجات</p>
     </div>
 
     <!-- Categories Grid -->
-    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-6" *ngIf="(categories$ | async) as categories">
+    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-3 sm:gap-4 lg:gap-6 px-4" *ngIf="(categories$ | async) as categories">
       <div *ngFor="let category of categories" class="group h-full">
         <div class="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 cursor-pointer overflow-hidden border border-gray-100 h-full flex flex-col" 
              (click)="onCardClick(category.id)">
@@ -25,13 +25,13 @@
           </div>
 
           <!-- Category Info -->
-          <div class="p-4 text-center flex flex-col flex-grow">
-            <h3 class="font-bold text-gray-900 text-sm mb-1 group-hover:text-blue-600 transition-colors">
+          <div class="p-2 sm:p-3 lg:p-4 text-center flex flex-col flex-grow">
+            <h3 class="font-bold text-gray-900 text-xs sm:text-sm mb-1 group-hover:text-blue-600 transition-colors">
               {{ category.nameAr }}
             </h3>
             <div class="flex-grow flex items-center justify-center">
               <p class="text-gray-500 text-xs leading-relaxed" *ngIf="category.description">
-                {{ category.description | slice:0:40 }}{{ (category.description && category.description.length > 40) ? '...' : '' }}
+                {{ category.description | slice:0:30 }}{{ (category.description && category.description.length > 30) ? '...' : '' }}
               </p>
             </div>
           </div>

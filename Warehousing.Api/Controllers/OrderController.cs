@@ -6,6 +6,7 @@ using Warehousing.Repo.Shared;
 using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Warehousing.Repo.Interfaces;
 
 namespace Warehousing.Api.Controllers
 {
@@ -15,11 +16,15 @@ namespace Warehousing.Api.Controllers
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
+        private readonly IWorkingHoursRepo _workingHoursRepo;
+        private readonly ILogger<OrderController> _logger;
 
-        public OrderController(IUnitOfWork unitOfWork, IMapper mapper)
+        public OrderController(IUnitOfWork unitOfWork, IMapper mapper, IWorkingHoursRepo workingHoursRepo, ILogger<OrderController> logger)
         {
             _unitOfWork = unitOfWork;
             _mapper = mapper;
+            _workingHoursRepo = workingHoursRepo;
+            _logger = logger;
         }
 
         [HttpGet]
@@ -262,6 +267,18 @@ namespace Warehousing.Api.Controllers
         {
             try
             {
+                // Working hours enforcement with per-role exceptions
+                var allowedRolesOutsideHours = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "Client" };
+                var userRoles = User?.Claims?.Where(c => c.Type == ClaimTypes.Role).Select(c => c.Value).ToList() ?? new List<string>();
+                var isAdmin = userRoles.Contains("Admin");
+                var isExceptionRole = userRoles.Any(r => allowedRolesOutsideHours.Contains(r));
+                var withinHours = await _workingHoursRepo.IsWithinWorkingHoursAsync(DateTime.Now);
+                if (!isAdmin && !isExceptionRole && !withinHours)
+                {
+                    _logger.LogWarning("Blocked SaveOrder outside working hours. User roles: {Roles}", string.Join(',', userRoles));
+                    return StatusCode(403, new { errorMessage = "Actions are restricted outside working hours. Please try during working hours." });
+                }
+
                 if (dto == null)
                 {
                     return BadRequest("Order Order Model is null!");

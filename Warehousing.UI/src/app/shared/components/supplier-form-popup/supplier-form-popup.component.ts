@@ -22,12 +22,12 @@ export class SupplierFormPopupComponent implements OnInit {
     @Inject(MAT_DIALOG_DATA) public data: any
   ) {
     this.supplierForm = this.fb.group({
-      nameAr: ['', [Validators.required, Validators.minLength(2)]],
-      nameEn: ['', [Validators.required, Validators.minLength(2)]],
+      id: [0],
+      name: ['', [Validators.required, Validators.minLength(2)]],
       phone: ['', [Validators.required, Validators.pattern(/^[0-9+\-\s()]+$/)]],
       email: ['', [Validators.email]],
       address: ['', [Validators.required, Validators.minLength(5)]],
-      contactPerson: ['', [Validators.required, Validators.minLength(2)]]
+      isActive: [true]
     });
   }
 
@@ -41,6 +41,7 @@ export class SupplierFormPopupComponent implements OnInit {
     if (this.supplierForm.valid) {
       this.isLoading = true;
       
+      // Use form values directly as they match the Supplier entity
       const supplierData = this.supplierForm.value;
       
       this.supplierService.SaveSupplier(supplierData).subscribe({

@@ -10,6 +10,7 @@ export class BreadcrumbService {
 
   private breadcrumbsSubject = new BehaviorSubject<Breadcrumb[]>([]);
   public breadcrumbs$ = this.breadcrumbsSubject.asObservable();
+  private manualBreadcrumbsSet = false;
 
   // Route to label mapping
   private routeLabels: { [key: string]: string } = {
@@ -21,7 +22,7 @@ export class BreadcrumbService {
     'users': 'المستخدمين',
     'users-form': 'نموذج المستخدم',
     'users-devices': 'أجهزة المستخدمين',
-    'roles': 'الصلاحيات',
+    'roles': 'الأدوار',
     'roles-form': 'نموذج الصلاحية',
     'categories': 'التصنيفات',
     'category-form': 'نموذج التصنيف',
@@ -53,45 +54,68 @@ export class BreadcrumbService {
     this.router.events
       .pipe(filter(event => event instanceof NavigationEnd))
       .subscribe((event: NavigationEnd) => {
-        this.generateBreadcrumbs(event.url);
+        // Clear breadcrumbs on navigation and reset flag
+        // Components will set breadcrumbs in ngOnInit if needed
+        this.manualBreadcrumbsSet = false;
+        this.breadcrumbsSubject.next([]);
+        
+        // Auto-generate after a short delay to allow components to set manual breadcrumbs
+        setTimeout(() => {
+          if (!this.manualBreadcrumbsSet && this.breadcrumbsSubject.value.length === 0) {
+            this.generateBreadcrumbs(event.url);
+          }
+        }, 150);
       });
   }
 
   private generateBreadcrumbs(url: string): void {
+    // Don't auto-generate if breadcrumbs were manually set
+    if (this.manualBreadcrumbsSet || this.breadcrumbsSubject.value.length > 0) {
+      return;
+    }
+
     const breadcrumbs: Breadcrumb[] = [];
-    const urlSegments = url.split('/').filter(segment => segment !== '');
+    const urlSegments = url.split('/').filter(segment => segment !== '' && segment !== '?');
     
     // Always start with home
     breadcrumbs.push({ label: 'الرئيسية', route: '/admin/main' });
     
-    // Generate breadcrumbs from URL segments, skipping 'admin' segment
-    let currentPath = '/admin';
-    for (let i = 1; i < urlSegments.length; i++) {
+    // Generate breadcrumbs from URL segments
+    let currentPath = '';
+    let foundAdmin = false;
+    
+    for (let i = 0; i < urlSegments.length; i++) {
       const segment = urlSegments[i];
+      const cleanSegment = segment.split('?')[0]; // Remove query params
       
-      // Skip the 'admin' segment itself
+      // Mark when we find 'admin' segment
       if (segment === 'admin') {
+        foundAdmin = true;
+        currentPath = '/admin';
         continue;
       }
       
-      currentPath += `/${segment}`;
-      
-      // Skip query parameters
-      if (segment.includes('?')) {
-        const cleanSegment = segment.split('?')[0];
-        const label = this.routeLabels[cleanSegment] || this.formatLabel(cleanSegment);
-        breadcrumbs.push({ label, route: null });
-      } else {
-        const label = this.routeLabels[segment] || this.formatLabel(segment);
-        const isLast = i === urlSegments.length - 1;
-        breadcrumbs.push({ 
-          label, 
-          route: isLast ? null : currentPath 
-        });
+      // Only process segments after 'admin'
+      if (!foundAdmin) {
+        continue;
       }
+      
+      currentPath += `/${cleanSegment}`;
+      
+      // Get label from mapping or format it
+      const label = this.routeLabels[cleanSegment] || this.formatLabel(cleanSegment);
+      const isLast = i === urlSegments.length - 1;
+      
+      breadcrumbs.push({ 
+        label, 
+        route: isLast ? null : currentPath 
+      });
     }
     
-    this.breadcrumbsSubject.next(breadcrumbs);
+    // Only update if we have breadcrumbs to show
+    if (breadcrumbs.length > 1) {
+      this.breadcrumbsSubject.next(breadcrumbs);
+    }
   }
 
   private formatLabel(segment: string): string {
@@ -104,11 +128,13 @@ export class BreadcrumbService {
 
   // Set breadcrumbs manually (for custom cases)
   setBreadcrumbs(breadcrumbs: Breadcrumb[]): void {
+    this.manualBreadcrumbsSet = true;
     this.breadcrumbsSubject.next(breadcrumbs);
   }
 
   // Add breadcrumb dynamically
   addBreadcrumb(label: string, route: string | null): void {
+    this.manualBreadcrumbsSet = true;
     const current = this.breadcrumbsSubject.value;
     const newBreadcrumbs = [...current, { label, route }];
     this.breadcrumbsSubject.next(newBreadcrumbs);
@@ -116,11 +142,13 @@ export class BreadcrumbService {
 
   // Reset breadcrumbs
   reset(): void {
+    this.manualBreadcrumbsSet = false;
     this.breadcrumbsSubject.next([]);
   }
 
   // Set breadcrumbs from array
   setFrom(routeArray: { label: string; route: string | null }[]) {
+    this.manualBreadcrumbsSet = true;
     this.breadcrumbsSubject.next(routeArray);
   }
 }

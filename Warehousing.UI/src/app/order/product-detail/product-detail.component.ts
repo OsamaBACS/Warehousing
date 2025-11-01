@@ -12,6 +12,8 @@ import { StoreSimple } from '../../admin/models/StoreSimple';
 import { ProductVariant } from '../models/ProductVariant';
 import { ProductModifierGroup } from '../models/ProductModifier';
 import { environment } from '../../../environments/environment';
+import { MatDialog } from '@angular/material/dialog';
+import { SplitGeneralQuantityDialogComponent } from '../split-general-quantity-dialog/split-general-quantity-dialog.component';
 
 @Component({
   selector: 'app-product-detail',
@@ -56,7 +58,8 @@ export class ProductDetailComponent implements OnInit {
     private productModifierService: ProductModifierService,
     private cartService: CartService,
     private orderBreadcrumbService: OrderBreadcrumbService,
-    private fb: FormBuilder
+    private fb: FormBuilder,
+    private dialog: MatDialog
   ) {
     this.productForm = this.fb.group({
       storeId: [null, Validators.required],
@@ -66,21 +69,34 @@ export class ProductDetailComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    // First, get orderTypeId from parent route (it's in the parent route path: /order/:orderTypeId/...)
+    this.route.parent?.paramMap.subscribe(params => {
+      const orderTypeIdParam = params.get('orderTypeId');
+      const newOrderTypeId = orderTypeIdParam ? Number(orderTypeIdParam) : 1;
+      const orderTypeChanged = this.orderTypeId !== newOrderTypeId;
+      this.orderTypeId = newOrderTypeId;
+      console.log('ProductDetailComponent - orderTypeId from PARENT route:', this.orderTypeId, 'type:', typeof this.orderTypeId);
+      
+      this.categoryId = Number(params.get('categoryId'));
+      this.subCategoryId = Number(params.get('subCategoryId'));
+      
+      // If product is already loaded and orderTypeId changed, reload stores
+      if (this.product && orderTypeChanged) {
+        console.log('OrderTypeId changed, reloading stores...');
+        this.loadStores();
+      }
+    });
+    
+    // Then get productId from current route
     this.route.paramMap.subscribe(params => {
       this.productId = Number(params.get('productId'));
-      this.orderTypeId = Number(params.get('orderTypeId'));
+      console.log('ProductDetailComponent - productId:', this.productId);
       
       if (this.productId) {
         this.loadProduct();
         this.loadProductVariants();
         this.loadProductModifiers();
       }
-    });
-    
-    // Get navigation parameters from parent route
-    this.route.parent?.paramMap.subscribe(params => {
-      this.categoryId = Number(params.get('categoryId'));
-      this.subCategoryId = Number(params.get('subCategoryId'));
     });
   }
 
@@ -91,6 +107,7 @@ export class ProductDetailComponent implements OnInit {
         this.product = product;
         console.log('Loaded product:', product);
         console.log('Product inventories:', product.inventories);
+        console.log('Current orderTypeId when loading product:', this.orderTypeId);
         
         // Log each inventory record
         if (product.inventories) {
@@ -108,6 +125,16 @@ export class ProductDetailComponent implements OnInit {
         // Load variant stock data
         this.loadVariantStockData();
         // Load stores after product is loaded (so we can filter by inventory)
+        // Ensure orderTypeId is set (should be from parent route subscription)
+        if (!this.orderTypeId) {
+          console.warn('⚠️ orderTypeId not set yet, waiting...');
+          // If not set, try to get it synchronously from route snapshot
+          const parentParams = this.route.parent?.snapshot?.paramMap;
+          if (parentParams?.get('orderTypeId')) {
+            this.orderTypeId = Number(parentParams.get('orderTypeId'));
+            console.log('Set orderTypeId from snapshot:', this.orderTypeId);
+          }
+        }
         this.loadStores();
         
         // Set breadcrumbs for product detail
@@ -124,12 +151,36 @@ export class ProductDetailComponent implements OnInit {
 
   loadStores(): void {
     console.log('Loading stores...');
+    console.log('Order Type ID:', this.orderTypeId);
+    console.log('Product available:', !!this.product);
+    console.log('Product inventories:', this.product?.inventories);
+    
     this.storeService.GetActiveStores().subscribe({
       next: (stores) => {
         console.log('Raw stores loaded:', stores);
-        // Filter stores to only show those that have the product in inventory
-        this.allStores = this.filterStoresWithProductInventory(stores);
-        console.log('Filtered stores:', this.allStores);
+        // For purchases (orderTypeId === 1), show all stores so admin can choose
+        // For sales (orderTypeId === 2), only show stores with inventory
+        // Ensure orderTypeId is a number for comparison
+        const orderType = Number(this.orderTypeId);
+        console.log('Comparing orderType:', orderType, '=== 1?', orderType === 1);
+        
+        if (orderType === 1) {
+          console.log('PURCHASE MODE: Showing all stores');
+          this.allStores = stores;
+        } else {
+          console.log('SALE MODE: Filtering stores with inventory > 0');
+          // Filter stores to only show those that have the product in inventory
+          const filtered = this.filterStoresWithProductInventory(stores);
+          this.allStores = filtered;
+          console.log(`Filtered ${stores.length} stores down to ${filtered.length} stores with stock`);
+          // Safety check: never show all stores for sales
+          if (filtered.length !== stores.length && filtered.length < stores.length) {
+            console.log('✅ Correctly filtered stores for sale');
+          } else {
+            console.warn('⚠️ WARNING: All stores are being shown for sale! This should not happen.');
+          }
+        }
+        console.log('Final allStores:', this.allStores);
       },
       error: (err) => {
         console.error('Error loading stores:', err);
@@ -141,6 +192,7 @@ export class ProductDetailComponent implements OnInit {
   private filterStoresWithProductInventory(allStores: StoreSimple[]): StoreSimple[] {
     console.log('Filtering stores for product:', this.product);
     console.log('Product inventories:', this.product?.inventories);
+    console.log('Order Type ID:', this.orderTypeId);
     
     if (!this.product || !this.product.inventories || this.product.inventories.length === 0) {
       console.log('No product or no inventories found');
@@ -153,15 +205,22 @@ export class ProductDetailComponent implements OnInit {
       return this.filterStoresWithVariantInventory(allStores);
     }
 
-    // Get store IDs that have the product with quantity > 0
+    // Get store IDs that have the product (general, no variant) with quantity > 0
+    // Only consider general inventory where variantId is null or 0
     const validStoreIds = this.product.inventories
-      .filter(inv => inv.quantity > 0)
+      .filter(inv => {
+        const isGeneral = !inv.variantId || inv.variantId === 0;
+        const qty = Number(inv.quantity) || 0;
+        const hasStock = qty > 0;
+        console.log(`Store ${inv.storeId}: isGeneral=${isGeneral}, quantity=${qty}, hasStock=${hasStock}`);
+        return isGeneral && hasStock;
+      })
       .map(inv => inv.storeId);
 
-    console.log('Valid store IDs:', validStoreIds);
+    console.log('Valid store IDs (with stock > 0):', validStoreIds);
     console.log('All stores:', allStores);
 
-    // Return only stores that have the product in inventory
+    // Return only stores that have the product in inventory with quantity > 0
     const filteredStores = allStores.filter(store => validStoreIds.includes(store.id));
     console.log('Filtered stores:', filteredStores);
     
@@ -174,18 +233,37 @@ export class ProductDetailComponent implements OnInit {
       return [];
     }
 
-    // Find the selected variant
+    // Check both variant.inventories and product.inventories with matching variantId
+    let validStoreIds: number[] = [];
+
+    // Method 1: Check variant inventories directly (if available)
     const selectedVariant = this.product.variants?.find(v => v.id === this.selectedVariantId);
-    if (!selectedVariant || !selectedVariant.inventories || selectedVariant.inventories.length === 0) {
-      return [];
+    if (selectedVariant?.inventories && selectedVariant.inventories.length > 0) {
+      validStoreIds = selectedVariant.inventories
+        .filter((inv: any) => {
+          const qty = Number(inv.quantity) || 0;
+          return qty > 0;
+        })
+        .map((inv: any) => inv.storeId);
     }
 
-    // Get store IDs that have the variant with quantity > 0
-    const validStoreIds = selectedVariant.inventories
-      .filter((inv: any) => inv.quantity > 0)
-      .map((inv: any) => inv.storeId);
+    // Method 2: Check product inventories with matching variantId (fallback or supplement)
+    if (this.product.inventories && this.product.inventories.length > 0) {
+      const variantStoreIds = this.product.inventories
+        .filter(inv => {
+          const matchesVariant = inv.variantId === this.selectedVariantId;
+          const qty = Number(inv.quantity) || 0;
+          return matchesVariant && qty > 0;
+        })
+        .map(inv => inv.storeId);
+      
+      // Combine both sources and remove duplicates
+      validStoreIds = [...new Set([...validStoreIds, ...variantStoreIds])];
+    }
 
-    // Return only stores that have the variant in inventory
+    console.log('Valid store IDs for variant (with stock > 0):', validStoreIds);
+
+    // Return only stores that have the variant in inventory with quantity > 0
     return allStores.filter(store => validStoreIds.includes(store.id));
   }
 
@@ -238,11 +316,17 @@ export class ProductDetailComponent implements OnInit {
   private refreshStoreList(): void {
     this.storeService.GetActiveStores().subscribe({
       next: (stores) => {
-        // Filter stores to only show those that have the product/variant in inventory
-        this.allStores = this.filterStoresWithProductInventory(stores);
+        // For purchases (orderTypeId === 1), show all stores so admin can choose
+        // For sales (orderTypeId === 2), only show stores with inventory
+        if (this.orderTypeId === 1) {
+          this.allStores = stores;
+        } else {
+          // Filter stores to only show those that have the product/variant in inventory
+          this.allStores = this.filterStoresWithProductInventory(stores);
+        }
         
-        // Clear store selection if current store is no longer valid
-        if (this.selectedStoreId && !this.allStores.find(s => s.id === this.selectedStoreId)) {
+        // Clear store selection if current store is no longer valid (only for sales)
+        if (this.orderTypeId === 2 && this.selectedStoreId && !this.allStores.find(s => s.id === this.selectedStoreId)) {
           this.selectedStoreId = null;
           this.productForm.patchValue({ storeId: null });
         }
@@ -360,6 +444,15 @@ export class ProductDetailComponent implements OnInit {
     }
   }
 
+  goToProductForm(): void {
+    if (this.product?.id) {
+      // Navigate to admin product form to add variants
+      this.router.navigate(['/admin/product-form'], { queryParams: { productId: this.product.id } });
+    } else {
+      console.error('Product ID not available');
+    }
+  }
+
   getProductPrice(): number {
     if (!this.product) return 0;
     
@@ -459,23 +552,30 @@ export class ProductDetailComponent implements OnInit {
   getStoresForVariant(variantId: number): StoreSimple[] {
     console.log('Getting stores for variant:', variantId);
     console.log('All stores:', this.allStores);
+    console.log('Order Type ID:', this.orderTypeId);
     
-    // Filter stores that have this variant in stock
-    const stores = this.allStores.filter(store => {
-      const stock = this.getVariantStock(this.product!.id, variantId, store.id);
-      console.log(`Variant ${variantId} stock in store ${store.id}:`, stock);
-      return stock > 0;
-    });
-    
-    console.log('Filtered stores for variant:', stores);
-    
-    // If no stores have stock, return empty array (don't show variant if no stock)
-    if (stores.length === 0) {
-      console.log('No stores with stock found for variant:', variantId);
-      return [];
+    // For purchases (orderTypeId === 1), show all stores so admin can choose
+    // For sales (orderTypeId === 2), only show stores with variant stock
+    if (this.orderTypeId === 1) {
+      return this.allStores;
+    } else {
+      // Filter stores that have this variant in stock
+      const stores = this.allStores.filter(store => {
+        const stock = this.getVariantStock(this.product!.id, variantId, store.id);
+        console.log(`Variant ${variantId} stock in store ${store.id}:`, stock);
+        return stock > 0;
+      });
+      
+      console.log('Filtered stores for variant:', stores);
+      
+      // If no stores have stock, return empty array (don't show variant if no stock)
+      if (stores.length === 0) {
+        console.log('No stores with stock found for variant:', variantId);
+        return [];
+      }
+      
+      return stores;
     }
-    
-    return stores;
   }
 
   getVariantStockForStore(variantId: number, storeId: number): number {
@@ -506,9 +606,10 @@ export class ProductDetailComponent implements OnInit {
     
     console.log('Current quantity:', currentQuantity, 'Available stock:', availableStock);
     
-    if (currentQuantity < availableStock) {
+    // For purchase orders, no stock limit check
+    if (this.orderTypeId === 1 || currentQuantity < availableStock) {
       console.log('Adding to cart...');
-      this.cartService.addToCart(this.product, 1, storeId);
+      this.cartService.addToCart(this.product, 1, storeId, undefined); // Explicitly pass undefined for products without variants
     } else {
       console.log('Cannot add more - stock limit reached');
     }
@@ -551,7 +652,8 @@ export class ProductDetailComponent implements OnInit {
     
     console.log('Current quantity:', currentQuantity, 'Available stock:', availableStock);
     
-    if (currentQuantity < availableStock) {
+    // For purchase orders, no stock limit check
+    if (this.orderTypeId === 1 || currentQuantity < availableStock) {
       console.log('Adding variant to cart...');
       this.cartService.addToCart(this.product, 1, storeId, variantId);
     } else {
@@ -613,7 +715,9 @@ export class ProductDetailComponent implements OnInit {
       return;
     }
     
-    if (newQuantity > maxQuantity) {
+    // Only check max quantity for sale orders (orderTypeId === 2)
+    // For purchase orders (orderTypeId === 1), allow any quantity
+    if (this.orderTypeId === 2 && newQuantity > maxQuantity) {
       event.target.value = maxQuantity;
       newQuantity = maxQuantity;
     }
@@ -629,7 +733,7 @@ export class ProductDetailComponent implements OnInit {
     } else if (newQuantity > currentQuantity) {
       // Add to cart
       const quantityToAdd = newQuantity - currentQuantity;
-      this.cartService.addToCart(this.product!, quantityToAdd, storeId);
+      this.cartService.addToCart(this.product!, quantityToAdd, storeId, undefined); // Explicitly pass undefined for products without variants
     } else if (newQuantity < currentQuantity) {
       // Remove from cart
       const quantityToRemove = currentQuantity - newQuantity;
@@ -649,7 +753,9 @@ export class ProductDetailComponent implements OnInit {
       return;
     }
     
-    if (newQuantity > maxQuantity) {
+    // Only check max quantity for sale orders (orderTypeId === 2)
+    // For purchase orders (orderTypeId === 1), allow any quantity
+    if (this.orderTypeId === 2 && newQuantity > maxQuantity) {
       event.target.value = maxQuantity;
       newQuantity = maxQuantity;
     }
@@ -671,6 +777,32 @@ export class ProductDetailComponent implements OnInit {
       const quantityToRemove = currentQuantity - newQuantity;
       this.cartService.removeFromCartWithDetails(this.product!.id, storeId, quantityToRemove, variantId);
     }
+  }
+
+  hasGeneralStock(): boolean {
+    return this.product?.inventories?.some(inv => !inv.variantId && inv.quantity > 0) ?? false;
+  }
+
+  openSplitQuantityDialog(): void {
+    if (!this.product || !this.productVariants.length) return;
+    const generalInventory = this.product.inventories.find(inv => !inv.variantId && inv.quantity > 0);
+    if (!generalInventory) return;
+    this.dialog.open(SplitGeneralQuantityDialogComponent, {
+      width: '450px',
+      maxWidth: '95vw',
+      data: {
+        product: this.product,
+        variants: this.productVariants,
+        generalInventory: generalInventory
+      },
+      disableClose: false
+    }).afterClosed().subscribe(result => {
+      if (result) {
+        // TODO: Call the inventoryService.splitGeneralToVariants(result)
+        // and refresh inventories afterwards.
+        this.loadProduct();
+      }
+    });
   }
 
 }

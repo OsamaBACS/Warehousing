@@ -16,6 +16,10 @@ namespace Warehousing.Data.Entities
         public Product Product { get; set; } = null!;
         public int ProductId { get; set; }
         
+        // Variant support (for allocation/recall)
+        public int? VariantId { get; set; }
+        public ProductVariant? Variant { get; set; }
+        
         public TransactionType TransactionType { get; set; } = null!; //Purchase, Sale, Adjustment
         public int TransactionTypeId { get; set; }
 

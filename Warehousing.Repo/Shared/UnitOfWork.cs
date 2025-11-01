@@ -1,6 +1,7 @@
 using Warehousing.Data.Context;
 using Warehousing.Repo.Classes;
 using Warehousing.Repo.Interfaces;
+using Warehousing.Repo.Services;
 using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -12,12 +13,14 @@ namespace Warehousing.Repo.Shared
         private readonly WarehousingContext _context;
         private readonly ILoggerFactory _loggerFactory;
         private readonly IConfiguration _config;
+        private readonly IActivityLoggingService _activityLoggingService;
 
-        public UnitOfWork(WarehousingContext context, ILoggerFactory loggerFactory, IConfiguration config)
+        public UnitOfWork(WarehousingContext context, ILoggerFactory loggerFactory, IConfiguration config, IActivityLoggingService activityLoggingService)
         {
             _context = context;
             _loggerFactory = loggerFactory;
             _config = config;
+            _activityLoggingService = activityLoggingService;
         }
 
         public ICategoryRepo CategoryRepo => new CategoryRepo(_context, _loggerFactory.CreateLogger<CategoryRepo>(), _config);
@@ -46,7 +49,7 @@ namespace Warehousing.Repo.Shared
 
         public IUnitRepo UnitRepo => new UnitRepo(_context, _loggerFactory.CreateLogger<UnitRepo>(), _config);
 
-        public IUserRepo UserRepo => new UserRepo(_context, _loggerFactory.CreateLogger<UserRepo>(), _config);
+        public IUserRepo UserRepo => new UserRepo(_context, _loggerFactory.CreateLogger<UserRepo>(), _config, _activityLoggingService, new WorkingHoursRepo(_context, _loggerFactory.CreateLogger<WorkingHoursRepo>()));
 
         public IUserRoleRepo UserRoleRepo => new UserRoleRepo(_context, _loggerFactory.CreateLogger<UserRoleRepo>(), _config);
 
@@ -78,6 +81,15 @@ namespace Warehousing.Repo.Shared
         public IProductModifierOptionRepo ProductModifierOptionRepo => new ProductModifierOptionRepo(_context, _loggerFactory.CreateLogger<ProductModifierOptionRepo>(), _config);
         public IProductModifierGroupRepo ProductModifierGroupRepo => new ProductModifierGroupRepo(_context, _loggerFactory.CreateLogger<ProductModifierGroupRepo>(), _config);
         public IOrderItemModifierRepo OrderItemModifierRepo => new OrderItemModifierRepo(_context, _loggerFactory.CreateLogger<OrderItemModifierRepo>(), _config);
+        
+        // User Activity Logging
+        public IUserActivityLogRepo UserActivityLogRepo => new UserActivityLogRepo(_context, _loggerFactory.CreateLogger<UserActivityLogRepo>());
+        
+        // Working Hours Configuration
+        public IWorkingHoursRepo WorkingHoursRepo => new WorkingHoursRepo(_context, _loggerFactory.CreateLogger<WorkingHoursRepo>());
+
+        // Context for direct database access
+        public WarehousingContext Context => _context;
 
         public async Task SaveAsync()
         {

@@ -67,7 +67,15 @@ export class CartComponent implements OnInit, OnDestroy {
     
     // Simulate loading time to ensure all data is loaded
     setTimeout(() => {
-      this.orderTypeId = this.cartService.orderTypeId;
+      // Get orderTypeId from cart service, but ensure it's valid (1 or 2)
+      // If it's 0 or invalid, default to 1 (Purchase)
+      const serviceOrderTypeId = this.cartService.orderTypeId;
+      this.orderTypeId = (serviceOrderTypeId === 1 || serviceOrderTypeId === 2) ? serviceOrderTypeId : 1;
+      
+      // Also ensure cart service has valid orderTypeId
+      if (this.cartService.orderTypeId !== 1 && this.cartService.orderTypeId !== 2) {
+        this.cartService.setOrderTypeId(this.orderTypeId);
+      }
 
       // Load cart items from the service
       if (this.cartService.cartForm && this.cartService.cartItems) {
@@ -136,13 +144,28 @@ export class CartComponent implements OnInit, OnDestroy {
     if (cartItem) {
       const currentQuantity = cartItem.get('quantity')?.value || 0;
       const storeId = cartItem.get('storeId')?.value;
+      const variantId = cartItem.get('variantId')?.value;
       const newQuantity = currentQuantity + 1;
       
-      // Validate stock before increasing
-      const isValid = await this.cartService.validateStockForCartItem(productId, storeId, newQuantity);
-      if (isValid) {
-        this.cartService.addToCart({ id: productId } as any, 1, storeId);
+      // Check max quantity limit
+      const maxQuantity = variantId 
+        ? this.getVariantStockForItem(productId, variantId, storeId)
+        : this.getProductStockForItem(productId, storeId);
+      
+      if (newQuantity > maxQuantity) {
+        this.toastr.warning(`الكمية القصوى المتاحة: ${maxQuantity}`, 'تحذير');
+        return;
       }
+      
+      // Validate stock before increasing (only for sale orders)
+      if (this.cartService.orderTypeId === 2) {
+        const isValid = await this.cartService.validateStockForCartItem(productId, storeId, newQuantity);
+        if (!isValid) {
+          return;
+        }
+      }
+      
+      this.cartService.addToCart({ id: productId } as any, 1, storeId, variantId || undefined);
     }
   }
 
@@ -177,26 +200,86 @@ export class CartComponent implements OnInit, OnDestroy {
 
   // Get stock for main product
   getProductStockForItem(productId: number, storeId: number): number {
-    // This would need to be implemented based on your stock data
-    // For now, return a high number to allow any quantity
-    // You should implement this to get actual stock from your inventory
-    return 999999; // Placeholder - implement actual stock check
+    // For purchase orders, allow unlimited quantity
+    if (this.cartService.orderTypeId === 1) {
+      return 999999;
+    }
+
+    // For sale orders, try to get stock from products array first
+    const product = this.products.find(p => p.id === productId);
+    
+    if (product && product.inventories && product.inventories.length > 0) {
+      const inventory = product.inventories.find(inv => inv.storeId === storeId);
+      const quantity = inventory?.quantity || 0;
+      return quantity;
+    }
+    
+    // If not found in products array, return 0
+    // In a real implementation, you might want to make an API call here
+    return 0;
   }
 
   // Get stock for variant
   getVariantStockForItem(productId: number, variantId: number, storeId: number): number {
-    // This would need to be implemented based on your variant stock data
-    // For now, return a high number to allow any quantity
-    // You should implement this to get actual variant stock from your inventory
-    return 999999; // Placeholder - implement actual variant stock check
+    // For purchase orders, allow unlimited quantity
+    if (this.cartService.orderTypeId === 1) {
+      return 999999;
+    }
+
+    // For sale orders, try to get variant stock from products array first
+    const product = this.products.find(p => p.id === productId);
+    
+    if (product && product.variants && product.variants.length > 0) {
+      const variant = product.variants.find(v => v.id === variantId);
+      
+      if (variant && variant.inventories && variant.inventories.length > 0) {
+        const inventory = variant.inventories.find(inv => inv.storeId === storeId);
+        const quantity = inventory?.quantity || 0;
+        return quantity;
+      }
+    }
+    
+    // If not found in products array, return 0
+    return 0;
+  }
+
+  // Handle real-time input validation
+  onQuantityInput(item: FormGroup, event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const value = parseInt(input.value) || 0;
+    const maxQuantity = this.getMaxQuantityForItem(item);
+    
+    // Prevent negative values
+    if (value < 0) {
+      input.value = '0';
+      item.get('quantity')?.setValue(0, { emitEvent: false });
+      return;
+    }
+    
+    // Cap at max quantity
+    if (value > maxQuantity) {
+      input.value = maxQuantity.toString();
+      item.get('quantity')?.setValue(maxQuantity, { emitEvent: false });
+    }
+  }
+
+  // Handle blur event to validate and correct input
+  onQuantityBlur(item: FormGroup): void {
+    const currentValue = parseInt(item.get('quantity')?.value) || 0;
+    const maxQuantity = this.getMaxQuantityForItem(item);
+    
+    if (currentValue < 0) {
+      item.get('quantity')?.setValue(0);
+    } else if (currentValue > maxQuantity) {
+      item.get('quantity')?.setValue(maxQuantity);
+      this.toastr.warning(`الكمية القصوى المتاحة: ${maxQuantity}`, 'تحذير');
+    }
   }
 
   // Handle manual quantity change with validation
-  onQuantityChange(item: FormGroup): void {
+  async onQuantityChange(item: FormGroup): Promise<void> {
     const newQuantity = parseInt(item.get('quantity')?.value) || 0;
     const maxQuantity = this.getMaxQuantityForItem(item);
-    
-    console.log('Cart quantity change:', newQuantity, 'max:', maxQuantity);
     
     // Validate quantity
     if (newQuantity < 0) {
@@ -206,6 +289,7 @@ export class CartComponent implements OnInit, OnDestroy {
     
     if (newQuantity > maxQuantity) {
       item.get('quantity')?.setValue(maxQuantity);
+      this.toastr.warning(`الكمية القصوى المتاحة: ${maxQuantity}`, 'تحذير');
       return;
     }
     
@@ -221,9 +305,18 @@ export class CartComponent implements OnInit, OnDestroy {
         this.cartService.removeFromCartWithDetails(productId, storeId, currentQuantity, variantId);
       }
     } else if (newQuantity !== currentQuantity) {
-      // Update quantity
+      // Validate stock before updating quantity (only for sale orders)
       const difference = newQuantity - currentQuantity;
       if (difference > 0) {
+        // For sale orders, validate stock before adding
+        if (this.cartService.orderTypeId === 2) {
+          const isValid = await this.cartService.validateStockForCartItem(productId, storeId, newQuantity);
+          if (!isValid) {
+            // Reset to previous quantity if validation fails
+            item.get('quantity')?.setValue(currentQuantity);
+            return;
+          }
+        }
         this.cartService.addToCart({ id: productId } as any, difference, storeId, variantId);
       } else {
         this.cartService.removeFromCartWithDetails(productId, storeId, Math.abs(difference), variantId);
@@ -328,9 +421,9 @@ export class CartComponent implements OnInit, OnDestroy {
   onConfirm(orderId: number) {
     const dialogRef = this.dialog.open(ConfirmModalComponent, {
       data: {
-        message: 'هل انت متاكد من هذا الجراء؟',
-        cancelBtn: 'لا',
-        confirmBtn: 'نعم'
+        message: 'هل أنت متأكد من اعتماد هذا الطلب؟ سيتم تغيير حالة الطلب إلى معتمد.',
+        cancelBtn: 'إلغاء',
+        confirmBtn: 'اعتماد الطلب'
       }
     });
 
@@ -367,9 +460,9 @@ export class CartComponent implements OnInit, OnDestroy {
   onEdit(orderId: number) {
     const dialogRef = this.dialog.open(ConfirmModalComponent, {
       data: {
-        message: 'هل انت متاكد من هذا الجراء؟',
-        cancelBtn: 'لا',
-        confirmBtn: 'نعم'
+        message: 'هل أنت متأكد من إلغاء هذا الطلب؟ سيتم تغيير حالة الطلب إلى ملغي.',
+        cancelBtn: 'إلغاء',
+        confirmBtn: 'تأكيد الإلغاء'
       }
     });
 

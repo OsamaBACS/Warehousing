@@ -24,6 +24,7 @@ export class RolesFormComponent implements OnInit {
   categories!: Category[];
   products!: Product[];
   subCategories!: SubCategory[];
+  groupedPermissions!: { [key: string]: Permission[] };
 
   constructor(
     private fb: FormBuilder,
@@ -41,6 +42,7 @@ export class RolesFormComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    this.groupPermissions();
     this.initializingForm(null);
     this.route.queryParams.subscribe(params => {
       const roleId = +params['roleId'];
@@ -66,6 +68,116 @@ export class RolesFormComponent implements OnInit {
           });
       }
     });
+  }
+
+  groupPermissions(): void {
+    this.groupedPermissions = {};
+    
+    this.permissions.forEach(permission => {
+      let module = this.getModuleFromCode(permission.code);
+      if (!this.groupedPermissions[module]) {
+        this.groupedPermissions[module] = [];
+      }
+      this.groupedPermissions[module].push(permission);
+    });
+  }
+
+  getModuleFromCode(code: string): string {
+    // Group permissions by admin pages/modules based on actual admin routes
+    
+    // Dashboard & Main (admin/main)
+    if (code === 'VIEW_ADMIN') return 'admin/main';
+    
+    // Products Management (admin/products)
+    if (code === 'VIEW_PRODUCTS' || code === 'ADD_PRODUCT' || code === 'EDIT_PRODUCT' || 
+        code === 'DELETE_PRODUCT' || code === 'PRINT_PRODUCTS') return 'admin/products';
+    
+    // Customers Management (admin/customers)
+    if (code === 'VIEW_CUSTOMERS' || code === 'ADD_CUSTOMER' || code === 'EDIT_CUSTOMER' || 
+        code === 'DELETE_CUSTOMER' || code === 'PRINT_CUSTOMERS') return 'admin/customers';
+    
+    // Suppliers Management (admin/suppliers)
+    if (code === 'VIEW_SUPPLIERS' || code === 'ADD_SUPPLIER' || code === 'EDIT_SUPPLIER' || 
+        code === 'DELETE_SUPPLIER' || code === 'PRINT_SUPPLIERS') return 'admin/suppliers';
+    
+    // Orders Management (admin/orders) - includes both purchase and sale orders
+    if (code === 'VIEW_PURCHASE_ORDERS' || code === 'ADD_PURCHASE_ORDER' || code === 'EDIT_PURCHASE_ORDER' || 
+        code === 'DELETE_PURCHASE_ORDER' || code === 'COMPLETE_PURCHASE_ORDER' || code === 'PRINT_PURCHASE_ORDER' ||
+        code === 'APPROVE_PURCHASE_ORDER' || code === 'CANCEL_PURCHASE_ORDER' ||
+        code === 'VIEW_SALE_ORDERS' || code === 'ADD_SALE_ORDER' || code === 'EDIT_SALE_ORDER' || 
+        code === 'DELETE_SALE_ORDER' || code === 'COMPLETE_SALE_ORDER' || code === 'PRINT_SALE_ORDER' ||
+        code === 'APPROVE_SALE_ORDER' || code === 'CANCEL_SALE_ORDER') return 'admin/orders';
+    
+    // Inventory Management (admin/inventory)
+    if (code === 'VIEW_INVENTORY_MANAGEMENT' || code === 'MANAGE_INVENTORY' || code === 'ADJUST_INVENTORY' || 
+        code === 'VIEW_LOW_STOCK' || code === 'VIEW_INVENTORY_REPORT' || code === 'PRINT_INVENTORY_REPORT') return 'admin/inventory';
+    
+    // Stores Management (admin/stores) - includes store transfers
+    if (code === 'VIEW_STORES' || code === 'ADD_STORE' || code === 'EDIT_STORE' || code === 'DELETE_STORE' || 
+        code === 'PRINT_STORES' || code === 'VIEW_STORE_TRANSFERS' || code === 'ADD_STORE_TRANSFER' || 
+        code === 'EDIT_STORE_TRANSFER' || code === 'DELETE_STORE_TRANSFER' || code === 'APPROVE_STORE_TRANSFER' || 
+        code === 'PRINT_STORE_TRANSFERS') return 'admin/stores';
+    
+    // Users Management (admin/users)
+    if (code === 'VIEW_USERS' || code === 'ADD_USER' || code === 'EDIT_USER' || code === 'DELETE_USER' || 
+        code === 'RESET_USER_PASSWORD' || code === 'ASSIGN_ROLES_TO_USER') return 'admin/users';
+    
+    // Roles Management (admin/roles)
+    if (code === 'VIEW_ROLES' || code === 'ADD_ROLE' || code === 'EDIT_ROLE' || code === 'DELETE_ROLE' || 
+        code === 'ASSIGN_PERMISSIONS_TO_ROLE') return 'admin/roles';
+    
+    // Categories Management (admin/categories)
+    if (code === 'VIEW_CATEGORIES' || code === 'ADD_CATEGORY' || code === 'EDIT_CATEGORY' || 
+        code === 'DELETE_CATEGORY' || code === 'PRINT_CATEGORIES') return 'admin/categories';
+    
+    // SubCategories Management (admin/subcategories)
+    if (code === 'VIEW_SUBCATEGORIES' || code === 'ADD_SUBCATEGORY' || code === 'EDIT_SUBCATEGORY' || 
+        code === 'DELETE_SUBCATEGORY' || code === 'PRINT_SUBCATEGORIES') return 'admin/subcategories';
+    
+    // Units Management (admin/units)
+    if (code === 'VIEW_UNITS' || code === 'ADD_UNIT' || code === 'EDIT_UNIT' || 
+        code === 'DELETE_UNIT' || code === 'PRINT_UNITS') return 'admin/units';
+    
+    // Company Settings (admin/company)
+    if (code === 'VIEW_SETTINGS' || code === 'EDIT_SETTINGS') return 'admin/company';
+    
+    // Activity Logs (admin/activity-logs)
+    if (code === 'VIEW_ACTIVITY_LOGS' || code === 'EXPORT_ACTIVITY_LOGS') return 'admin/activity-logs';
+    
+    // Working Hours (admin/working-hours)
+    if (code === 'VIEW_WORKING_HOURS' || code === 'EDIT_WORKING_HOURS' || code === 'MANAGE_WORKING_HOURS_EXCEPTIONS') return 'admin/working-hours';
+    
+    // Additional permissions that don't fit specific pages
+    if (code === 'EDIT_APPROVED_INVOICE') return 'admin/orders'; // Invoice editing is part of orders
+    
+    return 'admin/general';
+  }
+
+  getModuleDisplayName(module: string): string {
+    const moduleNames: { [key: string]: string } = {
+      'admin/main': 'لوحة التحكم الرئيسية',
+      'admin/products': 'إدارة المنتجات',
+      'admin/customers': 'إدارة العملاء',
+      'admin/suppliers': 'إدارة الموردين',
+      'admin/orders': 'إدارة الطلبات',
+      'admin/inventory': 'إدارة المخزون',
+      'admin/stores': 'إدارة المخازن',
+      'admin/users': 'إدارة المستخدمين',
+      'admin/roles': 'إدارة الأدوار',
+      'admin/categories': 'إدارة التصنيفات',
+      'admin/subcategories': 'إدارة التصنيفات الفرعية',
+      'admin/units': 'إدارة الوحدات',
+      'admin/company': 'إعدادات الشركة',
+      'admin/activity-logs': 'سجل الأنشطة',
+      'admin/working-hours': 'ساعات العمل',
+      'admin/general': 'عام'
+    };
+    
+    return moduleNames[module] || module;
+  }
+
+  getObjectKeys(obj: any): string[] {
+    return Object.keys(obj);
   }
 
   initializingForm(role: RoleDtoForAdd | null) {
@@ -133,6 +245,33 @@ export class RolesFormComponent implements OnInit {
 
   deselectAllPermissions(): void {
     this.roleForm.get('rolePermissionIds')?.setValue([]);
+  }
+
+  selectAllPermissionsInModule(module: string) {
+    const currentPerms = this.roleForm.get('rolePermissionIds')?.value || [];
+    const modulePerms = this.groupedPermissions[module]?.map(p => p.id) || [];
+    const newPerms = [...new Set([...currentPerms, ...modulePerms])];
+    this.roleForm.get('rolePermissionIds')?.setValue(newPerms);
+  }
+
+  deselectAllPermissionsInModule(module: string) {
+    const currentPerms = this.roleForm.get('rolePermissionIds')?.value || [];
+    const modulePerms = this.groupedPermissions[module]?.map(p => p.id) || [];
+    const newPerms = currentPerms.filter((id: number) => !modulePerms.includes(id));
+    this.roleForm.get('rolePermissionIds')?.setValue(newPerms);
+  }
+
+  isModuleFullySelected(module: string): boolean {
+    const currentPerms = this.roleForm.get('rolePermissionIds')?.value || [];
+    const modulePerms = this.groupedPermissions[module]?.map(p => p.id) || [];
+    return modulePerms.every((id: number) => currentPerms.includes(id));
+  }
+
+  isModulePartiallySelected(module: string): boolean {
+    const currentPerms = this.roleForm.get('rolePermissionIds')?.value || [];
+    const modulePerms = this.groupedPermissions[module]?.map(p => p.id) || [];
+    const selectedInModule = modulePerms.filter((id: number) => currentPerms.includes(id));
+    return selectedInModule.length > 0 && selectedInModule.length < modulePerms.length;
   }
 
   selectAllCategories(): void {

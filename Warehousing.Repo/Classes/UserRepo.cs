@@ -6,6 +6,7 @@ using Warehousing.Repo.Dtos;
 using Warehousing.Repo.Interfaces;
 using Warehousing.Repo.Models;
 using Warehousing.Repo.Shared;
+using Warehousing.Repo.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -16,10 +17,15 @@ namespace Warehousing.Repo.Classes
     {
         private new readonly ILogger<UserRepo> _logger;
         private readonly IConfiguration _config;
-        public UserRepo(WarehousingContext context, ILogger<UserRepo> logger, IConfiguration config) : base(context, logger, config)
+        private readonly IActivityLoggingService _activityLoggingService;
+        private readonly IWorkingHoursRepo _workingHoursRepo;
+        
+        public UserRepo(WarehousingContext context, ILogger<UserRepo> logger, IConfiguration config, IActivityLoggingService activityLoggingService, IWorkingHoursRepo workingHoursRepo) : base(context, logger, config)
         {
             _logger = logger;
             _config = config;
+            _activityLoggingService = activityLoggingService;
+            _workingHoursRepo = workingHoursRepo;
         }
 
         public async Task<LoginResult> Login(LoginDto dto)
@@ -49,41 +55,17 @@ namespace Warehousing.Repo.Classes
                     return new LoginResult { Success = false, ErrorMessage = "This account is inactive." };
                 }
 
-                // Check fingerprint
-                var trustedDevice = _context.UserDevices
-                    .FirstOrDefault(d => d.UserId == user.Id && d.Fingerprint == dto.Fingerprint);
-
-                if (trustedDevice == null)
-                {
-                    if (!user.Username.Equals("admin"))
-                    {
-                        // Optionally save this new device for manual approval
-                        _context.UserDevices.Add(new UserDevice
-                        {
-                            UserId = user.Id,
-                            Fingerprint = dto.Fingerprint ?? "",
-                            FirstSeen = DateTime.UtcNow,
-                            IPAddress = dto.ip ?? "",
-                            IsApproved = false
-                        });
-                        _context.SaveChanges();
-
-                        return new LoginResult { Success = true, ErrorMessage = "Unrecognized device. Contact admin to approve it.", Status = "NotApproved" };
-                    }
-                }
-                else
-                {
-                    if (!trustedDevice.IsApproved)
-                    {
-                        return new LoginResult { Success = true, ErrorMessage = "Unrecognized device. Contact admin to approve it.", Status = "NotApproved" };
-                    }
-                }
+                // ⛔ Working hours are no longer enforced at login time.
+                // Enforcement should happen on sensitive actions (e.g., order creation) for non-admins,
+                // optionally honoring per-user exceptions.
 
                 var claims = new List<Claim>
                 {
                     new Claim(ClaimTypes.Name, user.Username),
                     new Claim("UserId", user.Id.ToString()),
                     new Claim("UserName", user.Username.ToString()),
+                    new Claim("NameEn", user.NameEn ?? user.Username),
+                    new Claim("NameAr", user.NameAr ?? user.Username),
                 };
 
                 var roles = user.UserRoles.Select(ur => ur.Role?.NameEn).Where(name => !string.IsNullOrEmpty(name)).ToList();
@@ -156,11 +138,15 @@ namespace Warehousing.Repo.Classes
                     _logger.LogWarning("Failed to load subcategories: {Error}", ex.Message);
                 }
 
-                // ✅ Add claims with size limits to prevent token explosion
-                claims.Add(new Claim("Permission", string.Join(",", permissions.Take(100) ?? new List<string>()))); // Limit to 100 permissions
-                claims.Add(new Claim("Category", string.Join(",", categoryIds.Take(1000) ?? new List<int>()))); // Limit to 1000 categories
-                claims.Add(new Claim("Product", string.Join(",", productIds.Take(5000) ?? new List<int>()))); // Limit to 5000 products
-                claims.Add(new Claim("SubCategory", string.Join(",", subCategoryIds.Take(1000) ?? new List<int>()))); // Limit to 1000 subcategories
+                // ✅ Add claims with smaller size limits to prevent token explosion
+                // Apply the same limits to all users (including TestUser) to prevent token size issues
+                claims.Add(new Claim("Permission", string.Join(",", permissions.Take(50) ?? new List<string>()))); // Limit to 50 permissions
+                claims.Add(new Claim("Category", string.Join(",", categoryIds.Take(100) ?? new List<int>()))); // Limit to 100 categories
+                claims.Add(new Claim("Product", string.Join(",", productIds.Take(500) ?? new List<int>()))); // Limit to 500 products
+                claims.Add(new Claim("SubCategory", string.Join(",", subCategoryIds.Take(100) ?? new List<int>()))); // Limit to 100 subcategories
+                
+                _logger.LogInformation("Claims added for user {Username} - Permissions: {PermissionCount}, Categories: {CategoryCount}, Products: {ProductCount}, SubCategories: {SubCategoryCount}", 
+                    user.Username, permissions.Take(50).Count(), categoryIds.Take(100).Count(), productIds.Take(500).Count(), subCategoryIds.Take(100).Count());
 
                 // ✅ Add special claim for admin users to indicate they have all permissions
                 if (user.Username.Equals("admin"))
@@ -168,10 +154,47 @@ namespace Warehousing.Repo.Classes
                     claims.Add(new Claim("IsAdmin", "true"));
                 }
 
-                _logger.LogInformation("Generating JWT token with {ClaimsCount} claims", claims.Count);
+                _logger.LogInformation("Generating JWT token with {ClaimsCount} claims for user: {Username}", claims.Count, user.Username);
+                
+                // Log each claim for debugging
+                foreach (var claim in claims)
+                {
+                    _logger.LogInformation("Claim: {Type} = {Value} (length: {Length})", claim.Type, 
+                        claim.Value.Length > 100 ? claim.Value.Substring(0, 100) + "..." : claim.Value, 
+                        claim.Value.Length);
+                }
+                
                 var helper = new HelperClass(_config);
                 var token = helper.GenerateJwtToken(claims.ToArray());
-                _logger.LogInformation("JWT token generated successfully for user: {Username}", user.Username);
+                _logger.LogInformation("JWT token generated successfully for user: {Username}, Token length: {TokenLength}", user.Username, token.Length);
+                
+                // Log token structure for debugging
+                var tokenParts = token.Split('.');
+                if (tokenParts.Length == 3)
+                {
+                    _logger.LogInformation("Token structure - Header length: {HeaderLength}, Payload length: {PayloadLength}, Signature length: {SignatureLength}", 
+                        tokenParts[0].Length, tokenParts[1].Length, tokenParts[2].Length);
+                    
+                    // Try to decode the payload to see if it's valid
+                    try
+                    {
+                        var payloadBytes = Convert.FromBase64String(tokenParts[1]);
+                        var payloadJson = System.Text.Encoding.UTF8.GetString(payloadBytes);
+                        _logger.LogInformation("Payload JSON preview: {PayloadPreview}", payloadJson.Length > 200 ? payloadJson.Substring(0, 200) + "..." : payloadJson);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Failed to decode JWT payload for user: {Username}", user.Username);
+                    }
+                }
+                else
+                {
+                    _logger.LogError("Invalid JWT token structure for user: {Username}, expected 3 parts, got {PartsCount}", user.Username, tokenParts.Length);
+                }
+                
+                // Log successful login activity
+                await _activityLoggingService.LogLoginAsync(user.Id, dto.ip ?? "");
+                
                 return new LoginResult { Success = true, Token = token };
             }
             catch (Exception ex)

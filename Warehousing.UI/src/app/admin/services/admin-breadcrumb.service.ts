@@ -16,25 +16,24 @@ export class AdminBreadcrumbService {
   // Set breadcrumbs for admin dashboard
   setDashboardBreadcrumbs(): void {
     this.breadcrumbService.setFrom([
-      { label: this.translate.instant('BREADCRUMB.HOME'), route: '/home' },
-      { label: this.translate.instant('BREADCRUMB.DASHBOARD'), route: null }
+      { label: 'الرئيسية', route: '/admin/main' },
+      { label: 'لوحة التحكم', route: null }
     ]);
   }
 
   // Set breadcrumbs for products management
   setProductsBreadcrumbs(): void {
     this.breadcrumbService.setFrom([
-      { label: this.translate.instant('BREADCRUMB.HOME'), route: '/home' },
-      { label: this.translate.instant('BREADCRUMB.ADMIN'), route: '/admin/products' },
-      { label: this.translate.instant('BREADCRUMB.PRODUCTS'), route: null }
+      { label: 'الرئيسية', route: '/admin/main' },
+      { label: 'المنتجات', route: null }
     ]);
   }
 
   // Set breadcrumbs for product form
   setProductFormBreadcrumbs(isEdit: boolean = false): void {
     this.breadcrumbService.setFrom([
-      { label: 'الرئيسية', route: '/home' },
-      { label: 'إدارة المنتجات', route: '/admin/products' },
+      { label: 'الرئيسية', route: '/admin/main' },
+      { label: 'المنتجات', route: '/admin/products' },
       { label: isEdit ? 'تعديل المنتج' : 'إضافة منتج جديد', route: null }
     ]);
   }
@@ -42,8 +41,7 @@ export class AdminBreadcrumbService {
   // Set breadcrumbs for categories management
   setCategoriesBreadcrumbs(): void {
     this.breadcrumbService.setFrom([
-      { label: 'الرئيسية', route: '/home' },
-      { label: 'إدارة التصنيفات', route: '/admin/categories' },
+      { label: 'الرئيسية', route: '/admin/main' },
       { label: 'التصنيفات', route: null }
     ]);
   }
@@ -51,8 +49,8 @@ export class AdminBreadcrumbService {
   // Set breadcrumbs for category form
   setCategoryFormBreadcrumbs(isEdit: boolean = false): void {
     this.breadcrumbService.setFrom([
-      { label: 'الرئيسية', route: '/home' },
-      { label: 'إدارة التصنيفات', route: '/admin/categories' },
+      { label: 'الرئيسية', route: '/admin/main' },
+      { label: 'التصنيفات', route: '/admin/categories' },
       { label: isEdit ? 'تعديل التصنيف' : 'إضافة تصنيف جديد', route: null }
     ]);
   }
@@ -60,8 +58,8 @@ export class AdminBreadcrumbService {
   // Set breadcrumbs for subcategories management
   setSubCategoriesBreadcrumbs(): void {
     this.breadcrumbService.setFrom([
-      { label: 'الرئيسية', route: '/home' },
-      { label: 'إدارة التصنيفات', route: '/admin/categories' },
+      { label: 'الرئيسية', route: '/admin/main' },
+      { label: 'التصنيفات', route: '/admin/categories' },
       { label: 'التصنيفات الفرعية', route: null }
     ]);
   }
@@ -69,8 +67,8 @@ export class AdminBreadcrumbService {
   // Set breadcrumbs for subcategory form
   setSubCategoryFormBreadcrumbs(isEdit: boolean = false): void {
     this.breadcrumbService.setFrom([
-      { label: 'الرئيسية', route: '/home' },
-      { label: 'إدارة التصنيفات', route: '/admin/categories' },
+      { label: 'الرئيسية', route: '/admin/main' },
+      { label: 'التصنيفات', route: '/admin/categories' },
       { label: isEdit ? 'تعديل التصنيف الفرعي' : 'إضافة تصنيف فرعي جديد', route: null }
     ]);
   }
@@ -78,8 +76,7 @@ export class AdminBreadcrumbService {
   // Set breadcrumbs for stores management
   setStoresBreadcrumbs(): void {
     this.breadcrumbService.setFrom([
-      { label: 'الرئيسية', route: '/home' },
-      { label: 'إدارة المستودعات', route: '/admin/stores' },
+      { label: 'الرئيسية', route: '/admin/main' },
       { label: 'المستودعات', route: null }
     ]);
   }
@@ -87,8 +84,8 @@ export class AdminBreadcrumbService {
   // Set breadcrumbs for store form
   setStoreFormBreadcrumbs(isEdit: boolean = false): void {
     this.breadcrumbService.setFrom([
-      { label: 'الرئيسية', route: '/home' },
-      { label: 'إدارة المستودعات', route: '/admin/stores' },
+      { label: 'الرئيسية', route: '/admin/main' },
+      { label: 'المستودعات', route: '/admin/stores' },
       { label: isEdit ? 'تعديل المستودع' : 'إضافة مستودع جديد', route: null }
     ]);
   }
@@ -96,17 +93,16 @@ export class AdminBreadcrumbService {
   // Set breadcrumbs for users management
   setUsersBreadcrumbs(): void {
     this.breadcrumbService.setFrom([
-      { label: this.translate.instant('BREADCRUMB.HOME'), route: '/home' },
-      { label: this.translate.instant('BREADCRUMB.ADMIN'), route: '/admin/users' },
-      { label: this.translate.instant('BREADCRUMB.USERS'), route: null }
+      { label: 'الرئيسية', route: '/admin/main' },
+      { label: 'المستخدمين', route: null }
     ]);
   }
 
   // Set breadcrumbs for user form
   setUserFormBreadcrumbs(isEdit: boolean = false): void {
     this.breadcrumbService.setFrom([
-      { label: 'الرئيسية', route: '/home' },
-      { label: 'إدارة المستخدمين', route: '/admin/users' },
+      { label: 'الرئيسية', route: '/admin/main' },
+      { label: 'المستخدمين', route: '/admin/users' },
       { label: isEdit ? 'تعديل المستخدم' : 'إضافة مستخدم جديد', route: null }
     ]);
   }
@@ -114,8 +110,7 @@ export class AdminBreadcrumbService {
   // Set breadcrumbs for roles management
   setRolesBreadcrumbs(): void {
     this.breadcrumbService.setFrom([
-      { label: 'الرئيسية', route: '/home' },
-      { label: 'إدارة الأدوار', route: '/admin/roles' },
+      { label: 'الرئيسية', route: '/admin/main' },
       { label: 'الأدوار', route: null }
     ]);
   }
@@ -123,8 +118,8 @@ export class AdminBreadcrumbService {
   // Set breadcrumbs for role form
   setRoleFormBreadcrumbs(isEdit: boolean = false): void {
     this.breadcrumbService.setFrom([
-      { label: 'الرئيسية', route: '/home' },
-      { label: 'إدارة الأدوار', route: '/admin/roles' },
+      { label: 'الرئيسية', route: '/admin/main' },
+      { label: 'الأدوار', route: '/admin/roles' },
       { label: isEdit ? 'تعديل الدور' : 'إضافة دور جديد', route: null }
     ]);
   }
@@ -132,8 +127,7 @@ export class AdminBreadcrumbService {
   // Set breadcrumbs for orders management
   setOrdersBreadcrumbs(): void {
     this.breadcrumbService.setFrom([
-      { label: 'الرئيسية', route: '/home' },
-      { label: 'إدارة الطلبات', route: '/admin/orders' },
+      { label: 'الرئيسية', route: '/admin/main' },
       { label: 'الطلبات', route: null }
     ]);
   }
@@ -141,8 +135,8 @@ export class AdminBreadcrumbService {
   // Set breadcrumbs for order form
   setOrderFormBreadcrumbs(isEdit: boolean = false): void {
     this.breadcrumbService.setFrom([
-      { label: 'الرئيسية', route: '/home' },
-      { label: 'إدارة الطلبات', route: '/admin/orders' },
+      { label: 'الرئيسية', route: '/admin/main' },
+      { label: 'الطلبات', route: '/admin/order-list' },
       { label: isEdit ? 'تعديل الطلب' : 'إضافة طلب جديد', route: null }
     ]);
   }
@@ -150,8 +144,7 @@ export class AdminBreadcrumbService {
   // Set breadcrumbs for inventory management
   setInventoryBreadcrumbs(): void {
     this.breadcrumbService.setFrom([
-      { label: 'الرئيسية', route: '/home' },
-      { label: 'إدارة المخزون', route: '/admin/inventory' },
+      { label: 'الرئيسية', route: '/admin/main' },
       { label: 'المخزون', route: null }
     ]);
   }
@@ -159,8 +152,8 @@ export class AdminBreadcrumbService {
   // Set breadcrumbs for reports
   setReportsBreadcrumbs(reportType: string = 'التقارير'): void {
     this.breadcrumbService.setFrom([
-      { label: 'الرئيسية', route: '/home' },
-      { label: 'التقارير', route: '/admin/reports' },
+      { label: 'الرئيسية', route: '/admin/main' },
+      { label: 'التقارير', route: '/admin/inventory-report' },
       { label: reportType, route: null }
     ]);
   }
@@ -168,8 +161,7 @@ export class AdminBreadcrumbService {
   // Set breadcrumbs for company settings
   setCompanyBreadcrumbs(): void {
     this.breadcrumbService.setFrom([
-      { label: 'الرئيسية', route: '/home' },
-      { label: 'إعدادات الشركة', route: '/admin/company' },
+      { label: 'الرئيسية', route: '/admin/main' },
       { label: 'الشركة', route: null }
     ]);
   }
@@ -177,8 +169,8 @@ export class AdminBreadcrumbService {
   // Set breadcrumbs for company form
   setCompanyFormBreadcrumbs(): void {
     this.breadcrumbService.setFrom([
-      { label: 'الرئيسية', route: '/home' },
-      { label: 'إعدادات الشركة', route: '/admin/company' },
+      { label: 'الرئيسية', route: '/admin/main' },
+      { label: 'الشركة', route: '/admin/company' },
       { label: 'تعديل بيانات الشركة', route: null }
     ]);
   }

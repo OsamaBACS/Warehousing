@@ -38,7 +38,6 @@ import { ProductsComponent } from "./components/Products/products/products.compo
 import { SubCategoryComponent } from "./components/SubCategories/sub-category/sub-category.component";
 import { SubCategoryFormComponent } from "./components/SubCategories/sub-category-form/sub-category-form.component";
 import { SubCategoriesResolver } from "./resolvers/sub-categories-resolver";
-import { UserDevicesComponent } from "./components/Users/user-devices/user-devices.component";
 import { UsersListResolver } from "./resolvers/users-list-resolver";
 import { OrderListComponent } from "./components/Orders/order-list/order-list.component";
 import { OrderItemsListComponent } from "./components/Orders/order-items-list/order-items-list.component";
@@ -47,6 +46,8 @@ import { InventoryManagementComponent } from "./components/Inventory/inventory-m
 import { InitialStockSetupComponent } from "./components/Inventory/initial-stock-setup/initial-stock-setup.component";
 import { InitialStockComponent } from "./components/initial-stock/initial-stock.component";
 import { ModifierManagementComponent } from "./components/Products/modifier-management/modifier-management.component";
+import { ActivityLogsComponent } from "./components/ActivityLogs/activity-logs.component";
+import { WorkingHoursComponent } from "./components/WorkingHours/working-hours.component";
 
 
 const routes: Routes = [
@@ -106,12 +107,6 @@ const routes: Routes = [
         resolve: {
           StoresResolver: StoresResolver
         }
-      },
-      { 
-        path: 'users-devices', component: UserDevicesComponent,
-        canActivate: [PermissionGuard],
-        data: { permission: [PermissionsEnum.VIEW_USERS, PermissionsEnum.ADD_USER] },
-        resolve: { usersListResolver: UsersListResolver }
       },
       {
         path: 'roles',
@@ -319,6 +314,18 @@ const routes: Routes = [
         component: InitialStockComponent,
         canActivate: [PermissionGuard],
         data: { permission: [PermissionsEnum.MANAGE_INVENTORY] }
+      },
+      {
+        path: 'activity-logs',
+        component: ActivityLogsComponent,
+        canActivate: [PermissionGuard],
+        data: { permission: [PermissionsEnum.VIEW_ACTIVITY_LOGS] }
+      },
+      {
+        path: 'working-hours',
+        component: WorkingHoursComponent,
+        canActivate: [PermissionGuard],
+        data: { permission: [PermissionsEnum.VIEW_WORKING_HOURS] }
       },
       { path: '**', redirectTo: 'dashboard' }
     ]

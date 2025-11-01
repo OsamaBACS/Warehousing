@@ -1,0 +1,347 @@
+<div class="activity-logs-container">
+  <!-- Header Section -->
+  <div class="page-header">
+    <div class="header-content">
+      <div class="header-info">
+        <h1 class="page-title">
+          <i class="bi bi-activity"></i>
+          {{ 'BREADCRUMB.ACTIVITY_LOGS' | translate }}
+        </h1>
+        <p class="page-subtitle">{{ 'COMMON.MONITOR_ACTIVITIES' | translate }}</p>
+      </div>
+      <div class="header-actions">
+        <button class="btn btn-outline-danger" (click)="clearOldLogs()" *ngIf="hasPermission(permissionsEnum.VIEW_ADMIN)">
+          <i class="bi bi-trash"></i>
+          {{ 'COMMON.CLEAR_OLD_LOGS' | translate }}
+        </button>
+        <button class="btn btn-primary" (click)="loadActivityLogs()">
+          <i class="bi bi-arrow-clockwise"></i>
+          {{ 'COMMON.REFRESH' | translate }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stats Overview -->
+  <div class="stats-grid">
+    <div class="stat-card primary">
+      <div class="stat-icon">
+        <i class="bi bi-list-ul"></i>
+      </div>
+      <div class="stat-content">
+        <h3>{{ totalCount | number }}</h3>
+        <p>{{ 'COMMON.TOTAL_LOGS' | translate }}</p>
+      </div>
+    </div>
+    <div class="stat-card success">
+      <div class="stat-icon">
+        <i class="bi bi-check-circle"></i>
+      </div>
+      <div class="stat-content">
+        <h3>{{ activityLogs.length | number }}</h3>
+        <p>{{ 'COMMON.CURRENT_PAGE' | translate }}</p>
+      </div>
+    </div>
+    <div class="stat-card info">
+      <div class="stat-icon">
+        <i class="bi bi-people"></i>
+      </div>
+      <div class="stat-content">
+        <h3>{{ getUniqueUsers() | number }}</h3>
+        <p>{{ 'COMMON.LOGGED_USERS' | translate }}</p>
+      </div>
+    </div>
+    <div class="stat-card warning">
+      <div class="stat-icon">
+        <i class="bi bi-clock"></i>
+      </div>
+      <div class="stat-content">
+        <h3>{{ getTotalPages() | number }}</h3>
+        <p>{{ 'COMMON.PAGE_SIZE' | translate }}</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters Section -->
+  <div class="filters-card">
+    <div class="filters-header">
+      <h3>
+        <i class="bi bi-funnel"></i>
+        {{ 'COMMON.FILTERS' | translate }}
+      </h3>
+    </div>
+    <div class="filters-content">
+      <div class="filter-row">
+        <div class="filter-group">
+          <label class="filter-label">{{ 'COMMON.START_DATE' | translate }}</label>
+          <input type="date" class="form-control" [(ngModel)]="filter.startDate" />
+        </div>
+        <div class="filter-group">
+          <label class="filter-label">{{ 'COMMON.END_DATE' | translate }}</label>
+          <input type="date" class="form-control" [(ngModel)]="filter.endDate" />
+        </div>
+        <div class="filter-group">
+          <label class="filter-label">{{ 'COMMON.ACTION' | translate }}</label>
+          <select class="form-control" [(ngModel)]="filter.action">
+            <option value="">{{ 'COMMON.ALL_ACTIONS' | translate }}</option>
+            <option *ngFor="let action of availableActions" [value]="action">{{ action }}</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label class="filter-label">{{ 'COMMON.MODULE' | translate }}</label>
+          <select class="form-control" [(ngModel)]="filter.module">
+            <option value="">{{ 'COMMON.ALL_MODULES' | translate }}</option>
+            <option *ngFor="let module of availableModules" [value]="module">{{ module }}</option>
+          </select>
+        </div>
+        <div class="filter-actions">
+          <button class="btn btn-primary" (click)="applyFilter()">
+            <i class="bi bi-search"></i>
+            {{ 'COMMON.APPLY_FILTERS' | translate }}
+          </button>
+          <button class="btn btn-outline-secondary" (click)="clearFilters()">
+            <i class="bi bi-x-circle"></i>
+            {{ 'COMMON.CLEAR_FILTERS' | translate }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Activity Logs Table -->
+  <div class="table-card">
+    <div class="table-header">
+      <h3>
+        <i class="bi bi-table"></i>
+        {{ 'BREADCRUMB.ACTIVITY_LOGS' | translate }}
+      </h3>
+      <div class="table-actions">
+        <span class="results-info">
+          {{ 'COMMON.SHOWING_ENTRIES' | translate: {
+            start: (currentPage - 1) * pageSize + 1,
+            end: Math.min(currentPage * pageSize, totalCount),
+            total: totalCount
+          } }}
+        </span>
+      </div>
+    </div>
+    
+    <div class="table-container">
+      <div class="table-responsive">
+        <table class="activity-table">
+          <thead>
+            <tr>
+              <th class="user-col">
+                <i class="bi bi-person"></i>
+                {{ 'COMMON.USER' | translate }}
+              </th>
+              <th class="action-col">
+                <i class="bi bi-lightning"></i>
+                {{ 'COMMON.ACTION' | translate }}
+              </th>
+              <th class="module-col">
+                <i class="bi bi-grid"></i>
+                {{ 'COMMON.MODULE' | translate }}
+              </th>
+              <th class="time-col">
+                <i class="bi bi-clock"></i>
+                {{ 'COMMON.TIMESTAMP' | translate }}
+              </th>
+              <th class="ip-col">
+                <i class="bi bi-geo-alt"></i>
+                {{ 'COMMON.IP_ADDRESS' | translate }}
+              </th>
+              <th class="actions-col">
+                <i class="bi bi-gear"></i>
+                {{ 'COMMON.ACTIONS' | translate }}
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- Loading State -->
+            <tr *ngIf="loading" class="loading-row">
+              <td colspan="6" class="loading-cell">
+                <div class="loading-spinner">
+                  <div class="spinner"></div>
+                  <p>{{ 'COMMON.LOADING_ACTIVITY_LOGS' | translate }}</p>
+                </div>
+              </td>
+            </tr>
+
+            <!-- Data Rows -->
+            <tr *ngFor="let log of activityLogs; trackBy: trackByLogId" 
+                (click)="showLogDetails(log)" 
+                class="log-row">
+              <td class="user-cell">
+                <div class="user-info">
+                  <div class="user-avatar" [style.background-color]="getUserAvatarColor(log.userId)">
+                    {{ (log.username || 'U').charAt(0).toUpperCase() }}
+                  </div>
+                  <div class="user-details">
+                    <div class="user-name">{{ log.username || ('COMMON.UNKNOWN_USER' | translate) }}</div>
+                    <div class="user-id">{{ 'COMMON.USER_ID' | translate }}: {{ log.userId || 'N/A' }}</div>
+                  </div>
+                </div>
+              </td>
+              <td class="action-cell">
+                <span class="action-badge" [ngClass]="getActionClass(log.action || 'UNKNOWN')">
+                  {{ log.action || ('COMMON.UNKNOWN' | translate) }}
+                </span>
+              </td>
+              <td class="module-cell">
+                <span class="module-tag" [ngClass]="getModuleClass(log.module || 'UNKNOWN')">
+                  {{ log.module || ('COMMON.UNKNOWN' | translate) }}
+                </span>
+              </td>
+              <td class="time-cell">
+                <div class="time-info">
+                  <div class="time-date">{{ (log.timestamp || getCurrentDate()) | date:'MMM dd, yyyy' }}</div>
+                  <div class="time-clock">{{ (log.timestamp || getCurrentDate()) | date:'h:mm:ss a' }}</div>
+                </div>
+              </td>
+              <td class="ip-cell">
+                <code class="ip-address">{{ log.ipAddress || 'N/A' }}</code>
+              </td>
+              <td class="actions-cell">
+                <button class="btn btn-sm btn-outline-primary view-btn" 
+                        (click)="showLogDetails(log); $event.stopPropagation()">
+                  <i class="bi bi-eye"></i>
+                  {{ 'COMMON.VIEW' | translate }}
+                </button>
+              </td>
+            </tr>
+
+            <!-- Empty State -->
+            <tr *ngIf="!loading && activityLogs.length === 0" class="empty-row">
+              <td colspan="6" class="empty-cell">
+                <div class="empty-state">
+                  <i class="bi bi-inbox"></i>
+                  <h4>{{ 'COMMON.NO_LOGS_FOUND' | translate }}</h4>
+                  <p>{{ 'COMMON.TRY_ADJUSTING_FILTERS' | translate }}</p>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Pagination -->
+    <div class="pagination-container" *ngIf="!loading && totalCount > pageSize">
+      <div class="pagination-info">
+        <span>{{ 'COMMON.PAGE' | translate }} {{ currentPage }} {{ 'COMMON.OF' | translate }} {{ getTotalPages() }}</span>
+      </div>
+      <div class="pagination">
+        <button class="page-btn" 
+                [disabled]="currentPage === 1" 
+                (click)="onPageChange(currentPage - 1)">
+          <i class="bi bi-chevron-left"></i>
+        </button>
+        
+        <button *ngFor="let page of getPageNumbers()" 
+                class="page-btn" 
+                [class.active]="page === currentPage"
+                (click)="onPageChange(page)">
+          {{ page }}
+        </button>
+        
+        <button class="page-btn" 
+                [disabled]="currentPage === getTotalPages()" 
+                (click)="onPageChange(currentPage + 1)">
+          <i class="bi bi-chevron-right"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Log Details Modal -->
+<div class="modal fade" id="logDetailsModal" tabindex="-1" aria-labelledby="logDetailsModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-xl">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="logDetailsModalLabel">
+          <i class="bi bi-info-circle"></i>
+          {{ 'COMMON.ACTIVITY_LOG_DETAILS' | translate }}
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body" *ngIf="selectedLog">
+        <div class="log-details">
+          <!-- User Information -->
+          <div class="detail-section">
+            <div class="section-header">
+              <i class="bi bi-person"></i>
+              <h6>{{ 'COMMON.USER_INFO' | translate }}</h6>
+            </div>
+            <div class="user-detail-card">
+              <div class="user-avatar-large" [style.background-color]="getUserAvatarColor(selectedLog.userId)">
+                {{ (selectedLog.username || 'U').charAt(0).toUpperCase() }}
+              </div>
+              <div class="user-detail-info">
+                <h5>{{ selectedLog.username || ('COMMON.UNKNOWN_USER' | translate) }}</h5>
+                <p>{{ 'COMMON.USER_ID' | translate }}: {{ selectedLog.userId || 'N/A' }}</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Activity Information -->
+          <div class="detail-section">
+            <div class="section-header">
+              <i class="bi bi-activity"></i>
+              <h6>{{ 'COMMON.ACTIVITY_DETAILS' | translate }}</h6>
+            </div>
+            <div class="activity-details">
+              <div class="detail-item">
+                <label>{{ 'COMMON.ACTION' | translate }}</label>
+                <span class="action-badge" [ngClass]="getActionClass(selectedLog.action || 'UNKNOWN')">
+                  {{ selectedLog.action || ('COMMON.UNKNOWN' | translate) }}
+                </span>
+              </div>
+              <div class="detail-item">
+                <label>{{ 'COMMON.MODULE' | translate }}</label>
+                <span class="module-tag" [ngClass]="getModuleClass(selectedLog.module || 'UNKNOWN')">
+                  {{ selectedLog.module || ('COMMON.UNKNOWN' | translate) }}
+                </span>
+              </div>
+              <div class="detail-item">
+                <label>{{ 'COMMON.TIMESTAMP' | translate }}</label>
+                <span class="timestamp">{{ (selectedLog.timestamp || getCurrentDate()) | date:'full' }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Technical Details -->
+          <div class="detail-section">
+            <div class="section-header">
+              <i class="bi bi-gear"></i>
+              <h6>{{ 'COMMON.TECHNICAL_DETAILS' | translate }}</h6>
+            </div>
+            <div class="technical-details">
+              <div class="detail-item">
+                <label>{{ 'COMMON.IP_ADDRESS' | translate }}</label>
+                <code class="ip-code">{{ selectedLog.ipAddress || 'N/A' }}</code>
+              </div>
+              <div class="detail-item">
+                <label>{{ 'COMMON.SEVERITY' | translate }}</label>
+                <span class="severity-badge">INFO</span>
+              </div>
+              <div class="detail-item full-width">
+                <label>{{ 'COMMON.DETAILS' | translate }}</label>
+                <div class="details-content">
+                  {{ selectedLog.details || ('COMMON.NO_ADDITIONAL_DETAILS' | translate) }}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+          <i class="bi bi-x-circle"></i>
+          {{ 'COMMON.CLOSE' | translate }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

@@ -34,6 +34,7 @@ namespace Warehousing.Data.Services
             await SeedCompanyAsync();
             await SeedRolePermissionsAsync();
             await SeedUserRolesAsync();
+            await SeedWorkingHoursAsync();
         }
 
         private async Task SeedRolesAsync()
@@ -106,69 +107,83 @@ namespace Warehousing.Data.Services
                 new Permission { Id = 35, Code = "DELETE_PURCHASE_ORDER", NameEn = "Delete Purchase Order", NameAr = "حذف أمر شراء" },
                 new Permission { Id = 36, Code = "COMPLETE_PURCHASE_ORDER", NameEn = "Complete Purchase Order", NameAr = "إنهاء أمر شراء" },
                 new Permission { Id = 37, Code = "PRINT_PURCHASE_ORDER", NameEn = "Print Purchase Order", NameAr = "طباعة أمر شراء" },
+                new Permission { Id = 38, Code = "APPROVE_PURCHASE_ORDER", NameEn = "Approve Purchase Order", NameAr = "اعتماد أمر شراء" },
+                new Permission { Id = 39, Code = "CANCEL_PURCHASE_ORDER", NameEn = "Cancel Purchase Order", NameAr = "إلغاء أمر شراء" },
                 
                 // Sale Orders
-                new Permission { Id = 38, Code = "VIEW_SALE_ORDERS", NameEn = "View Sale Orders", NameAr = "عرض أوامر البيع" },
-                new Permission { Id = 39, Code = "ADD_SALE_ORDER", NameEn = "Add Sale Order", NameAr = "إضافة أمر بيع" },
-                new Permission { Id = 40, Code = "EDIT_SALE_ORDER", NameEn = "Edit Sale Order", NameAr = "تعديل أمر بيع" },
-                new Permission { Id = 41, Code = "DELETE_SALE_ORDER", NameEn = "Delete Sale Order", NameAr = "حذف أمر بيع" },
-                new Permission { Id = 42, Code = "COMPLETE_SALE_ORDER", NameEn = "Complete Sale Order", NameAr = "إنهاء أمر بيع" },
-                new Permission { Id = 43, Code = "PRINT_SALE_ORDER", NameEn = "Print Sale Order", NameAr = "طباعة أمر بيع" },
+                new Permission { Id = 40, Code = "VIEW_SALE_ORDERS", NameEn = "View Sale Orders", NameAr = "عرض أوامر البيع" },
+                new Permission { Id = 41, Code = "ADD_SALE_ORDER", NameEn = "Add Sale Order", NameAr = "إضافة أمر بيع" },
+                new Permission { Id = 42, Code = "EDIT_SALE_ORDER", NameEn = "Edit Sale Order", NameAr = "تعديل أمر بيع" },
+                new Permission { Id = 43, Code = "DELETE_SALE_ORDER", NameEn = "Delete Sale Order", NameAr = "حذف أمر بيع" },
+                new Permission { Id = 44, Code = "COMPLETE_SALE_ORDER", NameEn = "Complete Sale Order", NameAr = "إنهاء أمر بيع" },
+                new Permission { Id = 45, Code = "PRINT_SALE_ORDER", NameEn = "Print Sale Order", NameAr = "طباعة أمر بيع" },
+                new Permission { Id = 46, Code = "APPROVE_SALE_ORDER", NameEn = "Approve Sale Order", NameAr = "اعتماد أمر بيع" },
+                new Permission { Id = 47, Code = "CANCEL_SALE_ORDER", NameEn = "Cancel Sale Order", NameAr = "إلغاء أمر بيع" },
                 
                 // Reports
-                new Permission { Id = 44, Code = "VIEW_INVENTORY_REPORT", NameEn = "View Inventory Report", NameAr = "عرض تقرير المخزون" },
-                new Permission { Id = 45, Code = "PRINT_INVENTORY_REPORT", NameEn = "Print Inventory Report", NameAr = "طباعة تقرير المخزون" },
+                new Permission { Id = 48, Code = "VIEW_INVENTORY_REPORT", NameEn = "View Inventory Report", NameAr = "عرض تقرير المخزون" },
+                new Permission { Id = 49, Code = "PRINT_INVENTORY_REPORT", NameEn = "Print Inventory Report", NameAr = "طباعة تقرير المخزون" },
                 
                 // Settings
-                new Permission { Id = 46, Code = "VIEW_SETTINGS", NameEn = "View Settings", NameAr = "عرض الإعدادات" },
-                new Permission { Id = 47, Code = "EDIT_SETTINGS", NameEn = "Edit Settings", NameAr = "تعديل الإعدادات" },
+                new Permission { Id = 50, Code = "VIEW_SETTINGS", NameEn = "View Settings", NameAr = "عرض الإعدادات" },
+                new Permission { Id = 51, Code = "EDIT_SETTINGS", NameEn = "Edit Settings", NameAr = "تعديل الإعدادات" },
                 
                 // Admin Panel
-                new Permission { Id = 48, Code = "VIEW_ADMIN", NameEn = "View Admin", NameAr = "الإدارة" },
+                new Permission { Id = 52, Code = "VIEW_ADMIN", NameEn = "View Admin", NameAr = "الإدارة" },
                 
                 // Category Management
-                new Permission { Id = 49, Code = "VIEW_CATEGORIES", NameEn = "View Categories", NameAr = "عرض التصنيفات" },
-                new Permission { Id = 50, Code = "ADD_CATEGORY", NameEn = "Add Category", NameAr = "إضافة تصنيف" },
-                new Permission { Id = 51, Code = "EDIT_CATEGORY", NameEn = "Edit Category", NameAr = "تعديل تصنيف" },
-                new Permission { Id = 52, Code = "DELETE_CATEGORY", NameEn = "Delete Category", NameAr = "حذف تصنيف" },
-                new Permission { Id = 53, Code = "PRINT_CATEGORIES", NameEn = "Print Categories", NameAr = "طباعة التصنيفات" },
+                new Permission { Id = 53, Code = "VIEW_CATEGORIES", NameEn = "View Categories", NameAr = "عرض التصنيفات" },
+                new Permission { Id = 54, Code = "ADD_CATEGORY", NameEn = "Add Category", NameAr = "إضافة تصنيف" },
+                new Permission { Id = 55, Code = "EDIT_CATEGORY", NameEn = "Edit Category", NameAr = "تعديل تصنيف" },
+                new Permission { Id = 56, Code = "DELETE_CATEGORY", NameEn = "Delete Category", NameAr = "حذف تصنيف" },
+                new Permission { Id = 57, Code = "PRINT_CATEGORIES", NameEn = "Print Categories", NameAr = "طباعة التصنيفات" },
                 
                 // Unit Management
-                new Permission { Id = 54, Code = "VIEW_UNITS", NameEn = "View Units", NameAr = "عرض الوحدات" },
-                new Permission { Id = 55, Code = "ADD_UNIT", NameEn = "Add Unit", NameAr = "إضافة وحدة" },
-                new Permission { Id = 56, Code = "EDIT_UNIT", NameEn = "Edit Unit", NameAr = "تعديل وحدة" },
-                new Permission { Id = 57, Code = "DELETE_UNIT", NameEn = "Delete Unit", NameAr = "حذف وحدة" },
-                new Permission { Id = 58, Code = "PRINT_UNITS", NameEn = "Print Units", NameAr = "طباعة الوحدات" },
+                new Permission { Id = 58, Code = "VIEW_UNITS", NameEn = "View Units", NameAr = "عرض الوحدات" },
+                new Permission { Id = 59, Code = "ADD_UNIT", NameEn = "Add Unit", NameAr = "إضافة وحدة" },
+                new Permission { Id = 60, Code = "EDIT_UNIT", NameEn = "Edit Unit", NameAr = "تعديل وحدة" },
+                new Permission { Id = 61, Code = "DELETE_UNIT", NameEn = "Delete Unit", NameAr = "حذف وحدة" },
+                new Permission { Id = 62, Code = "PRINT_UNITS", NameEn = "Print Units", NameAr = "طباعة الوحدات" },
                 
                 // Store Management
-                new Permission { Id = 59, Code = "VIEW_STORES", NameEn = "View Stores", NameAr = "عرض المستودعات" },
-                new Permission { Id = 60, Code = "ADD_STORE", NameEn = "Add Store", NameAr = "إضافة مستودع" },
-                new Permission { Id = 61, Code = "EDIT_STORE", NameEn = "Edit Store", NameAr = "تعديل مستودع" },
-                new Permission { Id = 62, Code = "DELETE_STORE", NameEn = "Delete Store", NameAr = "حذف مستودع" },
-                new Permission { Id = 63, Code = "PRINT_STORES", NameEn = "Print Stores", NameAr = "طباعة المستودعات" },
+                new Permission { Id = 63, Code = "VIEW_STORES", NameEn = "View Stores", NameAr = "عرض المستودعات" },
+                new Permission { Id = 64, Code = "ADD_STORE", NameEn = "Add Store", NameAr = "إضافة مستودع" },
+                new Permission { Id = 65, Code = "EDIT_STORE", NameEn = "Edit Store", NameAr = "تعديل مستودع" },
+                new Permission { Id = 66, Code = "DELETE_STORE", NameEn = "Delete Store", NameAr = "حذف مستودع" },
+                new Permission { Id = 67, Code = "PRINT_STORES", NameEn = "Print Stores", NameAr = "طباعة المستودعات" },
                 
                 // Store Transfers
-                new Permission { Id = 64, Code = "VIEW_STORE_TRANSFERS", NameEn = "View Store Transfers", NameAr = "عرض تحويلات المخزون" },
-                new Permission { Id = 65, Code = "ADD_STORE_TRANSFER", NameEn = "Add Store Transfer", NameAr = "إضافة تحويل مخزون" },
-                new Permission { Id = 66, Code = "EDIT_STORE_TRANSFER", NameEn = "Edit Store Transfer", NameAr = "تعديل تحويل مخزون" },
-                new Permission { Id = 67, Code = "DELETE_STORE_TRANSFER", NameEn = "Delete Store Transfer", NameAr = "حذف تحويل مخزون" },
-                new Permission { Id = 68, Code = "APPROVE_STORE_TRANSFER", NameEn = "Approve Store Transfer", NameAr = "اعتماد تحويل مخزون" },
-                new Permission { Id = 69, Code = "PRINT_STORE_TRANSFERS", NameEn = "Print Store Transfers", NameAr = "طباعة تحويلات المخزون" },
+                new Permission { Id = 68, Code = "VIEW_STORE_TRANSFERS", NameEn = "View Store Transfers", NameAr = "عرض تحويلات المخزون" },
+                new Permission { Id = 69, Code = "ADD_STORE_TRANSFER", NameEn = "Add Store Transfer", NameAr = "إضافة تحويل مخزون" },
+                new Permission { Id = 70, Code = "EDIT_STORE_TRANSFER", NameEn = "Edit Store Transfer", NameAr = "تعديل تحويل مخزون" },
+                new Permission { Id = 71, Code = "DELETE_STORE_TRANSFER", NameEn = "Delete Store Transfer", NameAr = "حذف تحويل مخزون" },
+                new Permission { Id = 72, Code = "APPROVE_STORE_TRANSFER", NameEn = "Approve Store Transfer", NameAr = "اعتماد تحويل مخزون" },
+                new Permission { Id = 73, Code = "PRINT_STORE_TRANSFERS", NameEn = "Print Store Transfers", NameAr = "طباعة تحويلات المخزون" },
                 
                 // Inventory Management
-                new Permission { Id = 70, Code = "VIEW_INVENTORY_MANAGEMENT", NameEn = "View Inventory Management", NameAr = "عرض إدارة المخزون" },
-                new Permission { Id = 71, Code = "MANAGE_INVENTORY", NameEn = "Manage Inventory", NameAr = "إدارة المخزون" },
-                new Permission { Id = 72, Code = "ADJUST_INVENTORY", NameEn = "Adjust Inventory", NameAr = "تعديل المخزون" },
-                new Permission { Id = 73, Code = "VIEW_LOW_STOCK", NameEn = "View Low Stock", NameAr = "عرض المخزون المنخفض" },
+                new Permission { Id = 74, Code = "VIEW_INVENTORY_MANAGEMENT", NameEn = "View Inventory Management", NameAr = "عرض إدارة المخزون" },
+                new Permission { Id = 75, Code = "MANAGE_INVENTORY", NameEn = "Manage Inventory", NameAr = "إدارة المخزون" },
+                new Permission { Id = 76, Code = "ADJUST_INVENTORY", NameEn = "Adjust Inventory", NameAr = "تعديل المخزون" },
+                new Permission { Id = 77, Code = "VIEW_LOW_STOCK", NameEn = "View Low Stock", NameAr = "عرض المخزون المنخفض" },
                 
                 // Subcategory Management
-                new Permission { Id = 74, Code = "VIEW_SUBCATEGORIES", NameEn = "View Subcategories", NameAr = "عرض التصنيفات الفرعية" },
-                new Permission { Id = 75, Code = "ADD_SUBCATEGORY", NameEn = "Add Subcategory", NameAr = "إضافة تصنيف فرعي" },
-                new Permission { Id = 76, Code = "EDIT_SUBCATEGORY", NameEn = "Edit Subcategory", NameAr = "تعديل تصنيف فرعي" },
-                new Permission { Id = 77, Code = "DELETE_SUBCATEGORY", NameEn = "Delete Subcategory", NameAr = "حذف تصنيف فرعي" },
+                new Permission { Id = 78, Code = "VIEW_SUBCATEGORIES", NameEn = "View Subcategories", NameAr = "عرض التصنيفات الفرعية" },
+                new Permission { Id = 79, Code = "ADD_SUBCATEGORY", NameEn = "Add Subcategory", NameAr = "إضافة تصنيف فرعي" },
+                new Permission { Id = 80, Code = "EDIT_SUBCATEGORY", NameEn = "Edit Subcategory", NameAr = "تعديل تصنيف فرعي" },
+                new Permission { Id = 81, Code = "DELETE_SUBCATEGORY", NameEn = "Delete Subcategory", NameAr = "حذف تصنيف فرعي" },
+                new Permission { Id = 82, Code = "PRINT_SUBCATEGORIES", NameEn = "Print Subcategories", NameAr = "طباعة التصنيفات الفرعية" },
                 
                 // Additional permissions for invoice management
-                new Permission { Id = 1006, Code = "EDIT_APPROVED_INVOICE", NameEn = "Edit Approved Invoice", NameAr = "تعديل فاتورة معتمدة" }
+                new Permission { Id = 1006, Code = "EDIT_APPROVED_INVOICE", NameEn = "Edit Approved Invoice", NameAr = "تعديل فاتورة معتمدة" },
+                
+                // Activity Logs Management
+                new Permission { Id = 1007, Code = "VIEW_ACTIVITY_LOGS", NameEn = "View Activity Logs", NameAr = "عرض سجل الأنشطة" },
+                new Permission { Id = 1008, Code = "EXPORT_ACTIVITY_LOGS", NameEn = "Export Activity Logs", NameAr = "تصدير سجل الأنشطة" },
+                
+                // Working Hours Management
+                new Permission { Id = 1009, Code = "VIEW_WORKING_HOURS", NameEn = "View Working Hours", NameAr = "عرض ساعات العمل" },
+                new Permission { Id = 1010, Code = "EDIT_WORKING_HOURS", NameEn = "Edit Working Hours", NameAr = "تعديل ساعات العمل" },
+                new Permission { Id = 1011, Code = "MANAGE_WORKING_HOURS_EXCEPTIONS", NameEn = "Manage Working Hours Exceptions", NameAr = "إدارة استثناءات ساعات العمل" }
             };
 
             _context.Permissions.AddRange(permissions);
@@ -247,7 +262,17 @@ namespace Warehousing.Data.Services
                 return; // Order types already exist
             }
 
-            // Order types will be populated from your existing database
+            // Add basic order types
+            var orderTypes = new List<OrderType>
+            {
+                new OrderType { Id = 1, NameEn = "Purchase Order", NameAr = "طلب شراء", Description = "Order for purchasing products from suppliers", IsActive = true },
+                new OrderType { Id = 2, NameEn = "Sale Order", NameAr = "طلب بيع", Description = "Order for selling products to customers", IsActive = true },
+                new OrderType { Id = 3, NameEn = "Transfer Order", NameAr = "طلب نقل", Description = "Order for transferring products between stores", IsActive = true },
+                new OrderType { Id = 4, NameEn = "Return Order", NameAr = "طلب إرجاع", Description = "Order for returning products", IsActive = true }
+            };
+
+            _context.OrderTypes.AddRange(orderTypes);
+            await _context.SaveChangesAsync();
         }
 
         private async Task SeedTransactionTypesAsync()
@@ -376,6 +401,34 @@ namespace Warehousing.Data.Services
                 _context.UserRoles.Add(userRole);
                 await _context.SaveChangesAsync();
             }
+        }
+
+        private async Task SeedWorkingHoursAsync()
+        {
+            var existingWorkingHours = await _context.WorkingHours.FirstOrDefaultAsync();
+            if (existingWorkingHours != null)
+            {
+                return; // Working hours already exist
+            }
+
+            var workingHours = new WorkingHours
+            {
+                Id = 1,
+                Name = "Default Working Hours",
+                Description = "Standard working hours (Sunday to Thursday, 8:00 AM to 5:00 PM)",
+                StartTime = new TimeSpan(8, 0, 0), // 8:00 AM
+                EndTime = new TimeSpan(17, 0, 0), // 5:00 PM
+                StartDay = DayOfWeek.Sunday,
+                EndDay = DayOfWeek.Thursday,
+                AllowWeekends = false,
+                AllowHolidays = false,
+                IsActive = true,
+                CreatedAt = new DateTime(2024, 1, 1),
+                CreatedBy = "system"
+            };
+
+            _context.WorkingHours.Add(workingHours);
+            await _context.SaveChangesAsync();
         }
 
         private string HashPassword(string password)

@@ -30,4 +30,19 @@ namespace Warehousing.Repo.Dtos
         // Variant stock information for efficient loading
         public Dictionary<string, object>? VariantStockData { get; set; }
     }
+
+    public class SplitGeneralToVariantsRequest
+    {
+        public int ProductId { get; set; }
+        public int StoreId { get; set; }
+        public int GeneralInventoryId { get; set; }
+        public decimal GeneralQuantity { get; set; }
+        public List<VariantAllocation> Allocations { get; set; } = new();
+    }
+
+    public class VariantAllocation
+    {
+        public int VariantId { get; set; }
+        public decimal Quantity { get; set; }
+    }
 }

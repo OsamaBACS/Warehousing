@@ -3,6 +3,9 @@ using Warehousing.Api.middlewares;
 using Warehousing.Data.Context;
 using Warehousing.Data.Services;
 using Warehousing.Repo.Shared;
+using Warehousing.Repo.Services;
+using Warehousing.Repo.Interfaces;
+using Warehousing.Repo.Classes;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
@@ -43,6 +46,11 @@ builder.Services.AddDbContext<WarehousingContext>(options =>
 builder.Services.AddAutoMapper(typeof(AutoMapperProfile).Assembly);
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<SeedingService>();
+builder.Services.AddScoped<IActivityLoggingService, ActivityLoggingService>();
+
+// Register new repositories
+builder.Services.AddScoped<IUserActivityLogRepo, UserActivityLogRepo>();
+builder.Services.AddScoped<IWorkingHoursRepo, WorkingHoursRepo>();
 
 builder.Services.AddAuthentication(opt =>
 {
@@ -119,4 +127,6 @@ app.Use(async (context, next) =>
     }
 });
 
+// Force port 5036 for consistency
+app.Urls.Add("http://localhost:5036");
 app.Run();

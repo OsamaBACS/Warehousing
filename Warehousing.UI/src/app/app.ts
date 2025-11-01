@@ -64,6 +64,22 @@ export class App implements OnInit {
     }
   }
 
+  getUserDisplayName(): string {
+    if (this.currentLang === 'ar' && this.authService.nameAr) {
+      // Check if the Arabic name is properly encoded
+      const nameAr = this.authService.nameAr;
+      if (nameAr.includes('Ø') || nameAr.includes('Ù')) {
+        // If it's garbled, fallback to username
+        return this.username;
+      }
+      return nameAr;
+    } else if (this.authService.nameEn) {
+      return this.authService.nameEn;
+    } else {
+      return this.username;
+    }
+  }
+
   toggleDarkMode(): void {
     this.theme.toggle();
   }
@@ -76,5 +92,13 @@ export class App implements OnInit {
     localStorage.clear();
     this.cartService.clearCart();
     this.router.navigate(['/login']);
+  }
+
+  goToHome() {
+    if (this.authService.isAdmin) {
+      this.router.navigate(['/admin']);
+    } else {
+      this.router.navigate(['/order/2/categories']);
+    }
   }
 }

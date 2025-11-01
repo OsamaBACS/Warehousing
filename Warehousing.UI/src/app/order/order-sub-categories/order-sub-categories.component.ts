@@ -38,8 +38,9 @@ export class OrderSubCategoriesComponent implements OnInit {
       this.categoryId = categoryIdParam !== null ? Number(categoryIdParam) : 1;
       const categoryName = this.getCategoryName(this.categoryId);
 
+      const homeRoute = this.authService.isAdmin ? '/admin/main' : `/order/${this.orderTypeId}/categories`;
       this.breadcrumbService.setFrom([
-        { label: 'الرئيسية', route: '/home' },
+        { label: 'الرئيسية', route: homeRoute },
         { label: 'التصنيفات', route: `/order/${this.orderTypeId}/categories` },
         { label: categoryName, route: null }
       ]);

@@ -43,12 +43,10 @@ export class OrderProductsComponent implements OnInit {
     this.route.parent?.paramMap.subscribe(params => {
       const orderTypeIdParam = params.get('orderTypeId');
       this.orderTypeId = orderTypeIdParam !== null ? Number(orderTypeIdParam) : 1; // default 1 if null
-      if (this.cartService.cartItems.length <= 0) {
-        this.cartService.orderTypeId = this.orderTypeId;
-        if (this.cartService.cartForm) {
-          this.cartService.cartForm.patchValue({ orderTypeId: this.orderTypeId });
-        }
-      }
+      
+      // Always update the cart service orderTypeId to match the current route
+      // This ensures the correct order type is used regardless of cart state
+      this.cartService.setOrderTypeId(this.orderTypeId);
     });
 
     this.route.paramMap.subscribe(params => {
@@ -91,12 +89,20 @@ export class OrderProductsComponent implements OnInit {
   loadProducts(subCategoryId: number) {
     this.products$ = this.productsService.GetProductsBySubCategoryId(subCategoryId).pipe(
       tap(products => {
+        console.log('Products from API:', products);
+        console.log('User product permissions:', this.authService.getProductIds());
         // Load variant stock data for all products
         this.loadVariantStockData(products);
       }),
       map(products => {
         // Filter products based on user permissions
-        return products.filter(product => this.authService.hasProduct(product.id!));
+        const filteredProducts = products.filter(product => {
+          const hasPermission = this.authService.hasProduct(product.id!);
+          console.log(`Product ${product.id} (${product.nameEn}): hasPermission = ${hasPermission}`);
+          return hasPermission;
+        });
+        console.log('Filtered products:', filteredProducts);
+        return filteredProducts;
       })
     );
     // Set the selected subcategory for display

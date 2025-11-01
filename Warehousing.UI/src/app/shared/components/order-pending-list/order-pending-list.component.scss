@@ -1,0 +1,36 @@
+// Ensure consistent card heights
+.grid {
+  .group {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+  }
+  
+  .group > div {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+  }
+  
+  // Card body should grow to fill available space
+  .group > div > div:last-child {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+}
+
+// Ensure consistent spacing for customer/supplier section
+.customer-supplier-section {
+  min-height: 2.5rem; // Ensure minimum height for consistent spacing
+  display: flex;
+  align-items: center;
+}
+
+// Ensure items count section has consistent height
+.items-count-section {
+  min-height: 3rem; // Ensure minimum height for consistent spacing
+}
+
+

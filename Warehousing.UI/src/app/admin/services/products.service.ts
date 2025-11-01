@@ -81,4 +81,18 @@ export class ProductsService {
   SetVariantStock(productId: number, request: any) {
     return this.http.post<any>(`${this.url}${productId}/set-variant-stock`, request);
   }
+
+  splitGeneralQuantityToVariants(body: {
+    productId: number;
+    storeId: number;
+    generalInventoryId: number;
+    generalQuantity: number;
+    allocations: { variantId: number; quantity: number }[];
+  }) {
+    return this.http.post(`${this.url}SplitGeneralToVariants`, body);
+  }
+
+  RecallStockFromVariant(productId: number, request: { storeId: number; variantId: number; quantity: number; notes?: string; }) {
+    return this.http.post<any>(`${this.url}${productId}/recall-stock-from-variant`, request);
+  }
 }

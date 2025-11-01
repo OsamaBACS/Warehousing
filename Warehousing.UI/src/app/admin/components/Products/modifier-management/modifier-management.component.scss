@@ -1,15 +1,16 @@
+// Optimized Modifier Management Component Styles
 .modifier-management-container {
-  padding: 20px;
+  padding: 1rem;
   background: #f8f9fa;
   border-radius: 8px;
-  margin: 20px 0;
+  margin: 1rem 0;
 
   .header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 20px;
-    padding-bottom: 15px;
+    margin-bottom: 1rem;
+    padding-bottom: 0.75rem;
     border-bottom: 2px solid #e9ecef;
 
     h3 {
@@ -21,26 +22,28 @@
 
   .modifier-form, .option-form {
     background: white;
-    padding: 20px;
+    padding: 1rem;
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    margin-bottom: 20px;
+    margin-bottom: 1rem;
 
     .form-group {
-      margin-bottom: 15px;
+      margin-bottom: 0.75rem;
 
       label {
         font-weight: 600;
         color: #495057;
-        margin-bottom: 5px;
+        margin-bottom: 0.25rem;
         display: block;
+        font-size: 0.9rem;
       }
 
       .form-control {
         border: 1px solid #ced4da;
         border-radius: 4px;
-        padding: 8px 12px;
+        padding: 0.5rem 0.75rem;
         transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+        font-size: 0.9rem;
 
         &:focus {
           border-color: #80bdff;
@@ -52,31 +55,33 @@
       .form-check {
         display: flex;
         align-items: center;
-        margin-top: 10px;
+        margin-top: 0.5rem;
 
         .form-check-input {
-          margin-right: 8px;
+          margin-right: 0.5rem;
         }
 
         .form-check-label {
           margin-bottom: 0;
           font-weight: 500;
+          font-size: 0.9rem;
         }
       }
     }
 
     .form-actions {
       display: flex;
-      gap: 10px;
-      margin-top: 20px;
-      padding-top: 15px;
+      gap: 0.5rem;
+      margin-top: 1rem;
+      padding-top: 0.75rem;
       border-top: 1px solid #e9ecef;
 
       .btn {
-        padding: 8px 16px;
+        padding: 0.5rem 1rem;
         border-radius: 4px;
         font-weight: 500;
         transition: all 0.15s ease-in-out;
+        font-size: 0.9rem;
 
         &.btn-success {
           background-color: #28a745;
@@ -107,15 +112,16 @@
     background: white;
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    margin-bottom: 20px;
+    margin-bottom: 1rem;
 
     h4 {
-      padding: 15px 20px;
+      padding: 0.75rem 1rem;
       margin: 0;
       background: #f8f9fa;
       border-bottom: 1px solid #e9ecef;
       color: #495057;
       font-weight: 600;
+      font-size: 1rem;
     }
 
     .table {
@@ -126,7 +132,8 @@
         border-bottom: 2px solid #dee2e6;
         font-weight: 600;
         color: #495057;
-        padding: 12px;
+        padding: 0.75rem;
+        font-size: 0.9rem;
       }
 
       tbody tr {
@@ -137,37 +144,16 @@
         }
 
         td {
-          padding: 12px;
+          padding: 0.75rem;
           vertical-align: middle;
+          font-size: 0.9rem;
         }
       }
     }
   }
 
-  .modifier-options {
-    background: white;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    margin-bottom: 20px;
-
-    .options-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 15px 20px;
-      background: #f8f9fa;
-      border-bottom: 1px solid #e9ecef;
-
-      h4 {
-        margin: 0;
-        color: #495057;
-        font-weight: 600;
-      }
-    }
-  }
-
   .badge {
-    padding: 4px 8px;
+    padding: 0.25rem 0.5rem;
     border-radius: 4px;
     font-size: 0.75em;
     font-weight: 500;
@@ -195,27 +181,28 @@
 
   .loading {
     text-align: center;
-    padding: 40px;
+    padding: 2rem;
 
     .spinner-border {
-      width: 3rem;
-      height: 3rem;
+      width: 2rem;
+      height: 2rem;
       color: #007bff;
     }
   }
 
   .empty-state {
     text-align: center;
-    padding: 40px;
+    padding: 2rem;
     color: #6c757d;
 
     h4 {
-      margin-top: 15px;
+      margin-top: 0.75rem;
       color: #495057;
+      font-size: 1rem;
     }
 
     p {
-      margin-top: 10px;
+      margin-top: 0.5rem;
       font-size: 0.9em;
     }
   }
@@ -233,7 +220,7 @@
     }
 
     &.btn-sm {
-      padding: 4px 8px;
+      padding: 0.25rem 0.5rem;
       font-size: 0.875em;
       border-radius: 3px;
     }

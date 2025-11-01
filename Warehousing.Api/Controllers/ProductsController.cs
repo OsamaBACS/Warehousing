@@ -4,6 +4,7 @@ using AutoMapper;
 using AutoMapper.QueryableExtensions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 
 namespace Warehousing.Api.Controllers
 {
@@ -832,6 +833,175 @@ namespace Warehousing.Api.Controllers
                 return BadRequest(ex.Message);
             }
         }
+
+        [HttpPost("SplitGeneralToVariants")]
+        public async Task<IActionResult> SplitGeneralToVariants([FromBody] SplitGeneralToVariantsRequest request)
+        {
+            var strategy = _unitOfWork.GetExecutionStrategy();
+            return await strategy.ExecuteAsync<IActionResult>(async () =>
+            {
+                using var transaction = await _unitOfWork.BeginTransactionAsync();
+                try
+                {
+                    var generalInventory = await _unitOfWork.InventoryRepo.GetByIdAsync(request.GeneralInventoryId);
+                    if (generalInventory == null || generalInventory.Quantity < request.GeneralQuantity)
+                    {
+                        await transaction.RollbackAsync();
+                        return BadRequest("General inventory not found or insufficient quantity.");
+                    }
+
+                    var totalAlloc = request.Allocations.Sum(a => a.Quantity);
+                    if (totalAlloc > generalInventory.Quantity)
+                    {
+                        await transaction.RollbackAsync();
+                        return BadRequest($"Allocation exceeds available general quantity. (Available: {generalInventory.Quantity}, Requested: {totalAlloc})");
+                    }
+
+                    foreach (var alloc in request.Allocations)
+                    {
+                        var variantInventory = await _unitOfWork.InventoryRepo
+                            .GetByCondition(i => i.ProductId == request.ProductId && i.StoreId == request.StoreId && i.VariantId == alloc.VariantId)
+                            .FirstOrDefaultAsync();
+                        if (variantInventory == null)
+                        {
+                            variantInventory = new Warehousing.Data.Entities.Inventory
+                            {
+                                ProductId = request.ProductId,
+                                StoreId = request.StoreId,
+                                VariantId = alloc.VariantId,
+                                Quantity = alloc.Quantity
+                            };
+                            await _unitOfWork.InventoryRepo.CreateAsync(variantInventory);
+                        }
+                        else
+                        {
+                            variantInventory.Quantity += alloc.Quantity;
+                            await _unitOfWork.InventoryRepo.UpdateAsync(variantInventory);
+                        }
+
+                        // Create inventory transaction record for audit
+                        var transactionType = await _unitOfWork.Context.Set<Warehousing.Data.Entities.TransactionType>()
+                            .FirstOrDefaultAsync(t => t.Code == "ADJUSTMENT" || t.Id == 3);
+                        
+                        if (transactionType != null)
+                        {
+                            var invTransaction = new Warehousing.Data.Entities.InventoryTransaction
+                            {
+                                ProductId = request.ProductId,
+                                StoreId = request.StoreId,
+                                VariantId = alloc.VariantId,
+                                QuantityChanged = alloc.Quantity,
+                                QuantityBefore = variantInventory.Quantity - alloc.Quantity,
+                                QuantityAfter = variantInventory.Quantity,
+                                TransactionDate = DateTime.UtcNow,
+                                Notes = $"Allocated {alloc.Quantity} from general inventory to variant {alloc.VariantId}",
+                                TransactionTypeId = transactionType.Id,
+                                UnitCost = 0
+                            };
+                            await _unitOfWork.InventoryTransactionRepo.CreateAsync(invTransaction);
+                        }
+                    }
+
+                    generalInventory.Quantity -= totalAlloc;
+                    await _unitOfWork.InventoryRepo.UpdateAsync(generalInventory);
+                    await _unitOfWork.SaveAsync();
+                    await transaction.CommitAsync();
+                    return Ok(new {
+                        success = true,
+                        message = "Quantities allocated successfully to variants.",
+                        remainingGeneral = generalInventory.Quantity
+                    });
+                }
+                catch (Exception ex)
+                {
+                    await transaction.RollbackAsync();
+                    return BadRequest(ex.Message);
+                }
+            });
+        }
+
+        [HttpPost("{productId}/recall-stock-from-variant")]
+        public async Task<ActionResult> RecallStockFromVariant(int productId, [FromBody] RecallStockRequest request)
+        {
+            try
+            {
+                // Find inventory entry for the variant
+                var variantInventory = await _unitOfWork.InventoryRepo
+                    .GetByCondition(i => i.ProductId == productId && i.StoreId == request.StoreId && i.VariantId == request.VariantId)
+                    .FirstOrDefaultAsync();
+
+                if (variantInventory == null || variantInventory.Quantity < request.Quantity)
+                    return BadRequest("Not enough quantity in the selected variant to recall");
+
+                // Find or create inventory entry for the general product
+                var generalInventory = await _unitOfWork.InventoryRepo
+                    .GetByCondition(i => i.ProductId == productId && i.StoreId == request.StoreId && (i.VariantId == null || i.VariantId == 0))
+                    .FirstOrDefaultAsync();
+                if (generalInventory == null)
+                {
+                    generalInventory = new Warehousing.Data.Entities.Inventory
+                    {
+                        ProductId = productId,
+                        StoreId = request.StoreId,
+                        Quantity = 0
+                    };
+                    await _unitOfWork.InventoryRepo.CreateAsync(generalInventory);
+                }
+
+                // Perform the recall
+                variantInventory.Quantity -= request.Quantity;
+                generalInventory.Quantity += request.Quantity;
+
+                await _unitOfWork.InventoryRepo.UpdateAsync(variantInventory);
+                await _unitOfWork.InventoryRepo.UpdateAsync(generalInventory);
+
+                // Transaction log for both operations
+                var recallTransaction = new Warehousing.Data.Entities.InventoryTransaction
+                {
+                    ProductId = productId,
+                    StoreId = request.StoreId,
+                    VariantId = request.VariantId,
+                    QuantityChanged = -request.Quantity,
+                    QuantityBefore = variantInventory.Quantity + request.Quantity,
+                    QuantityAfter = variantInventory.Quantity,
+                    TransactionDate = DateTime.UtcNow,
+                    Notes = request.Notes ?? $"Stock recalled from variant {request.VariantId}",
+                    TransactionTypeId = 4, // type 4 for recall (define as needed)
+                    UnitCost = 0
+                };
+                await _unitOfWork.InventoryTransactionRepo.CreateAsync(recallTransaction);
+
+                var addToGeneralTransaction = new Warehousing.Data.Entities.InventoryTransaction
+                {
+                    ProductId = productId,
+                    StoreId = request.StoreId,
+                    VariantId = null,
+                    QuantityChanged = request.Quantity,
+                    QuantityBefore = generalInventory.Quantity - request.Quantity,
+                    QuantityAfter = generalInventory.Quantity,
+                    TransactionDate = DateTime.UtcNow,
+                    Notes = request.Notes ?? $"Stock recalled to general from variant {request.VariantId}",
+                    TransactionTypeId = 4,
+                    UnitCost = 0
+                };
+                await _unitOfWork.InventoryTransactionRepo.CreateAsync(addToGeneralTransaction);
+
+                await _unitOfWork.SaveAsync();
+                return Ok(new { success = true });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        public class RecallStockRequest
+        {
+            public int StoreId { get; set; }
+            public int VariantId { get; set; }
+            public decimal Quantity { get; set; }
+            public string? Notes { get; set; }
+        }
     }
 
     public class StockValidationRequest
@@ -866,5 +1036,14 @@ namespace Warehousing.Api.Controllers
         public int VariantId { get; set; }
         public int StoreId { get; set; }
         public decimal Quantity { get; set; }
+    }
+
+    public class SplitGeneralToVariantsRequest
+    {
+        public int GeneralInventoryId { get; set; }
+        public int ProductId { get; set; }
+        public int StoreId { get; set; }
+        public decimal GeneralQuantity { get; set; }
+        public List<VariantDistribution> Allocations { get; set; } = new List<VariantDistribution>();
     }
 }

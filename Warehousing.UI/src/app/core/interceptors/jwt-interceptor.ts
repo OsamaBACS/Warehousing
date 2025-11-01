@@ -13,7 +13,29 @@ export const JwtInterceptor: HttpInterceptorFn = (req, next): Observable<HttpEve
     if (!token) return false;
 
     try {
-      const payload = JSON.parse(atob(token.split('.')[1]));
+      const tokenParts = token.split('.');
+      if (tokenParts.length !== 3) return false;
+      
+      const payloadBase64 = tokenParts[1];
+      
+      // Decode base64 URL-safe encoded string
+      let base64 = payloadBase64.replace(/-/g, '+').replace(/_/g, '/');
+      const padding = base64.length % 4;
+      if (padding) {
+        base64 += '='.repeat(4 - padding);
+      }
+      
+      // Decode base64 to binary string
+      const binaryString = atob(base64);
+      
+      // Convert binary string to UTF-8 string properly
+      const bytes = new Uint8Array(binaryString.length);
+      for (let i = 0; i < binaryString.length; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+      }
+      const decodedPayload = new TextDecoder('utf-8').decode(bytes);
+      
+      const payload = JSON.parse(decodedPayload);
       const isExpired = payload.exp * 1000 < Date.now();
 
       return !!payload.UserId && !isExpired;

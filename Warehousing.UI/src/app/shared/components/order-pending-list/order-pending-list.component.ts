@@ -130,6 +130,42 @@ export class OrderPendingListComponent implements OnInit {
     return STATUS_COLORS[status] || '#9E9E9E';
   }
 
+  // Ensure header background and text color are always set so the title is visible
+  getHeaderStyle(order: OrderDto): { [key: string]: string } {
+    const statusIndex = ((order?.statusId ?? 1) - 1) as Statuses;
+    const baseColor = this.getStatusColor(statusIndex) || '#4f46e5'; // fallback indigo
+    
+    // Ensure we have a dark enough color for white text to be visible
+    const darkColor = this.ensureDarkColor(baseColor);
+    
+    return {
+      background: `linear-gradient(135deg, ${darkColor}, ${darkColor}dd)`,
+      color: '#ffffff'
+    };
+  }
+
+  // Helper method to ensure the color is dark enough for white text
+  private ensureDarkColor(color: string): string {
+    // If it's a hex color, make it darker
+    if (color.startsWith('#')) {
+      // Convert to RGB and darken
+      const hex = color.replace('#', '');
+      const r = parseInt(hex.substr(0, 2), 16);
+      const g = parseInt(hex.substr(2, 2), 16);
+      const b = parseInt(hex.substr(4, 2), 16);
+      
+      // Darken by 30%
+      const darkR = Math.max(0, Math.floor(r * 0.7));
+      const darkG = Math.max(0, Math.floor(g * 0.7));
+      const darkB = Math.max(0, Math.floor(b * 0.7));
+      
+      return `#${darkR.toString(16).padStart(2, '0')}${darkG.toString(16).padStart(2, '0')}${darkB.toString(16).padStart(2, '0')}`;
+    }
+    
+    // For other color formats, return a dark blue as fallback
+    return '#1e40af';
+  }
+
   changePage(page: number): void {
     if (page < 1 || page > this.totalPages) return;
     this.PageIndex.setValue(page);

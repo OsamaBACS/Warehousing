@@ -98,17 +98,57 @@
                 </button>
               </div>
             </div>
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              <div *ngFor="let p of permissions" class="flex items-center p-3 bg-white rounded-lg border border-gray-200 hover:border-blue-300 transition-colors">
-                <input type="checkbox" 
-                       id="perm_{{ p.id }}" 
-                       [value]="p.id"
-                       [checked]="roleForm.get('rolePermissionIds')?.value.includes(p.id)"
-                       (change)="onPermissionChange(p.id, $event)"
-                       class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2">
-                <label for="perm_{{ p.id }}" class="mr-3 text-sm font-medium text-gray-700 cursor-pointer flex-1">
-                  {{ p.nameAr }}
-                </label>
+            <!-- Grouped Permissions -->
+            <div class="space-y-6">
+              <div *ngFor="let module of getObjectKeys(groupedPermissions)" class="border border-gray-200 rounded-xl overflow-hidden">
+                <!-- Module Header -->
+                <div class="bg-gray-50 px-4 py-3 border-b border-gray-200 flex items-center justify-between">
+                  <div class="flex items-center">
+                    <input type="checkbox" 
+                           [id]="'module_' + module"
+                           [checked]="isModuleFullySelected(module)"
+                           [indeterminate]="isModulePartiallySelected(module)"
+                           (change)="isModuleFullySelected(module) ? deselectAllPermissionsInModule(module) : selectAllPermissionsInModule(module)"
+                           class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2">
+                    <label [for]="'module_' + module" class="mr-3 text-sm font-semibold text-gray-800 cursor-pointer">
+                      {{ getModuleDisplayName(module) }}
+                    </label>
+                    <span class="text-xs text-gray-500 bg-gray-200 px-2 py-1 rounded-full">
+                      {{ groupedPermissions[module]?.length || 0 }} صلاحية
+                    </span>
+                  </div>
+                  <div class="flex space-x-2 space-x-reverse">
+                    <button type="button" 
+                            (click)="selectAllPermissionsInModule(module)"
+                            class="px-2 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700 transition-colors">
+                      <i class="bi bi-check-square mr-1"></i>
+                      تحديد الكل
+                    </button>
+                    <button type="button" 
+                            (click)="deselectAllPermissionsInModule(module)"
+                            class="px-2 py-1 bg-gray-500 text-white text-xs rounded hover:bg-gray-600 transition-colors">
+                      <i class="bi bi-square mr-1"></i>
+                      إلغاء الكل
+                    </button>
+                  </div>
+                </div>
+                
+                <!-- Module Permissions -->
+                <div class="p-4">
+                  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                    <div *ngFor="let p of groupedPermissions[module]" class="flex items-center p-3 bg-white rounded-lg border border-gray-200 hover:border-blue-300 transition-colors">
+                      <input type="checkbox" 
+                             id="perm_{{ p.id }}" 
+                             [value]="p.id"
+                             [checked]="roleForm.get('rolePermissionIds')?.value.includes(p.id)"
+                             (change)="onPermissionChange(p.id, $event)"
+                             class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2">
+                      <label for="perm_{{ p.id }}" class="mr-3 text-sm font-medium text-gray-700 cursor-pointer flex-1">
+                        {{ p.nameAr }}
+                      </label>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
