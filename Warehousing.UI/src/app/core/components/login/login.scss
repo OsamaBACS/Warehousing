@@ -1,2 +1,141 @@
-/* Clean, modern login styles - no background image */
-/* All styling now handled by Tailwind classes in the HTML */
+/* Modern Login Styles */
+
+// Animated blob background
+@keyframes blob {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+  }
+  33% {
+    transform: translate(30px, -50px) scale(1.1);
+  }
+  66% {
+    transform: translate(-20px, 20px) scale(0.9);
+  }
+}
+
+.animate-blob {
+  animation: blob 7s infinite;
+}
+
+.animation-delay-2000 {
+  animation-delay: 2s;
+}
+
+.animation-delay-4000 {
+  animation-delay: 4s;
+}
+
+// Shake animation for errors
+@keyframes shake {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  10%, 30%, 50%, 70%, 90% {
+    transform: translateX(-5px);
+  }
+  20%, 40%, 60%, 80% {
+    transform: translateX(5px);
+  }
+}
+
+.animate-shake {
+  animation: shake 0.5s ease-in-out;
+}
+
+// Input focus effects
+input:focus {
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+}
+
+// RTL/LTR specific adjustments
+[dir="rtl"] {
+  input {
+    text-align: right;
+  }
+}
+
+[dir="ltr"] {
+  input {
+    text-align: left;
+  }
+}
+
+// Login card glassmorphism effect
+.bg-white\/80 {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+// Button loading spinner
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+// Input icon transitions
+.bi-person-fill,
+.bi-lock-fill {
+  transition: all 0.3s ease;
+}
+
+// Enhanced hover effects
+button[type="submit"]:hover:not(:disabled) {
+  background-size: 200% auto;
+  background-position: right center;
+}
+
+// Error message slide-in
+@keyframes slideInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-shake {
+  animation: shake 0.5s ease-in-out, slideInDown 0.3s ease-out;
+}
+
+// Responsive adjustments
+@media (max-width: 640px) {
+  .rounded-3xl {
+    border-radius: 1.5rem;
+  }
+  
+  .p-8 {
+    padding: 1.5rem;
+  }
+}
+
+// Dark mode support
+body.dark-mode {
+  .bg-gradient-to-br.from-blue-50.via-indigo-50.to-purple-50 {
+    background: linear-gradient(to bottom right, #1e293b, #312e81, #581c87);
+  }
+  
+  .bg-white\/80 {
+    background: rgba(31, 41, 55, 0.9);
+    color: #f9fafb;
+  }
+  
+  input {
+    background-color: #1f2937;
+    border-color: #374151;
+    color: #f9fafb;
+    
+    &:focus {
+      background-color: #111827;
+      border-color: #3b82f6;
+    }
+  }
+}

@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { AuthService } from '../../services/auth.service';
 import { Router } from '@angular/router';
+import { LanguageService } from '../../services/language.service';
 
 @Component({
   selector: 'app-login',
@@ -13,11 +14,13 @@ export class Login implements OnInit {
   loginForm: FormGroup;
   errorMessage = '';
   showPassword = false;
+  isSubmitting = false;
 
   constructor(
     private fb: FormBuilder,
     private authService: AuthService,
-    private router: Router
+    private router: Router,
+    public languageService: LanguageService
   ) {
     this.loginForm = fb.group({
       username: ['', Validators.required],
@@ -34,41 +37,36 @@ export class Login implements OnInit {
   }
 
   login() {
-    console.log('Form valid:', this.loginForm.valid);
-    console.log('Form errors:', this.loginForm.errors);
-    console.log('Username errors:', this.loginForm.get('username')?.errors);
-    console.log('Password errors:', this.loginForm.get('password')?.errors);
-    
     if (this.loginForm.invalid) {
-      console.log('Form is invalid, returning early');
+      // Mark all fields as touched to show validation errors
+      Object.keys(this.loginForm.controls).forEach(key => {
+        this.loginForm.get(key)?.markAsTouched();
+      });
       return;
     }
 
     // Clear previous error message
     this.errorMessage = '';
+    this.isSubmitting = true;
 
-    var credentials: { username: string, password: string } = {
+    const credentials: { username: string, password: string } = {
       username: this.username.value,
       password: this.password.value
-    }
-    
-    console.log('Sending credentials:', credentials);
+    };
 
     this.authService.login(credentials).subscribe({
       next: (res) => {
-        console.log('Login response:', res);
+        this.isSubmitting = false;
         if(res.success && res.token) {
           const isAdmin = this.authService.isAdmin;
-          this.router.navigate([isAdmin ? '/admin' : '/order/2/categories']);
+          this.router.navigate([isAdmin ? '/admin/dashboard' : '/order/2/categories']);
         } else {
-          this.errorMessage = res.errorMessage || 'Login failed. Check credentials.';
-          console.log('Setting error message:', this.errorMessage);
+          this.errorMessage = res.errorMessage || '';
         }
       },
       error: (err) => {
-        console.log('Login error:', err);
-        this.errorMessage = err.error.errorMessage;
-        console.log('Setting error message (error):', this.errorMessage);
+        this.isSubmitting = false;
+        this.errorMessage = err.error?.errorMessage || '';
       }
     });
   }

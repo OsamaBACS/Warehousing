@@ -1,11 +1,13 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, DoCheck } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { WorkingHoursService, WorkingHours, WorkingHoursException, WorkingHoursStatus } from '../../services/working-hours.service';
+import { WorkingHoursDay } from '../../models/working-hours.models';
 import { NotificationService } from '../../../core/services/notification.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { PermissionsEnum } from '../../constants/enums/permissions.enum';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { LanguageService } from '../../../core/services/language.service';
 
 @Component({
   selector: 'app-working-hours',
@@ -14,7 +16,7 @@ import { TranslateModule } from '@ngx-translate/core';
   standalone: true,
   imports: [CommonModule, FormsModule, ReactiveFormsModule, TranslateModule]
 })
-export class WorkingHoursComponent implements OnInit {
+export class WorkingHoursComponent implements OnInit, DoCheck {
   workingHoursForm!: FormGroup;
   exceptionForm!: FormGroup;
   workingHours: WorkingHours | null = null;
@@ -25,6 +27,7 @@ export class WorkingHoursComponent implements OnInit {
   currentStatusMessage: string = '';
   currentStatusClass: string = '';
   currentTime: Date = new Date();
+  isRTL = false;
 
   // Form data
   formData: Partial<WorkingHours> = {};
@@ -40,29 +43,65 @@ export class WorkingHoursComponent implements OnInit {
   showExceptionForm = false;
   editingException: WorkingHoursException | null = null;
 
-  // Day options
+  // Day options with translations
   dayOfWeekOptions = [
-    { value: 0, name: 'Sunday' },
-    { value: 1, name: 'Monday' },
-    { value: 2, name: 'Tuesday' },
-    { value: 3, name: 'Wednesday' },
-    { value: 4, name: 'Thursday' },
-    { value: 5, name: 'Friday' },
-    { value: 6, name: 'Saturday' }
+    { value: 0, nameKey: 'COMMON.SUNDAY', name: 'Sunday' },
+    { value: 1, nameKey: 'COMMON.MONDAY', name: 'Monday' },
+    { value: 2, nameKey: 'COMMON.TUESDAY', name: 'Tuesday' },
+    { value: 3, nameKey: 'COMMON.WEDNESDAY', name: 'Wednesday' },
+    { value: 4, nameKey: 'COMMON.THURSDAY', name: 'Thursday' },
+    { value: 5, nameKey: 'COMMON.FRIDAY', name: 'Friday' },
+    { value: 6, nameKey: 'COMMON.SATURDAY', name: 'Saturday' }
   ];
+
+  getDayNameKey(dayNumber: number | string | null | undefined): string {
+    if (dayNumber === null || dayNumber === undefined) return '';
+    
+    // Convert to number if it's a string
+    const dayNum = typeof dayNumber === 'string' ? parseInt(dayNumber, 10) : dayNumber;
+    
+    // Validate it's a valid day (0-6)
+    if (isNaN(dayNum) || dayNum < 0 || dayNum > 6) {
+      console.warn('Invalid day number:', dayNumber);
+      return '';
+    }
+    
+    const dayOption = this.dayOfWeekOptions.find(d => d.value === dayNum);
+    return dayOption?.nameKey || '';
+  }
   permissionsEnum = PermissionsEnum;
 
   constructor(
     private fb: FormBuilder,
     private workingHoursService: WorkingHoursService,
     private notificationService: NotificationService,
-    private authService: AuthService
+    private authService: AuthService,
+    public languageService: LanguageService,
+    private translate: TranslateService
   ) { }
 
   ngOnInit(): void {
+    this.updateRTL();
     this.initForms();
+    this.initExceptionForm();
     this.loadWorkingHours();
     this.loadWorkingHoursStatus();
+    // Update current time every second
+    setInterval(() => {
+      this.currentTime = new Date();
+    }, 1000);
+  }
+
+  ngDoCheck(): void {
+    // Check if language changed on every change detection cycle
+    const newRTL = this.languageService.currentLang === 'ar';
+    if (newRTL !== this.isRTL) {
+      this.updateRTL();
+    }
+  }
+
+  updateRTL(): void {
+    this.isRTL = this.languageService.currentLang === 'ar';
   }
 
   initForms(): void {
@@ -70,15 +109,32 @@ export class WorkingHoursComponent implements OnInit {
       id: [0],
       name: ['', Validators.required],
       description: [''],
-      startTime: ['', Validators.required],
-      endTime: ['', Validators.required],
-      startDay: [0, Validators.required], // Sunday
-      endDay: [4, Validators.required], // Thursday
       allowWeekends: [false],
       allowHolidays: [false],
-      isActive: [false]
+      isActive: [false],
+      days: this.fb.array([]) // Will be populated with 7 days
     });
 
+    // Initialize days array with all 7 days
+    this.initializeDays();
+  }
+
+  initializeDays(): void {
+    const daysArray = this.workingHoursForm.get('days') as any;
+    daysArray.clear();
+    
+    for (let i = 0; i < 7; i++) {
+      daysArray.push(this.fb.group({
+        id: [null],
+        dayOfWeek: [i],
+        startTime: [''],
+        endTime: [''],
+        isEnabled: [false]
+      }));
+    }
+  }
+
+  initExceptionForm(): void {
     this.exceptionForm = this.fb.group({
       workingHoursId: [0, Validators.required],
       exceptionDate: ['', Validators.required],
@@ -102,15 +158,59 @@ export class WorkingHoursComponent implements OnInit {
           data.exceptions = [];
         }
         
-        // Convert DayOfWeek enum strings to numbers for form handling
-        const convertedData = {
-          ...data,
-          startDay: this.convertDayToNumber(data.startDay),
-          endDay: this.convertDayToNumber(data.endDay)
-        };
+        // Ensure days array exists and has all 7 days, sorted by dayOfWeek
+        if (!data.days || data.days.length === 0) {
+          // Initialize with all 7 days disabled
+          data.days = this.dayOfWeekOptions.map(day => ({
+            dayOfWeek: day.value,
+            startTime: '',
+            endTime: '',
+            isEnabled: false
+          }));
+        } else {
+          // Normalize dayOfWeek values to numbers and ensure all 7 days are present
+          const normalizedDays = data.days.map(day => ({
+            ...day,
+            dayOfWeek: typeof day.dayOfWeek === 'string' 
+              ? this.workingHoursService.convertDayToNumber(day.dayOfWeek)
+              : day.dayOfWeek
+          }));
+          
+          // Ensure all 7 days are present (fill missing days)
+          const allDays: WorkingHoursDay[] = [];
+          for (let i = 0; i < 7; i++) {
+            const existingDay = normalizedDays.find(d => d.dayOfWeek === i);
+            if (existingDay) {
+              allDays.push(existingDay);
+            } else {
+              allDays.push({
+                dayOfWeek: i,
+                startTime: '',
+                endTime: '',
+                isEnabled: false
+              });
+            }
+          }
+          // Sort by dayOfWeek
+          data.days = allDays.sort((a, b) => a.dayOfWeek - b.dayOfWeek);
+        }
         
-        this.workingHours = convertedData;
-        this.formData = { ...convertedData };
+        this.workingHours = data;
+        this.formData = { ...data };
+        
+        // Populate form with days (this will replace any existing days in the form array)
+        this.populateDaysForm(data.days);
+        
+        // Populate basic info
+        this.workingHoursForm.patchValue({
+          id: data.id,
+          name: data.name,
+          description: data.description,
+          allowWeekends: data.allowWeekends,
+          allowHolidays: data.allowHolidays,
+          isActive: data.isActive
+        });
+        
         this.loading = false;
       },
       error: (error: unknown) => {
@@ -119,6 +219,53 @@ export class WorkingHoursComponent implements OnInit {
         this.loading = false;
       }
     });
+  }
+
+  populateDaysForm(days: WorkingHoursDay[]): void {
+    const daysArray = this.workingHoursForm.get('days') as any;
+    daysArray.clear();
+    
+    // Ensure we have exactly 7 days, sorted by dayOfWeek (0-6)
+    const sortedDays = [...days].sort((a, b) => a.dayOfWeek - b.dayOfWeek);
+    
+    // Fill missing days
+    for (let i = 0; i < 7; i++) {
+      const existingDay = sortedDays.find(d => {
+        // Handle both number and DayOfWeek enum string values
+        const dayNum = typeof d.dayOfWeek === 'string' 
+          ? this.workingHoursService.convertDayToNumber(d.dayOfWeek) 
+          : d.dayOfWeek;
+        return dayNum === i;
+      });
+      
+      if (existingDay) {
+        // Convert dayOfWeek to number if it's a string
+        const dayOfWeekNum = typeof existingDay.dayOfWeek === 'string'
+          ? this.workingHoursService.convertDayToNumber(existingDay.dayOfWeek)
+          : existingDay.dayOfWeek;
+          
+        daysArray.push(this.fb.group({
+          id: [existingDay.id || null],
+          dayOfWeek: [dayOfWeekNum],
+          startTime: [existingDay.startTime || ''],
+          endTime: [existingDay.endTime || ''],
+          isEnabled: [existingDay.isEnabled || false]
+        }));
+      } else {
+        // Create a new day entry for missing day
+        daysArray.push(this.fb.group({
+          id: [null],
+          dayOfWeek: [i],
+          startTime: [''],
+          endTime: [''],
+          isEnabled: [false]
+        }));
+      }
+    }
+  }
+
+  getDaysFormArray(): any {
+    return this.workingHoursForm.get('days') as any;
   }
 
   loadWorkingHoursStatus(): void {
@@ -141,30 +288,41 @@ export class WorkingHoursComponent implements OnInit {
     this.saving = true;
     const formValue = this.workingHoursForm.value;
     
-    // Convert day numbers back to DayOfWeek enum strings for the API
+    // Get days from form array
+    const daysArray = this.getDaysFormArray();
+    const days: WorkingHoursDay[] = daysArray.controls.map((control: any) => ({
+      id: control.value.id || undefined,
+      workingHoursId: this.workingHours?.id,
+      dayOfWeek: control.value.dayOfWeek,
+      startTime: control.value.isEnabled && control.value.startTime ? control.value.startTime : undefined,
+      endTime: control.value.isEnabled && control.value.endTime ? control.value.endTime : undefined,
+      isEnabled: control.value.isEnabled
+    }));
+    
     const updatedData: WorkingHours = {
-      ...formValue,
-      startDay: this.convertNumberToDayString(formValue.startDay),
-      endDay: this.convertNumberToDayString(formValue.endDay),
-      exceptions: this.workingHours?.exceptions || []
+      id: formValue.id,
+      name: formValue.name,
+      description: formValue.description,
+      allowWeekends: formValue.allowWeekends,
+      allowHolidays: formValue.allowHolidays,
+      isActive: formValue.isActive,
+      days: days,
+      exceptions: this.workingHours?.exceptions || [],
+      createdAt: this.workingHours?.createdAt || new Date().toISOString(),
+      createdBy: this.workingHours?.createdBy || ''
     };
 
     console.log('Saving working hours:', updatedData); // Debug log
 
     this.workingHoursService.updateWorkingHours(updatedData).subscribe({
       next: (data: WorkingHours) => {
-        // Convert the response back to numbers for display
-        const convertedData = {
-          ...data,
-          startDay: this.convertDayToNumber(data.startDay),
-          endDay: this.convertDayToNumber(data.endDay)
-        };
-        
-        this.workingHours = convertedData;
-        this.formData = { ...convertedData };
+        this.workingHours = data;
+        this.formData = { ...data };
         this.notificationService.success('Working hours updated successfully');
         this.saving = false;
         this.loadWorkingHoursStatus();
+        // Reload to get updated days
+        this.loadWorkingHours();
       },
       error: (error: unknown) => {
         console.error('Error updating working hours:', error);
@@ -276,10 +434,6 @@ export class WorkingHoursComponent implements OnInit {
     }
   }
 
-  getDayName(dayNumber: number | string | undefined): string {
-    if (dayNumber === undefined) return 'Unknown';
-    return this.workingHoursService.getDayName(dayNumber);
-  }
 
   convertDayToNumber(day: number | string): number {
     if (typeof day === 'number') return day;
@@ -313,23 +467,15 @@ export class WorkingHoursComponent implements OnInit {
 
   onStatusClick(): void {
     if (this.workingHours) {
-      const formData = {
+      // Populate basic info (days are already loaded in loadWorkingHours)
+      this.workingHoursForm.patchValue({
         id: this.workingHours.id,
         name: this.workingHours.name,
         description: this.workingHours.description,
-        startTime: this.workingHours.startTime,
-        endTime: this.workingHours.endTime,
-        startDay: this.convertDayToNumber(this.workingHours.startDay),
-        endDay: this.convertDayToNumber(this.workingHours.endDay),
         allowWeekends: this.workingHours.allowWeekends,
         allowHolidays: this.workingHours.allowHolidays,
         isActive: this.workingHours.isActive
-      };
-      
-      console.log('Populating form with:', formData); // Debug log
-      
-      // Populate the form with current working hours data
-      this.workingHoursForm.patchValue(formData);
+      });
       
       // Scroll to the form section
       const formElement = document.querySelector('.config-section');
@@ -339,9 +485,23 @@ export class WorkingHoursComponent implements OnInit {
     }
   }
 
-  formatTime(timeString: string): string {
-    return this.workingHoursService.formatTime(timeString);
+  getDayName(dayNumber: number | string | null | undefined): string {
+    const nameKey = this.getDayNameKey(dayNumber);
+    return nameKey ? this.translate.instant(nameKey) : '';
   }
+
+  getEnabledDaysCount(): number {
+    if (!this.workingHours?.days) return 0;
+    return this.workingHours.days.filter(d => d.isEnabled).length;
+  }
+
+  getEnabledDaysNames(): string {
+    if (!this.workingHours?.days) return '';
+    const enabledDays = this.workingHours.days.filter(d => d.isEnabled);
+    if (enabledDays.length === 0) return '';
+    return enabledDays.map(d => this.getDayName(d.dayOfWeek)).join(', ');
+  }
+
 
   isCurrentTimeWithinWorkingHours(): boolean {
     if (!this.workingHours) return false;

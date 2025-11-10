@@ -25,6 +25,10 @@ import { CustomerFormPopupComponent } from '../customer-form-popup/customer-form
 import { SupplierFormPopupComponent } from '../supplier-form-popup/supplier-form-popup.component';
 import { CustomersService } from '../../../admin/services/customers.service';
 import { SupplierService } from '../../../admin/services/supplier.service';
+import { CompaniesService } from '../../../admin/services/companies.service';
+import { Company } from '../../../admin/models/Company';
+import { UsersService } from '../../../admin/services/users.service';
+import { User } from '../../../admin/models/users';
 
 @Component({
   selector: 'app-cart',
@@ -49,6 +53,8 @@ export class CartComponent implements OnInit, OnDestroy {
     private pdfPrintService: PdfPrintService,
     private customerService: CustomersService,
     private supplierService: SupplierService,
+    private companiesService: CompaniesService,
+    private usersService: UsersService,
   ) {
     this.products = this.route.snapshot.data['productsResolver'];
     this.suppliers = this.route.snapshot.data['suppliersResolver'];
@@ -64,6 +70,55 @@ export class CartComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     // Show loading indicator
     this.isLoading = true;
+    
+    // Load company data from API
+    this.companiesService.GetCompanies().subscribe({
+      next: (company) => {
+        this.company = company;
+        // Store in localStorage for quick access (optional, but helps if needed elsewhere)
+        if (company) {
+          localStorage.setItem('companyInfo', JSON.stringify(company));
+        }
+      },
+      error: (err) => {
+        console.error('Error loading company data:', err);
+        // Try to get from localStorage as fallback
+        const cached = localStorage.getItem('companyInfo');
+        if (cached) {
+          try {
+            this.company = JSON.parse(cached);
+          } catch (e) {
+            console.error('Error parsing cached company info:', e);
+          }
+        }
+      }
+    });
+
+    // Load current user data from API (using userId from auth service)
+    const userId = this.authService.userId;
+    if (userId) {
+      this.usersService.GetUserById(+userId).subscribe({
+        next: (user) => {
+          this.currentUser = user;
+          // Store in localStorage for quick access
+          if (user) {
+            localStorage.setItem('userInfo', JSON.stringify(user));
+          }
+        },
+        error: (err) => {
+          console.error('Error loading user data:', err);
+          // Try to get from localStorage as fallback
+          const cached = localStorage.getItem('userInfo');
+          if (cached) {
+            try {
+              this.currentUser = JSON.parse(cached);
+            } catch (e) {
+              console.error('Error parsing cached user info:', e);
+            }
+          }
+        }
+      });
+    }
     
     // Simulate loading time to ensure all data is loaded
     setTimeout(() => {
@@ -112,6 +167,8 @@ export class CartComponent implements OnInit, OnDestroy {
   stores: Store[] = [];
   statuses: Status[] = [];
   resourceUrl: string = environment.resourcesUrl;
+  company: Company | null = null; // Store company data
+  currentUser: User | null = null; // Store current user data
   status: {
     nameAr: string | null,
     nameEn: string | null,
@@ -352,8 +409,26 @@ export class CartComponent implements OnInit, OnDestroy {
         console.error('Error saving order:', err);
         // Restore the original statusId so the button remains visible
         this.cartService.cartForm.get('statusId')?.setValue(originalStatusId);
-        this.toastr.error('فشل في حفظ الطلب. يرجى المحاولة مرة أخرى.');
+        const errorMessage = this.extractErrorMessage(err);
+        this.toastr.error(errorMessage);
         // Don't clear cart on error - keep the data so user can try again
+      }
+    });
+  }
+
+  clearCartWithConfirm() {
+    const dialogRef = this.dialog.open(ConfirmModalComponent, {
+      data: {
+        message: 'هل أنت متأكد من إفراغ السلة؟ سيتم حذف جميع العناصر من السلة.',
+        cancelBtn: 'إلغاء',
+        confirmBtn: 'إفراغ السلة'
+      }
+    });
+
+    dialogRef.afterClosed().subscribe((result: boolean) => {
+      if (result) {
+        this.cartService.clearCart();
+        this.toastr.success('تم إفراغ السلة بنجاح');
       }
     });
   }
@@ -381,7 +456,8 @@ export class CartComponent implements OnInit, OnDestroy {
           },
           error: (err) => {
             console.error('Error saving order:', err);
-            this.toastr.error('فشل في إلغاء الطلب. يرجى المحاولة مرة أخرى.');
+            const errorMessage = this.extractErrorMessage(err);
+            this.toastr.error(errorMessage);
             // Don't clear cart on error - keep the data so user can try again
           }
         });
@@ -412,7 +488,8 @@ export class CartComponent implements OnInit, OnDestroy {
         console.error('Error saving order:', err);
         // Restore the original statusId so the button remains visible
         this.cartService.cartForm.get('statusId')?.setValue(originalStatusId);
-        this.toastr.error('فشل في إرسال الطلب. يرجى المحاولة مرة أخرى.');
+        const errorMessage = this.extractErrorMessage(err);
+        this.toastr.error(errorMessage);
         // Don't clear cart on error - keep the data so user can try again
       }
     });
@@ -451,7 +528,7 @@ export class CartComponent implements OnInit, OnDestroy {
       },
       error: (err) => {
         console.error(err);
-        const errorMessage = err.error?.message || err.error || 'حدث خطأ أثناء إتمام الطلب';
+        const errorMessage = this.extractErrorMessage(err);
         this.toastr.error(errorMessage, 'خطأ في الطلب');
       }
     });
@@ -490,7 +567,7 @@ export class CartComponent implements OnInit, OnDestroy {
       },
       error: (err) => {
         console.error(err);
-        const errorMessage = err.error?.message || err.error || 'حدث خطأ أثناء تعديل الطلب';
+        const errorMessage = this.extractErrorMessage(err);
         this.toastr.error(errorMessage, 'خطأ في التعديل');
       }
     });
@@ -529,7 +606,7 @@ export class CartComponent implements OnInit, OnDestroy {
       },
       error: (err) => {
         console.error(err);
-        const errorMessage = err.error?.message || err.error || 'حدث خطأ أثناء إلغاء الطلب';
+        const errorMessage = this.extractErrorMessage(err);
         this.toastr.error(errorMessage, 'خطأ في الإلغاء');
       }
     });
@@ -556,7 +633,7 @@ export class CartComponent implements OnInit, OnDestroy {
     return cat ? (this.lang.currentLang === 'ar' ? cat.nameAr! : cat.nameEn!) : '';
   }
 
-  getProductDescription(id: number): string {
+  getProductDescriptionById(id: number): string {
     const product = this.products.find(p => p.id === id);
     return product ? (product.description!) : '';
   }
@@ -761,59 +838,409 @@ export class CartComponent implements OnInit, OnDestroy {
   }
 
   // Company Information Methods
-  getCompanyName(): string {
+  private getCompanyInfo(): Company | null {
+    // Return cached company data if available
+    if (this.company) {
+      return this.company;
+    }
+    
+    // Fallback to localStorage if API data not loaded yet
     const companyInfo = localStorage.getItem('companyInfo');
     if (companyInfo) {
-      const company = JSON.parse(companyInfo);
-      return company.nameAr || 'اسم الشركة';
+      try {
+        return JSON.parse(companyInfo);
+      } catch (e) {
+        console.error('Error parsing company info from localStorage:', e);
+      }
     }
-    return 'اسم الشركة';
+    
+    return null;
+  }
+
+  getCompanyName(): string {
+    const company = this.getCompanyInfo();
+    return company?.nameAr || company?.nameEn || '';
   }
 
   getCompanyAddress(): string {
-    const companyInfo = localStorage.getItem('companyInfo');
-    if (companyInfo) {
-      const company = JSON.parse(companyInfo);
-      return company.address || 'العنوان';
-    }
-    return 'العنوان';
+    const company = this.getCompanyInfo();
+    return company?.addressAr || company?.addressEn || '';
   }
 
   getCompanyPhone(): string {
-    const companyInfo = localStorage.getItem('companyInfo');
-    if (companyInfo) {
-      const company = JSON.parse(companyInfo);
-      return company.phone || 'رقم الهاتف';
-    }
-    return 'رقم الهاتف';
+    const company = this.getCompanyInfo();
+    return company?.phone || '';
+  }
+
+  getCompanyFax(): string {
+    const company = this.getCompanyInfo();
+    return company?.fax || '';
   }
 
   getCompanyEmail(): string {
-    const companyInfo = localStorage.getItem('companyInfo');
-    if (companyInfo) {
-      const company = JSON.parse(companyInfo);
-      return company.email || 'البريد الإلكتروني';
+    const company = this.getCompanyInfo();
+    return company?.email || '';
+  }
+
+  getCompanyRegistrationNumber(): string {
+    const company = this.getCompanyInfo();
+    return company?.registrationNumber || '';
+  }
+
+  getCompanyCapital(): string {
+    const company = this.getCompanyInfo();
+    if (company?.capital != null && company.capital > 0) {
+      return `${company.capital} ${company.currencyCode || 'د.أ'}`;
     }
-    return 'البريد الإلكتروني';
+    return '';
+  }
+
+  getCompanyTaxNumber(): string {
+    const company = this.getCompanyInfo();
+    return company?.taxNumber || '';
+  }
+
+  getCompanySlogan(): string {
+    const company = this.getCompanyInfo();
+    return company?.sloganAr || company?.sloganEn || '';
+  }
+
+  getCompanyLogoUrl(): string {
+    const company = this.getCompanyInfo();
+    const logoUrl = company?.logoUrl || '';
+    if (logoUrl && !logoUrl.startsWith('http')) {
+      return environment.resourcesUrl + logoUrl;
+    }
+    return logoUrl || '';
+  }
+
+  getCompanyTerms(): string {
+    const company = this.getCompanyInfo();
+    return company?.termsAr || company?.termsEn || '';
+  }
+
+  // Sales Order Code Generator
+  getSalesOrderCode(): string {
+    const orderId = this.cartService.cartForm?.get('id')?.value;
+    const year = new Date().getFullYear();
+    if (orderId) {
+      return `SO-${year}-${orderId}`;
+    }
+    return `SO-${year}-NEW`;
+  }
+
+  // Get Sales Representative Info (from current user or order creator)
+  private getCurrentUserInfo(): User | null {
+    // Return cached user data if available
+    if (this.currentUser) {
+      return this.currentUser;
+    }
+    
+    // Fallback to localStorage if API data not loaded yet
+    const userInfo = localStorage.getItem('userInfo');
+    if (userInfo) {
+      try {
+        return JSON.parse(userInfo);
+      } catch (e) {
+        console.error('Error parsing user info from localStorage:', e);
+      }
+    }
+    
+    // Final fallback: construct from auth service data
+    if (this.authService.nameAr || this.authService.nameEn) {
+      return {
+        id: +this.authService.userId,
+        nameAr: this.authService.nameAr,
+        nameEn: this.authService.nameEn,
+        phone: '',
+        email: '',
+        username: this.authService.username
+      } as User;
+    }
+    
+    return null;
+  }
+
+  getSalesRepName(): string {
+    const user = this.getCurrentUserInfo();
+    return user?.nameAr || user?.nameEn || '';
+  }
+
+  getSalesRepPhone(): string {
+    const user = this.getCurrentUserInfo();
+    return user?.phone || '';
+  }
+
+  // Get Store/Inventory name for print
+  getStoreNameForPrint(storeId: number): string {
+    const store = this.stores?.find(s => s.id === storeId);
+    return store?.nameAr || store?.nameEn || 'غير محدد';
+  }
+
+  // Get first store name from cart items (for print header)
+  getPrimaryStoreName(): string {
+    if (this.cartService.cartItems && this.cartService.cartItems.length > 0) {
+      const firstItem = this.cartService.cartItems.at(0);
+      const storeId = firstItem?.get('storeId')?.value;
+      if (storeId) {
+        return this.getStoreNameForPrint(storeId);
+      }
+    }
+    return 'غير محدد';
+  }
+
+  // Calculate totals for print
+  getTotalBeforeDiscount(): number {
+    return this.cartService.cartForm?.get('totalAmount')?.value || 0;
+  }
+
+  getTotalDiscount(): number {
+    // Sum all item discounts
+    if (this.cartService.cartItems) {
+      let totalDiscount = 0;
+      for (let i = 0; i < this.cartService.cartItems.length; i++) {
+        const item = this.cartService.cartItems.at(i);
+        const discount = item?.get('discount')?.value || 0;
+        totalDiscount += discount;
+      }
+      return totalDiscount;
+    }
+    return 0;
+  }
+
+  getNetTotal(): number {
+    return this.getTotalBeforeDiscount() - this.getTotalDiscount();
+  }
+
+  // Get product description/code for print table
+  getProductDescription(productId: number): string {
+    const product = this.products?.find(p => p.id === productId);
+    return product?.code || '';
   }
 
   // User Print Settings Methods
   getUserPrintHeader(): string {
-    const userInfo = localStorage.getItem('userInfo');
-    if (userInfo) {
-      const user = JSON.parse(userInfo);
-      return user.printHeader || '';
+    const user = this.getCurrentUserInfo();
+    const printHeader = user?.printHeader || '';
+    
+    if (!printHeader) return '';
+    
+    // If it's JSON, extract customText
+    if (printHeader.trim().startsWith('{')) {
+      try {
+        const parsed = JSON.parse(printHeader);
+        return parsed.customText || '';
+      } catch (e) {
+        return printHeader;
+      }
     }
-    return '';
+    
+    return printHeader;
   }
 
   getUserPrintFooter(): string {
-    const userInfo = localStorage.getItem('userInfo');
-    if (userInfo) {
-      const user = JSON.parse(userInfo);
-      return user.printFooter || '';
+    const user = this.getCurrentUserInfo();
+    const printFooter = user?.printFooter || '';
+    
+    if (!printFooter) return '';
+    
+    // If it's JSON, extract customText
+    if (printFooter.trim().startsWith('{')) {
+      try {
+        const parsed = JSON.parse(printFooter);
+        return parsed.customText || '';
+      } catch (e) {
+        return printFooter;
+      }
     }
+    
+    return printFooter;
+  }
+
+  // Get print visibility settings
+  getPrintHeaderVisibility(): any {
+    const user = this.getCurrentUserInfo();
+    const printHeader = user?.printHeader || '';
+    
+    if (!printHeader || !printHeader.trim().startsWith('{')) {
+      // Return all visible by default
+      return {
+        showCompanyName: true,
+        showCompanyLogo: true,
+        showCompanyAddress: true,
+        showCompanyPhone: true,
+        showCompanyFax: true,
+        showCompanyEmail: true,
+        showRegistrationNumber: true,
+        showCapital: true,
+        showTaxNumber: true,
+        showSlogan: true,
+        showDocumentTitle: true
+      };
+    }
+    
+    if (printHeader.trim().startsWith('{')) {
+      try {
+        const parsed = JSON.parse(printHeader);
+        return parsed.visibility || {
+          showCompanyName: true,
+          showCompanyLogo: true,
+          showCompanyAddress: true,
+          showCompanyPhone: true,
+          showCompanyFax: true,
+          showCompanyEmail: true,
+          showRegistrationNumber: true,
+          showCapital: true,
+          showTaxNumber: true,
+          showSlogan: true,
+          showDocumentTitle: true
+        };
+      } catch (e) {
+        // Return defaults (already returned above)
+      }
+    }
+    
+    // This should not be reached due to early return above, but keeping for safety
+    return {
+      showCompanyName: true,
+      showCompanyLogo: true,
+      showCompanyAddress: true,
+      showCompanyPhone: true,
+      showCompanyFax: true,
+      showCompanyEmail: true,
+      showRegistrationNumber: true,
+      showCapital: true,
+      showTaxNumber: true,
+      showSlogan: true,
+      showDocumentTitle: true
+    };
+  }
+
+  getPrintFooterVisibility(): any {
+    const user = this.getCurrentUserInfo();
+    const printFooter = user?.printFooter || '';
+    
+    if (!printFooter || !printFooter.trim().startsWith('{')) {
+      // Return all visible by default
+      return {
+        showTerms: true,
+        showNotes: true,
+        showCustomerSignature: true,
+        showAuthorizedSignature: true,
+        showCompanyFooterNote: true,
+        showDocumentGenerationDate: true
+      };
+    }
+    
+    if (printFooter.trim().startsWith('{')) {
+      try {
+        const parsed = JSON.parse(printFooter);
+        return parsed.visibility || {
+          showTerms: true,
+          showNotes: true,
+          showCustomerSignature: true,
+          showAuthorizedSignature: true,
+          showCompanyFooterNote: true,
+          showDocumentGenerationDate: true
+        };
+      } catch (e) {
+        // Return defaults (already returned above)
+      }
+    }
+    
+    // This should not be reached due to early return above, but keeping for safety
+    return {
+      showTerms: true,
+      showNotes: true,
+      showCustomerSignature: true,
+      showAuthorizedSignature: true,
+      showCompanyFooterNote: true,
+      showDocumentGenerationDate: true
+    };
+  }
+
+  getCustomTerms(): string {
+    const user = this.getCurrentUserInfo();
+    const printFooter = user?.printFooter || '';
+    
+    if (!printFooter || !printFooter.trim().startsWith('{')) {
+      return '';
+    }
+    
+    if (printFooter.trim().startsWith('{')) {
+      try {
+        const parsed = JSON.parse(printFooter);
+        return parsed.customTerms || '';
+      } catch (e) {
+        return '';
+      }
+    }
+    
     return '';
+  }
+
+  getCustomNotes(): string {
+    const user = this.getCurrentUserInfo();
+    const printFooter = user?.printFooter || '';
+    
+    if (!printFooter || !printFooter.trim().startsWith('{')) {
+      return '';
+    }
+    
+    if (printFooter.trim().startsWith('{')) {
+      try {
+        const parsed = JSON.parse(printFooter);
+        return parsed.customNotes || '';
+      } catch (e) {
+        return '';
+      }
+    }
+    
+    return '';
+  }
+
+  // Error Message Extraction
+  private extractErrorMessage(err: any): string {
+    // Try to get error message from different possible locations
+    let errorMessage = '';
+    
+    if (err?.error?.errorMessage) {
+      errorMessage = err.error.errorMessage;
+    } else if (err?.error?.message) {
+      errorMessage = err.error.message;
+    } else if (err?.error) {
+      // If error.error is a string
+      if (typeof err.error === 'string') {
+        errorMessage = err.error;
+      } else if (err.error?.error) {
+        errorMessage = err.error.error;
+      }
+    } else if (err?.message) {
+      errorMessage = err.message;
+    }
+    
+    // Check if it's a working hours error and translate it
+    if (errorMessage && (errorMessage.toLowerCase().includes('working hours') || 
+        errorMessage.toLowerCase().includes('outside working hours') ||
+        errorMessage.toLowerCase().includes('restricted outside'))) {
+      // Return translated message based on current language
+      if (this.lang.currentLang === 'ar') {
+        return 'العمليات مقيدة خارج ساعات العمل. يرجى المحاولة خلال ساعات العمل.';
+      } else {
+        return errorMessage; // Already in English
+      }
+    }
+    
+    // If no specific error message found, return generic message
+    if (!errorMessage || errorMessage.trim() === '') {
+      if (this.lang.currentLang === 'ar') {
+        return 'فشل في إرسال الطلب. يرجى المحاولة مرة أخرى.';
+      } else {
+        return 'Failed to send order. Please try again.';
+      }
+    }
+    
+    return errorMessage;
   }
 
   // Utility Methods

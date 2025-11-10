@@ -1,9 +1,10 @@
 import { Component, OnInit, Renderer2 } from '@angular/core';
-import { Router } from '@angular/router';
+import { Router, NavigationEnd } from '@angular/router';
 import { AuthService } from './core/services/auth.service';
 import { ThemeService } from './shared/services/theme.service';
 import { LanguageService } from './core/services/language.service';
 import { CartService } from './shared/services/cart.service';
+import { filter } from 'rxjs/operators';
 
 @Component({
   selector: 'app-root',
@@ -16,13 +17,14 @@ export class App implements OnInit {
   isDarkMode = false;
   cartCount = 3;
   username = '';
+  inModule = false;
 
   constructor(
     private router: Router,
     private renderer: Renderer2,
     public authService: AuthService,
     public theme: ThemeService,
-    private languageService: LanguageService,
+    public languageService: LanguageService,
     public cartService: CartService
   ) { }
 
@@ -41,6 +43,16 @@ export class App implements OnInit {
     this.authService.username$.subscribe(un => {
       this.username = un;
     });
+
+    // Track route changes to update module detection
+    this.router.events
+      .pipe(filter((event): event is NavigationEnd => event instanceof NavigationEnd))
+      .subscribe((event: NavigationEnd) => {
+        this.inModule = event.urlAfterRedirects.startsWith('/admin/') || event.urlAfterRedirects.startsWith('/order/');
+      });
+    
+    // Set initial state
+    this.inModule = this.router.url.startsWith('/admin/') || this.router.url.startsWith('/order/');
   }
 
   get currentLang() {
@@ -96,9 +108,14 @@ export class App implements OnInit {
 
   goToHome() {
     if (this.authService.isAdmin) {
-      this.router.navigate(['/admin']);
+      this.router.navigate(['/admin/dashboard']);
     } else {
       this.router.navigate(['/order/2/categories']);
     }
+  }
+
+  isInModule(): boolean {
+    const url = this.router.url;
+    return url.startsWith('/admin/') || url.startsWith('/order/');
   }
 }

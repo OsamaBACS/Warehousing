@@ -1,16 +1,20 @@
-<div class="working-hours-container">
-  <!-- Header Section -->
-  <div class="page-header">
-    <div class="header-content">
-      <div class="header-info">
-        <h1 class="page-title">
-          <i class="bi bi-calendar-check"></i>
-          {{ 'BREADCRUMB.WORKING_HOURS' | translate }}
-        </h1>
-        <p class="page-subtitle">{{ 'COMMON.CONFIGURE_WORKING_HOURS' | translate }}</p>
-      </div>
-      <div class="header-actions">
-        <button class="btn btn-outline-light" (click)="loadWorkingHours()">
+<div class="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-100 py-6 px-4 sm:px-6 lg:px-8"
+     [dir]="isRTL ? 'rtl' : 'ltr'">
+  
+  <!-- Modern Header -->
+  <div class="max-w-7xl mx-auto mb-8">
+    <div class="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 rounded-2xl shadow-xl p-6 sm:p-8 text-white">
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h1 class="text-3xl sm:text-4xl font-bold mb-2 flex items-center gap-3">
+            <i class="bi bi-calendar-check text-4xl"></i>
+            {{ 'BREADCRUMB.WORKING_HOURS' | translate }}
+          </h1>
+          <p class="text-blue-100 text-lg">{{ 'COMMON.CONFIGURE_WORKING_HOURS' | translate }}</p>
+        </div>
+        <button 
+          (click)="loadWorkingHours()"
+          class="px-4 py-2 bg-white/20 hover:bg-white/30 backdrop-blur-sm rounded-xl font-semibold transition-all duration-200 flex items-center gap-2 hover:scale-105">
           <i class="bi bi-arrow-clockwise"></i>
           {{ 'COMMON.REFRESH' | translate }}
         </button>
@@ -18,134 +22,196 @@
     </div>
   </div>
 
-  <!-- Status Overview -->
-  <div class="status-overview" *ngIf="workingHours">
-    <div class="status-card clickable" 
-         [ngClass]="isWorkingHoursActive ? 'status-active' : 'status-inactive'"
-         (click)="onStatusClick()"
-         title="Click to edit working hours">
-      <div class="status-indicator">
-        <i [ngClass]="isWorkingHoursActive ? 'bi bi-check-circle-fill' : 'bi bi-x-circle-fill'"></i>
-      </div>
-      <div class="status-content">
-        <h3 [ngClass]="currentStatusClass">{{ currentStatusMessage }}</h3>
-        <div class="status-details">
-          <div class="status-item">
-            <i class="bi bi-clock"></i>
-            <span>{{ 'COMMON.CURRENT_TIME' | translate }}: {{ currentTime | date:'medium' }}</span>
+  <!-- Status Overview Card -->
+  <div class="max-w-7xl mx-auto mb-8" *ngIf="workingHours">
+    <div class="bg-white rounded-2xl shadow-xl overflow-hidden">
+      <div class="p-6 sm:p-8">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-gray-700">
+          <div class="flex items-center gap-2">
+            <i class="bi bi-clock text-blue-600"></i>
+            <span class="text-sm font-medium">{{ 'COMMON.CURRENT_TIME' | translate }}: <span class="font-bold">{{ currentTime | date:'medium' }}</span></span>
           </div>
-          <div class="status-item" *ngIf="workingHours">
-            <i class="bi bi-calendar-range"></i>
-            <span>{{ 'COMMON.WORKING_DAYS' | translate }}: {{ getDayName(workingHours.startDay) }} - {{ getDayName(workingHours.endDay) }}</span>
-          </div>
-          <div class="status-item" *ngIf="workingHours">
-            <i class="bi bi-clock-history"></i>
-            <span>{{ 'COMMON.WORKING_HOURS' | translate }}: {{ workingHours.startTime }} - {{ workingHours.endTime }}</span>
+          <div class="flex items-center gap-2" *ngIf="workingHours && workingHours.days">
+            <i class="bi bi-calendar-range text-indigo-600"></i>
+            <span class="text-sm font-medium">
+              {{ 'COMMON.ENABLED_WORKING_DAYS' | translate }}: 
+              <span class="font-bold">
+                {{ getEnabledDaysCount() }} {{ 'COMMON.DAYS' | translate }}
+              </span>
+            </span>
           </div>
         </div>
-        <div class="click-hint">
-          <i class="bi bi-cursor"></i>
-          <span>{{ 'COMMON.CLICK_TO_EDIT' | translate }}</span>
+        <div class="mt-4 p-4 bg-gray-50 rounded-xl" *ngIf="workingHours && workingHours.days && getEnabledDaysNames()">
+          <div class="flex items-start gap-3">
+            <i class="bi bi-info-circle text-blue-600 mt-1"></i>
+            <div>
+              <p class="text-sm font-semibold text-gray-900 mb-1">{{ 'COMMON.CONFIGURED_DAYS' | translate }}:</p>
+              <p class="text-sm text-gray-700">{{ getEnabledDaysNames() }}</p>
+            </div>
+          </div>
         </div>
       </div>
     </div>
   </div>
 
   <!-- Working Hours Configuration -->
-  <div class="config-section" *ngIf="workingHours && !loading">
-    <div class="config-card">
-      <div class="card-header">
-        <h3>
-          <i class="bi bi-gear"></i>
+  <div class="max-w-7xl mx-auto mb-8" *ngIf="workingHours && !loading">
+    <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
+      <div class="bg-gradient-to-r from-gray-50 to-gray-100 px-6 py-4 border-b border-gray-200">
+        <h3 class="text-xl font-bold text-gray-800 flex items-center gap-2">
+          <i class="bi bi-gear text-blue-600"></i>
           {{ 'COMMON.WORKING_HOURS_CONFIGURATION' | translate }}
         </h3>
       </div>
-      <div class="card-body">
+      <div class="p-6">
         <form [formGroup]="workingHoursForm" (ngSubmit)="saveWorkingHours()">
-          <div class="form-grid">
-            <!-- Basic Information -->
-            <div class="form-section">
-              <h4>{{ 'COMMON.BASIC_INFORMATION' | translate }}</h4>
-              <div class="form-row">
-                <div class="form-group">
-                  <label class="form-label">
-                    <i class="bi bi-tag"></i>
-                    {{ 'COMMON.CONFIGURATION_NAME' | translate }}
-                  </label>
-                  <input type="text" class="form-control" formControlName="name" [placeholder]="'COMMON.ENTER_NAME' | translate">
-                </div>
-                <div class="form-group">
-                  <label class="form-label">
-                    <i class="bi bi-file-text"></i>
-                    {{ 'COMMON.DESCRIPTION' | translate }}
-                  </label>
-                  <input type="text" class="form-control" formControlName="description" [placeholder]="'COMMON.ENTER_DESCRIPTION' | translate">
+          <!-- Basic Information -->
+          <div class="mb-8">
+            <h4 class="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+              <i class="bi bi-info-circle text-blue-600"></i>
+              {{ 'COMMON.BASIC_INFORMATION' | translate }}
+            </h4>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label class="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                  <i class="bi bi-tag text-gray-500"></i>
+                  {{ 'COMMON.CONFIGURATION_NAME' | translate }}
+                </label>
+                <input 
+                  type="text" 
+                  formControlName="name"
+                  [placeholder]="'COMMON.ENTER_NAME' | translate"
+                  class="w-full px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200">
+              </div>
+              <div>
+                <label class="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                  <i class="bi bi-file-text text-gray-500"></i>
+                  {{ 'COMMON.DESCRIPTION' | translate }}
+                </label>
+                <input 
+                  type="text" 
+                  formControlName="description"
+                  [placeholder]="'COMMON.ENTER_DESCRIPTION' | translate"
+                  class="w-full px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200">
+              </div>
+            </div>
+          </div>
+
+          <!-- Working Schedule - Per Day -->
+          <div class="mb-8">
+            <h4 class="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+              <i class="bi bi-calendar-check text-indigo-600"></i>
+              {{ 'COMMON.WORKING_SCHEDULE' | translate }}
+            </h4>
+            <div class="space-y-4">
+              <div *ngFor="let dayControl of getDaysFormArray().controls; let i = index" 
+                   [formGroup]="dayControl"
+                   class="p-4 bg-gray-50 rounded-xl border-2 border-gray-200 hover:border-blue-300 transition-all duration-200">
+                <div class="flex flex-col md:flex-row md:items-center gap-4">
+                  <!-- Day Name and Enable Toggle -->
+                  <div class="flex items-center gap-3 md:w-32">
+                    <label class="relative inline-flex items-center cursor-pointer">
+                      <input 
+                        type="checkbox" 
+                        formControlName="isEnabled"
+                        class="sr-only peer">
+                      <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                    </label>
+                    <span class="font-bold text-gray-900 min-w-[80px]">
+                      <ng-container *ngIf="getDayNameKey(dayControl.value.dayOfWeek) as dayKey">
+                        {{ dayKey | translate }}
+                      </ng-container>
+                    </span>
+                  </div>
+                  
+                  <!-- Time Inputs -->
+                  <div class="flex-1 flex items-center gap-3">
+                    <div class="flex-1">
+                      <label class="block text-xs font-semibold text-gray-600 mb-1">{{ 'COMMON.START_TIME' | translate }}</label>
+                      <input 
+                        type="time" 
+                        formControlName="startTime"
+                        [disabled]="!dayControl.value.isEnabled"
+                        class="w-full px-4 py-2 border-2 rounded-xl transition-all duration-200"
+                        [class.border-gray-200]="dayControl.value.isEnabled"
+                        [class.border-gray-100]="!dayControl.value.isEnabled"
+                        [class.bg-gray-100]="!dayControl.value.isEnabled"
+                        [class.bg-white]="dayControl.value.isEnabled"
+                        [class.focus:border-blue-500]="dayControl.value.isEnabled"
+                        [class.focus:ring-2]="dayControl.value.isEnabled"
+                        [class.focus:ring-blue-200]="dayControl.value.isEnabled">
+                    </div>
+                    <span class="text-gray-600 font-semibold mt-6">{{ 'COMMON.TO' | translate }}</span>
+                    <div class="flex-1">
+                      <label class="block text-xs font-semibold text-gray-600 mb-1">{{ 'COMMON.END_TIME' | translate }}</label>
+                      <input 
+                        type="time" 
+                        formControlName="endTime"
+                        [disabled]="!dayControl.value.isEnabled"
+                        class="w-full px-4 py-2 border-2 rounded-xl transition-all duration-200"
+                        [class.border-gray-200]="dayControl.value.isEnabled"
+                        [class.border-gray-100]="!dayControl.value.isEnabled"
+                        [class.bg-gray-100]="!dayControl.value.isEnabled"
+                        [class.bg-white]="dayControl.value.isEnabled"
+                        [class.focus:border-blue-500]="dayControl.value.isEnabled"
+                        [class.focus:ring-2]="dayControl.value.isEnabled"
+                        [class.focus:ring-blue-200]="dayControl.value.isEnabled">
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
+          </div>
 
-            <!-- Working Schedule -->
-            <div class="form-section">
-              <h4>{{ 'COMMON.WORKING_SCHEDULE' | translate }}</h4>
-              <div class="form-row">
-                <div class="form-group">
-                  <label class="form-label">
-                    <i class="bi bi-calendar-range"></i>
-                    {{ 'COMMON.WORKING_DAYS' | translate }}
-                  </label>
-                  <div class="day-selector">
-                    <select class="form-control" formControlName="startDay">
-                      <option *ngFor="let day of dayOfWeekOptions" [value]="day.value">{{ day.name }}</option>
-                    </select>
-                    <span class="day-separator">{{ 'COMMON.TO' | translate }}</span>
-                    <select class="form-control" formControlName="endDay">
-                      <option *ngFor="let day of dayOfWeekOptions" [value]="day.value">{{ day.name }}</option>
-                    </select>
-                  </div>
-                </div>
-                <div class="form-group">
-                  <label class="form-label">
-                    <i class="bi bi-clock"></i>
-                    {{ 'COMMON.WORKING_HOURS' | translate }}
-                  </label>
-                  <div class="time-selector">
-                    <input type="time" class="form-control" formControlName="startTime">
-                    <span class="time-separator">{{ 'COMMON.TO' | translate }}</span>
-                    <input type="time" class="form-control" formControlName="endTime">
+          <!-- Options -->
+          <div class="mb-8">
+            <h4 class="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+              <i class="bi bi-sliders text-purple-600"></i>
+              {{ 'COMMON.OPTIONS' | translate }}
+            </h4>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div class="flex items-center gap-3 p-4 bg-gray-50 rounded-xl">
+                <label class="relative inline-flex items-center cursor-pointer">
+                  <input 
+                    type="checkbox" 
+                    formControlName="isActive"
+                    class="sr-only peer">
+                  <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                </label>
+                <div class="flex-1">
+                  <div class="font-semibold text-gray-900 flex items-center gap-2">
+                    <i class="bi bi-power text-blue-600"></i>
+                    {{ 'COMMON.ACTIVE_CONFIGURATION' | translate }}
                   </div>
                 </div>
               </div>
-            </div>
-
-            <!-- Options -->
-            <div class="form-section">
-              <h4>{{ 'COMMON.OPTIONS' | translate }}</h4>
-              <div class="options-grid">
-                <div class="option-item">
-                  <div class="form-check form-switch">
-                    <input class="form-check-input" type="checkbox" formControlName="isActive" id="isActive">
-                    <label class="form-check-label" for="isActive">
-                      <i class="bi bi-power"></i>
-                      {{ 'COMMON.ACTIVE_CONFIGURATION' | translate }}
-                    </label>
+              <div class="flex items-center gap-3 p-4 bg-gray-50 rounded-xl">
+                <label class="relative inline-flex items-center cursor-pointer">
+                  <input 
+                    type="checkbox" 
+                    formControlName="allowWeekends"
+                    class="sr-only peer">
+                  <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                </label>
+                <div class="flex-1">
+                  <div class="font-semibold text-gray-900 flex items-center gap-2">
+                    <i class="bi bi-calendar-week text-indigo-600"></i>
+                    {{ 'COMMON.ALLOW_WEEKENDS' | translate }}
                   </div>
                 </div>
-                <div class="option-item">
-                  <div class="form-check form-switch">
-                    <input class="form-check-input" type="checkbox" formControlName="allowWeekends" id="allowWeekends">
-                    <label class="form-check-label" for="allowWeekends">
-                      <i class="bi bi-calendar-week"></i>
-                      {{ 'COMMON.ALLOW_WEEKENDS' | translate }}
-                    </label>
-                  </div>
-                </div>
-                <div class="option-item">
-                  <div class="form-check form-switch">
-                    <input class="form-check-input" type="checkbox" formControlName="allowHolidays" id="allowHolidays">
-                    <label class="form-check-label" for="allowHolidays">
-                      <i class="bi bi-calendar-x"></i>
-                      {{ 'COMMON.ALLOW_HOLIDAYS' | translate }}
-                    </label>
+              </div>
+              <div class="flex items-center gap-3 p-4 bg-gray-50 rounded-xl">
+                <label class="relative inline-flex items-center cursor-pointer">
+                  <input 
+                    type="checkbox" 
+                    formControlName="allowHolidays"
+                    class="sr-only peer">
+                  <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                </label>
+                <div class="flex-1">
+                  <div class="font-semibold text-gray-900 flex items-center gap-2">
+                    <i class="bi bi-calendar-x text-purple-600"></i>
+                    {{ 'COMMON.ALLOW_HOLIDAYS' | translate }}
                   </div>
                 </div>
               </div>
@@ -153,11 +219,14 @@
           </div>
 
           <!-- Save Button -->
-          <div class="form-actions">
-            <button type="submit" class="btn btn-primary btn-lg" [disabled]="workingHoursForm.invalid || loading">
-              <i class="bi bi-check-circle" *ngIf="!loading"></i>
-              <span class="spinner-border spinner-border-sm me-2" *ngIf="loading"></span>
-              {{ loading ? ('COMMON.SAVING' | translate) : ('COMMON.SAVE_CONFIGURATION' | translate) }}
+          <div class="flex justify-center pt-6 border-t border-gray-200">
+            <button 
+              type="submit" 
+              [disabled]="workingHoursForm.invalid || saving"
+              class="px-8 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-bold hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 flex items-center gap-2 hover:scale-105 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100">
+              <i class="bi bi-check-circle" *ngIf="!saving"></i>
+              <div class="animate-spin rounded-full h-5 w-5 border-b-2 border-white" *ngIf="saving"></div>
+              {{ saving ? ('COMMON.SAVING' | translate) : ('COMMON.SAVE_CONFIGURATION' | translate) }}
             </button>
           </div>
         </form>
@@ -166,63 +235,99 @@
   </div>
 
   <!-- Exceptions Management -->
-  <div class="exceptions-section" *ngIf="workingHours && !loading">
-    <div class="exceptions-card">
-      <div class="card-header">
-        <div class="header-content">
-          <h3>
-            <i class="bi bi-calendar-x"></i>
-            Working Hours Exceptions
-          </h3>
-          <button class="btn btn-primary" (click)="toggleExceptionForm()">
-            <i class="bi bi-plus-circle"></i>
-            Add Exception
-          </button>
-        </div>
+  <div class="max-w-7xl mx-auto mb-8" *ngIf="workingHours && !loading">
+    <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
+      <div class="bg-gradient-to-r from-gray-50 to-gray-100 px-6 py-4 border-b border-gray-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <h3 class="text-xl font-bold text-gray-800 flex items-center gap-2">
+          <i class="bi bi-calendar-x text-red-600"></i>
+          Working Hours Exceptions
+        </h3>
+        <button 
+          (click)="toggleExceptionForm()"
+          class="px-4 py-2 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl font-semibold hover:from-green-700 hover:to-emerald-700 transition-all duration-200 flex items-center gap-2 hover:scale-105 shadow-lg">
+          <i class="bi bi-plus-circle"></i>
+          Add Exception
+        </button>
       </div>
-      <div class="card-body">
+      <div class="p-6">
+        <!-- Info Box: How to Use Exceptions -->
+        <div class="mb-6 p-4 bg-blue-50 border-l-4 border-blue-500 rounded-r-lg">
+          <div class="flex items-start gap-3">
+            <i class="bi bi-info-circle text-blue-600 mt-0.5"></i>
+            <div class="flex-1">
+              <h5 class="font-semibold text-blue-900 mb-1">{{ 'COMMON.EXCEPTIONS_INFO_TITLE' | translate }}</h5>
+              <p class="text-sm text-blue-800">{{ 'COMMON.EXCEPTIONS_INFO_DESCRIPTION' | translate }}</p>
+            </div>
+          </div>
+        </div>
+        
         <!-- Exception Form -->
-        <div class="exception-form" *ngIf="showExceptionForm">
-          <div class="form-header">
-            <h4>
-              <i class="bi bi-plus-circle"></i>
+        <div class="mb-6 p-6 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl border-2 border-blue-200" *ngIf="showExceptionForm">
+          <div class="mb-4">
+            <h4 class="text-lg font-bold text-gray-900 flex items-center gap-2">
+              <i class="bi bi-plus-circle text-blue-600"></i>
               {{ editingException ? 'Edit Exception' : 'Add New Exception' }}
             </h4>
           </div>
           <form [formGroup]="exceptionForm" (ngSubmit)="editingException ? updateException() : addException()">
-            <div class="form-grid">
-              <div class="form-group">
-                <label class="form-label">Exception Date</label>
-                <input type="date" class="form-control" formControlName="exceptionDate">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Exception Date</label>
+                <input 
+                  type="date" 
+                  formControlName="exceptionDate"
+                  class="w-full px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200">
               </div>
-              <div class="form-group">
-                <label class="form-label">Start Time (Optional)</label>
-                <input type="time" class="form-control" formControlName="startTime">
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Start Time (Optional)</label>
+                <input 
+                  type="time" 
+                  formControlName="startTime"
+                  class="w-full px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200">
               </div>
-              <div class="form-group">
-                <label class="form-label">End Time (Optional)</label>
-                <input type="time" class="form-control" formControlName="endTime">
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">End Time (Optional)</label>
+                <input 
+                  type="time" 
+                  formControlName="endTime"
+                  class="w-full px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200">
               </div>
-              <div class="form-group">
-                <label class="form-label">Reason</label>
-                <input type="text" class="form-control" formControlName="reason" placeholder="Enter reason">
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Reason</label>
+                <input 
+                  type="text" 
+                  formControlName="reason"
+                  placeholder="Enter reason"
+                  class="w-full px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200">
               </div>
-              <div class="form-group full-width">
-                <div class="form-check form-switch">
-                  <input class="form-check-input" type="checkbox" formControlName="isWorkingDay" id="isWorkingDay">
-                  <label class="form-check-label" for="isWorkingDay">
-                    <i class="bi bi-calendar-check"></i>
-                    Is Working Day (uncheck for holidays/closures)
+              <div class="md:col-span-2">
+                <div class="flex items-center gap-3 p-4 bg-white rounded-xl">
+                  <label class="relative inline-flex items-center cursor-pointer">
+                    <input 
+                      type="checkbox" 
+                      formControlName="isWorkingDay"
+                      class="sr-only peer">
+                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
                   </label>
+                  <div class="flex-1 font-semibold text-gray-900 flex items-center gap-2">
+                    <i class="bi bi-calendar-check text-blue-600"></i>
+                    Is Working Day (uncheck for holidays/closures)
+                  </div>
                 </div>
               </div>
             </div>
-            <div class="form-actions">
-              <button type="submit" class="btn btn-success" [disabled]="exceptionForm.invalid">
+            <div class="flex gap-3">
+              <button 
+                type="submit" 
+                [disabled]="exceptionForm.invalid"
+                class="px-6 py-2 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl font-semibold hover:from-green-700 hover:to-emerald-700 transition-all duration-200 flex items-center gap-2 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed">
                 <i class="bi bi-check-circle"></i>
                 {{ editingException ? 'Update Exception' : 'Add Exception' }}
               </button>
-              <button type="button" class="btn btn-outline-secondary" (click)="resetExceptionForm()">
+              <button 
+                type="button" 
+                (click)="resetExceptionForm()"
+                class="px-6 py-2 bg-gray-200 text-gray-700 rounded-xl font-semibold hover:bg-gray-300 transition-all duration-200 flex items-center gap-2">
                 <i class="bi bi-x-circle"></i>
                 Cancel
               </button>
@@ -231,70 +336,86 @@
         </div>
 
         <!-- Exceptions List -->
-        <div class="exceptions-list" *ngIf="workingHours && workingHours.exceptions && workingHours.exceptions.length > 0; else noExceptions">
-          <div class="exceptions-table">
-            <div class="table-header">
-              <div class="header-cell">Date</div>
-              <div class="header-cell">Start Time</div>
-              <div class="header-cell">End Time</div>
-              <div class="header-cell">Reason</div>
-              <div class="header-cell">Type</div>
-              <div class="header-cell">Actions</div>
-            </div>
-            <div class="table-body">
-              <div class="table-row" *ngFor="let exception of workingHours.exceptions; trackBy: trackByExceptionId">
-                <div class="table-cell">
-                  <div class="date-info">
-                    <i class="bi bi-calendar-date"></i>
-                    <span>{{ exception.exceptionDate | date:'MMM dd, yyyy' }}</span>
-                  </div>
-                </div>
-                <div class="table-cell">
-                  <span *ngIf="exception.startTime; else noTime" class="time-badge">
-                    {{ exception.startTime }}
-                  </span>
-                  <ng-template #noTime>
-                    <span class="no-data">-</span>
-                  </ng-template>
-                </div>
-                <div class="table-cell">
-                  <span *ngIf="exception.endTime; else noTime" class="time-badge">
-                    {{ exception.endTime }}
-                  </span>
-                  <ng-template #noTime>
-                    <span class="no-data">-</span>
-                  </ng-template>
-                </div>
-                <div class="table-cell">
-                  <span class="reason-text">{{ exception.reason }}</span>
-                </div>
-                <div class="table-cell">
-                  <span class="type-badge" [ngClass]="exception.isWorkingDay ? 'working-day' : 'closed-day'">
-                    <i [ngClass]="exception.isWorkingDay ? 'bi bi-check-circle' : 'bi bi-x-circle'"></i>
-                    {{ exception.isWorkingDay ? 'Working Day' : 'Closed Day' }}
-                  </span>
-                </div>
-                <div class="table-cell">
-                  <div class="action-buttons">
-                    <button class="btn btn-sm btn-outline-primary" (click)="editException(exception)" title="Edit">
-                      <i class="bi bi-pencil"></i>
-                    </button>
-                    <button class="btn btn-sm btn-outline-danger" (click)="deleteException(exception)" title="Delete">
-                      <i class="bi bi-trash"></i>
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
+        <div *ngIf="workingHours && workingHours.exceptions && workingHours.exceptions.length > 0; else noExceptions">
+          <div class="overflow-x-auto">
+            <table class="w-full">
+              <thead class="bg-gray-50">
+                <tr>
+                  <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Date</th>
+                  <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Start Time</th>
+                  <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">End Time</th>
+                  <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Reason</th>
+                  <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Type</th>
+                  <th class="px-6 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Actions</th>
+                </tr>
+              </thead>
+              <tbody class="bg-white divide-y divide-gray-200">
+                <tr *ngFor="let exception of workingHours.exceptions; trackBy: trackByExceptionId" 
+                    class="hover:bg-blue-50 transition-colors duration-150">
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="flex items-center gap-2 text-sm font-medium text-gray-900">
+                      <i class="bi bi-calendar-date text-blue-600"></i>
+                      {{ exception.exceptionDate | date:'MMM dd, yyyy' }}
+                    </div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <span *ngIf="exception.startTime; else noTime" class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                      {{ exception.startTime }}
+                    </span>
+                    <ng-template #noTime>
+                      <span class="text-gray-400">-</span>
+                    </ng-template>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <span *ngIf="exception.endTime; else noTime" class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                      {{ exception.endTime }}
+                    </span>
+                    <ng-template #noTime>
+                      <span class="text-gray-400">-</span>
+                    </ng-template>
+                  </td>
+                  <td class="px-6 py-4">
+                    <span class="text-sm text-gray-900">{{ exception.reason }}</span>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full"
+                          [ngClass]="exception.isWorkingDay ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'">
+                      <i [ngClass]="exception.isWorkingDay ? 'bi bi-check-circle mr-1' : 'bi bi-x-circle mr-1'"></i>
+                      {{ exception.isWorkingDay ? 'Working Day' : 'Closed Day' }}
+                    </span>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-center">
+                    <div class="flex items-center justify-center gap-2">
+                      <button 
+                        (click)="editException(exception)"
+                        class="px-3 py-1 bg-blue-100 text-blue-700 hover:bg-blue-200 rounded-lg text-sm font-semibold transition-colors duration-200"
+                        title="Edit">
+                        <i class="bi bi-pencil"></i>
+                      </button>
+                      <button 
+                        (click)="deleteException(exception)"
+                        class="px-3 py-1 bg-red-100 text-red-700 hover:bg-red-200 rounded-lg text-sm font-semibold transition-colors duration-200"
+                        title="Delete">
+                        <i class="bi bi-trash"></i>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </div>
 
         <ng-template #noExceptions>
-          <div class="empty-state">
-            <i class="bi bi-calendar-x"></i>
-            <h4>No exceptions configured</h4>
-            <p>Add exceptions for holidays, maintenance days, or special working hours.</p>
-            <button class="btn btn-primary" (click)="toggleExceptionForm()">
+          <div class="text-center py-12">
+            <div class="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <i class="bi bi-calendar-x text-gray-400 text-4xl"></i>
+            </div>
+            <h4 class="text-lg font-semibold text-gray-900 mb-2">No exceptions configured</h4>
+            <p class="text-gray-500 mb-4">Add exceptions for holidays, maintenance days, or special working hours.</p>
+            <button 
+              (click)="toggleExceptionForm()"
+              class="px-6 py-2 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl font-semibold hover:from-green-700 hover:to-emerald-700 transition-all duration-200 flex items-center gap-2 hover:scale-105 shadow-lg mx-auto">
               <i class="bi bi-plus-circle"></i>
               Add First Exception
             </button>
@@ -305,12 +426,12 @@
   </div>
 
   <!-- Loading State -->
-  <div class="loading-section" *ngIf="loading">
-    <div class="loading-card">
-      <div class="loading-content">
-        <div class="spinner"></div>
-        <h4>Loading working hours configuration...</h4>
-        <p>Please wait while we fetch the latest settings.</p>
+  <div class="max-w-7xl mx-auto" *ngIf="loading">
+    <div class="bg-white rounded-2xl shadow-lg p-12">
+      <div class="flex flex-col items-center justify-center text-center">
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
+        <h4 class="text-lg font-semibold text-gray-900 mb-2">Loading working hours configuration...</h4>
+        <p class="text-gray-600">Please wait while we fetch the latest settings.</p>
       </div>
     </div>
   </div>

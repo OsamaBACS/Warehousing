@@ -27,7 +27,8 @@ export class ProductsService {
   }
 
   SearchProducts(keyword: string) {
-    return this.http.get<Product[]>(`${this.url}SearchProducts?keyword=${keyword}`);
+    const encodedKeyword = encodeURIComponent(keyword);
+    return this.http.get<Product[]>(`${this.url}search/${encodedKeyword}`);
   }
 
   GetProductsByCategory(categoryId: number) {

@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, DoCheck } from '@angular/core';
 import { ActivityLogService, ActivityLogFilters, UserActivityLog, ActivityLogResponse } from '../../services/activity-log.service';
 import { NotificationService } from '../../../core/services/notification.service';
 import { CommonModule } from '@angular/common';
@@ -6,6 +6,7 @@ import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../../core/services/auth.service';
 import { PermissionsEnum } from '../../constants/enums/permissions.enum';
 import { TranslateModule } from '@ngx-translate/core';
+import { LanguageService } from '../../../core/services/language.service';
 
 @Component({
   selector: 'app-activity-logs',
@@ -14,7 +15,7 @@ import { TranslateModule } from '@ngx-translate/core';
   standalone: true,
   imports: [CommonModule, FormsModule, TranslateModule]
 })
-export class ActivityLogsComponent implements OnInit {
+export class ActivityLogsComponent implements OnInit, DoCheck {
   // Optional stats placeholder to satisfy template bindings; can be wired later
   stats: any | null = null;
   activityLogs: UserActivityLog[] = [];
@@ -23,6 +24,7 @@ export class ActivityLogsComponent implements OnInit {
   pageSize = 20;
   loading = false;
   selectedLog: UserActivityLog | null = null;
+  isRTL = false;
 
   filter: ActivityLogFilters = {
     page: 1,
@@ -38,11 +40,25 @@ export class ActivityLogsComponent implements OnInit {
   constructor(
     private activityLogService: ActivityLogService,
     private notificationService: NotificationService,
-    private authService: AuthService
+    private authService: AuthService,
+    public languageService: LanguageService
   ) { }
 
   ngOnInit(): void {
+    this.updateRTL();
     this.loadActivityLogs();
+  }
+
+  updateRTL(): void {
+    this.isRTL = this.languageService.currentLang === 'ar';
+  }
+
+  ngDoCheck(): void {
+    // Check if language changed on every change detection cycle
+    const newRTL = this.languageService.currentLang === 'ar';
+    if (newRTL !== this.isRTL) {
+      this.updateRTL();
+    }
   }
 
   loadActivityLogs(): void {

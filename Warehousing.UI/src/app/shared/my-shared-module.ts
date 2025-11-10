@@ -17,6 +17,7 @@ import { BreadcrumbComponent } from './components/breadcrumb/breadcrumb.componen
 import { OrderPendingListComponent } from './components/order-pending-list/order-pending-list.component';
 import { CustomerFormPopupComponent } from './components/customer-form-popup/customer-form-popup.component';
 import { SupplierFormPopupComponent } from './components/supplier-form-popup/supplier-form-popup.component';
+import { SidebarComponent } from './components/sidebar/sidebar.component';
 
 
 
@@ -30,7 +31,8 @@ import { SupplierFormPopupComponent } from './components/supplier-form-popup/sup
     BreadcrumbComponent,
     OrderPendingListComponent,
     CustomerFormPopupComponent,
-    SupplierFormPopupComponent
+    SupplierFormPopupComponent,
+    SidebarComponent
   ],
   imports: [
     CommonModule,
@@ -58,6 +60,7 @@ import { SupplierFormPopupComponent } from './components/supplier-form-popup/sup
     CompanyHeaderComponent,
     CompanyFooterComponent,
     BreadcrumbComponent,
+    SidebarComponent,
     ReactiveFormsModule,
     RouterModule,
     TranslateModule

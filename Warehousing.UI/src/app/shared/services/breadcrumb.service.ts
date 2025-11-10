@@ -18,6 +18,8 @@ export class BreadcrumbService {
     'dashboard': 'لوحة التحكم',
     'products': 'المنتجات',
     'product-form': 'نموذج المنتج',
+    'product-detail': 'تفاصيل المنتج',
+    'product-details': 'تفاصيل المنتج',
     'modifier-management': 'إدارة المكونات',
     'users': 'المستخدمين',
     'users-form': 'نموذج المستخدم',
@@ -78,7 +80,7 @@ export class BreadcrumbService {
     const urlSegments = url.split('/').filter(segment => segment !== '' && segment !== '?');
     
     // Always start with home
-    breadcrumbs.push({ label: 'الرئيسية', route: '/admin/main' });
+    breadcrumbs.push({ label: 'الرئيسية', route: '/admin/dashboard' });
     
     // Generate breadcrumbs from URL segments
     let currentPath = '';
@@ -97,6 +99,13 @@ export class BreadcrumbService {
       
       // Only process segments after 'admin'
       if (!foundAdmin) {
+        continue;
+      }
+      
+      // Skip numeric segments (IDs) - they shouldn't appear in breadcrumbs
+      if (/^\d+$/.test(cleanSegment)) {
+        // Keep the path updated but don't add breadcrumb for IDs
+        currentPath += `/${cleanSegment}`;
         continue;
       }
       

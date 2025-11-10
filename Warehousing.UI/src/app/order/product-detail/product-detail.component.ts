@@ -7,6 +7,7 @@ import { ProductVariantService } from '../services/product-variant.service';
 import { ProductModifierService } from '../services/product-modifier.service';
 import { CartService } from '../../shared/services/cart.service';
 import { OrderBreadcrumbService } from '../services/order-breadcrumb.service';
+import { AuthService } from '../../core/services/auth.service';
 import { Product } from '../../admin/models/product';
 import { StoreSimple } from '../../admin/models/StoreSimple';
 import { ProductVariant } from '../models/ProductVariant';
@@ -28,8 +29,8 @@ export class ProductDetailComponent implements OnInit {
   serverUrl = environment.resourcesUrl;
   
   // Navigation parameters
-  categoryId!: number;
-  subCategoryId!: number;
+  categoryId?: number;
+  subCategoryId?: number;
   
   // Stores
   allStores: StoreSimple[] = [];
@@ -58,6 +59,7 @@ export class ProductDetailComponent implements OnInit {
     private productModifierService: ProductModifierService,
     private cartService: CartService,
     private orderBreadcrumbService: OrderBreadcrumbService,
+    public authService: AuthService,
     private fb: FormBuilder,
     private dialog: MatDialog
   ) {
@@ -77,13 +79,28 @@ export class ProductDetailComponent implements OnInit {
       this.orderTypeId = newOrderTypeId;
       console.log('ProductDetailComponent - orderTypeId from PARENT route:', this.orderTypeId, 'type:', typeof this.orderTypeId);
       
-      this.categoryId = Number(params.get('categoryId'));
-      this.subCategoryId = Number(params.get('subCategoryId'));
+      const categoryIdParam = params.get('categoryId');
+      const subCategoryIdParam = params.get('subCategoryId');
+
+      this.categoryId = categoryIdParam ? Number(categoryIdParam) : this.categoryId;
+      this.subCategoryId = subCategoryIdParam ? Number(subCategoryIdParam) : this.subCategoryId;
       
       // If product is already loaded and orderTypeId changed, reload stores
       if (this.product && orderTypeChanged) {
         console.log('OrderTypeId changed, reloading stores...');
         this.loadStores();
+      }
+    });
+
+    this.route.queryParamMap.subscribe(params => {
+      const categoryIdParam = params.get('categoryId');
+      const subCategoryIdParam = params.get('subCategoryId');
+
+      if (categoryIdParam) {
+        this.categoryId = Number(categoryIdParam);
+      }
+      if (subCategoryIdParam) {
+        this.subCategoryId = Number(subCategoryIdParam);
       }
     });
     
@@ -108,6 +125,13 @@ export class ProductDetailComponent implements OnInit {
         console.log('Loaded product:', product);
         console.log('Product inventories:', product.inventories);
         console.log('Current orderTypeId when loading product:', this.orderTypeId);
+
+        if (!this.categoryId && product.subCategory?.categoryId) {
+          this.categoryId = product.subCategory.categoryId;
+        }
+        if (!this.subCategoryId && product.subCategoryId) {
+          this.subCategoryId = product.subCategoryId;
+        }
         
         // Log each inventory record
         if (product.inventories) {
@@ -154,33 +178,34 @@ export class ProductDetailComponent implements OnInit {
     console.log('Order Type ID:', this.orderTypeId);
     console.log('Product available:', !!this.product);
     console.log('Product inventories:', this.product?.inventories);
+    console.log('Product variants count:', this.productVariants.length);
     
     this.storeService.GetActiveStores().subscribe({
       next: (stores) => {
         console.log('Raw stores loaded:', stores);
-        // For purchases (orderTypeId === 1), show all stores so admin can choose
-        // For sales (orderTypeId === 2), only show stores with inventory
         // Ensure orderTypeId is a number for comparison
         const orderType = Number(this.orderTypeId);
         console.log('Comparing orderType:', orderType, '=== 1?', orderType === 1);
         
         if (orderType === 1) {
+          // Purchase Orders: Show all stores so admin can choose where to add inventory
           console.log('PURCHASE MODE: Showing all stores');
           this.allStores = stores;
         } else {
-          console.log('SALE MODE: Filtering stores with inventory > 0');
-          // Filter stores to only show those that have the product in inventory
-          const filtered = this.filterStoresWithProductInventory(stores);
-          this.allStores = filtered;
-          console.log(`Filtered ${stores.length} stores down to ${filtered.length} stores with stock`);
-          // Safety check: never show all stores for sales
-          if (filtered.length !== stores.length && filtered.length < stores.length) {
-            console.log('✅ Correctly filtered stores for sale');
+          // Sale Orders: 
+          // - If product has NO variants: Filter to show only stores with general inventory
+          // - If product HAS variants: Show ALL stores (getStoresForVariant will filter per variant)
+          if (this.productVariants.length === 0) {
+            console.log('SALE MODE (no variants): Filtering stores with general inventory > 0');
+            const filtered = this.filterStoresWithProductInventory(stores);
+            this.allStores = filtered;
+            console.log(`Filtered ${stores.length} stores down to ${filtered.length} stores with general stock`);
           } else {
-            console.warn('⚠️ WARNING: All stores are being shown for sale! This should not happen.');
+            console.log('SALE MODE (with variants): Showing all stores (getStoresForVariant will filter per variant)');
+            this.allStores = stores; // Show all stores, filtering happens in getStoresForVariant()
           }
         }
-        console.log('Final allStores:', this.allStores);
+        console.log('Final allStores:', this.allStores.length, 'stores');
       },
       error: (err) => {
         console.error('Error loading stores:', err);
@@ -271,11 +296,27 @@ export class ProductDetailComponent implements OnInit {
     this.productVariantService.getProductVariantsByProductId(this.productId).subscribe({
       next: (variants) => {
         this.productVariants = variants;
+        console.log('✅ Loaded product variants:', variants);
+        
         // Set default variant if available
         const defaultVariant = variants.find(v => v.isDefault);
         if (defaultVariant) {
           this.selectedVariantId = defaultVariant.id;
           this.productForm.patchValue({ variantId: defaultVariant.id });
+        }
+        
+        // Reload variant stock data now that we have variants loaded
+        // This ensures variant IDs are available for matching
+        if (this.product) {
+          console.log('🔄 Reloading variant stock data after variants loaded...');
+          this.loadVariantStockData();
+          
+          // If this is a sale order and we now have variants, reload stores
+          // to ensure all stores are available (filtering will happen per variant in getStoresForVariant)
+          if (this.orderTypeId === 2) {
+            console.log('🔄 Reloading stores after variants loaded (for sale orders with variants)...');
+            this.loadStores();
+          }
         }
       },
       error: (err) => {
@@ -412,21 +453,29 @@ export class ProductDetailComponent implements OnInit {
   }
 
   setProductDetailBreadcrumbs(): void {
-    if (this.product && this.categoryId && this.subCategoryId) {
-      // Get category and subcategory names from the product
-      const categoryName = this.product.subCategory?.category?.nameAr || 'التصنيف';
-      const subCategoryName = this.product.subCategory?.nameAr || 'التصنيف الفرعي';
-      const productName = this.product.nameAr || 'المنتج';
-      
-      this.orderBreadcrumbService.setProductDetailBreadcrumbs(
-        this.orderTypeId,
-        this.categoryId,
-        categoryName,
-        this.subCategoryId,
-        subCategoryName,
-        productName
-      );
+    if (!this.product) {
+      return;
     }
+
+    const resolvedCategoryId = this.categoryId ?? this.product.subCategory?.categoryId ?? undefined;
+    const resolvedSubCategoryId = this.subCategoryId ?? this.product.subCategoryId ?? undefined;
+
+    if (!resolvedCategoryId || !resolvedSubCategoryId) {
+      return;
+    }
+
+    const categoryName = this.product.subCategory?.category?.nameAr || 'التصنيف';
+    const subCategoryName = this.product.subCategory?.nameAr || 'التصنيف الفرعي';
+    const productName = this.product.nameAr || 'المنتج';
+    
+    this.orderBreadcrumbService.setProductDetailBreadcrumbs(
+      this.orderTypeId,
+      resolvedCategoryId,
+      categoryName,
+      resolvedSubCategoryId,
+      subCategoryName,
+      productName
+    );
   }
 
 
@@ -495,52 +544,85 @@ export class ProductDetailComponent implements OnInit {
 
   // Load variant stock data when product is loaded
   loadVariantStockData(): void {
-    console.log('Loading variant stock data...');
-    console.log('Product:', this.product);
-    console.log('Product variants:', this.product?.variants);
-    console.log('Product variantStockData:', this.product?.variantStockData);
+    console.log('🔄 Loading variant stock data...');
+    console.log('📦 Product:', this.product);
+    console.log('🏷️ Product variants:', this.product?.variants);
+    console.log('📊 Product variantStockData:', this.product?.variantStockData);
+    console.log('📋 Product inventories:', this.product?.inventories);
     
-    if (this.product?.variants && this.product.variants.length > 0 && this.product.variantStockData) {
-      // Process the variant stock data that's already included in the API response
+    // Clear previous data
+    this.variantStockData = {};
+    
+    // First, try to process variantStockData from API (if available)
+    if (this.product?.variantStockData) {
+      console.log('📦 Processing variantStockData from API...');
       const variantStockData = this.product.variantStockData;
-      console.log('Variant stock data:', variantStockData);
       
-      if (variantStockData) {
-        Object.keys(variantStockData).forEach(storeKey => {
-          const stockData = variantStockData[storeKey] as any[];
-          console.log(`Store ${storeKey} stock data:`, stockData);
+      Object.keys(variantStockData).forEach(storeKey => {
+        const stockData = variantStockData[storeKey] as any[];
+        console.log(`🏪 Store ${storeKey} stock data:`, stockData);
+        
+        if (stockData && Array.isArray(stockData)) {
+          const storeId = storeKey.replace('store_', '');
           
-          if (stockData) {
-            const storeId = storeKey.replace('store_', '');
-            
-            stockData.forEach(variantStock => {
-              const key = `${this.product!.id}-${variantStock.variantId}-${storeId}`;
-              this.variantStockData[key] = variantStock.availableQuantity;
-              console.log(`Set variant stock: ${key} = ${variantStock.availableQuantity}`);
-            });
-          }
-        });
-      }
-    } else {
-      console.log('No variant stock data available, checking for variant-specific inventory');
-      // Check if inventories have variant information
-      if (this.product?.inventories) {
-        this.product.inventories.forEach(inventory => {
-          console.log('Processing inventory:', inventory);
-          
-          // Check if this inventory record has a variant ID
-          if (inventory.variantId) {
-            const key = `${this.product!.id}-${inventory.variantId}-${inventory.storeId}`;
-            this.variantStockData[key] = inventory.quantity;
-            console.log(`Set variant stock from inventory: ${key} = ${inventory.quantity}`);
-          } else {
-            console.log('Inventory record has no variant ID, skipping');
-          }
-        });
-      }
+          stockData.forEach(variantStock => {
+            const key = `${this.product!.id}-${variantStock.variantId}-${storeId}`;
+            this.variantStockData[key] = variantStock.availableQuantity || 0;
+            console.log(`✅ Set variant stock: ${key} = ${this.variantStockData[key]}`);
+          });
+        }
+      });
     }
     
-    console.log('Final variant stock data:', this.variantStockData);
+    // Always check product.inventories for variant-specific inventory (this is the primary source)
+    if (this.product?.inventories && this.product.inventories.length > 0) {
+      console.log('📋 Processing inventories for variant stock...');
+      this.product.inventories.forEach(inventory => {
+        console.log('🔍 Processing inventory:', {
+          id: inventory.id,
+          productId: inventory.productId,
+          storeId: inventory.storeId,
+          variantId: inventory.variantId,
+          quantity: inventory.quantity
+        });
+        
+        // Check if this inventory record has a variant ID (not null, not 0, not undefined)
+        // Convert variantId to number for comparison (handles string/number mismatch)
+        const variantId = inventory.variantId != null ? Number(inventory.variantId) : null;
+        
+        if (variantId != null && variantId !== 0) {
+          const key = `${this.product!.id}-${variantId}-${inventory.storeId}`;
+          const quantity = Number(inventory.quantity) || 0;
+          
+          // Check if this variantId exists in our loaded variants (if variants are loaded)
+          // If variants aren't loaded yet, we'll still add it (they might load later)
+          const variantExists = this.productVariants.length === 0 || this.productVariants.some(v => Number(v.id) === variantId);
+          
+          if (quantity > 0) {
+            // If key already exists, keep the higher value (in case both sources have data)
+            if (!this.variantStockData[key] || this.variantStockData[key] < quantity) {
+              this.variantStockData[key] = quantity;
+              if (variantExists || this.productVariants.length === 0) {
+                console.log(`✅ Set variant stock from inventory: ${key} = ${quantity}`);
+              } else {
+                console.log(`⚠️ Set variant stock for variant ${variantId} that's not yet loaded: ${key} = ${quantity}`);
+              }
+            } else {
+              console.log(`ℹ️ Key ${key} already exists with value ${this.variantStockData[key]}, keeping it`);
+            }
+          } else {
+            console.log(`⏭️ Variant ${variantId} has quantity 0, skipping`);
+          }
+        } else {
+          console.log('⏭️ Inventory record has no variant ID, skipping (this is general product inventory)');
+        }
+      });
+    } else {
+      console.log('⚠️ No inventories found in product');
+    }
+    
+    console.log('✅ Final variant stock data:', this.variantStockData);
+    console.log('📊 Total variant stock entries:', Object.keys(this.variantStockData).length);
   }
 
   getVariantStock(productId: number, variantId: number, storeId: number): number {
@@ -548,32 +630,56 @@ export class ProductDetailComponent implements OnInit {
     return this.variantStockData[`${productId}-${variantId}-${storeId}`] || 0;
   }
 
-  // Enhanced cart management methods
+  // Get stores for a variant
+  // For Purchase Orders (orderTypeId === 1): Show ALL stores (admin chooses where to add inventory)
+  // For Sale Orders (orderTypeId === 2): Show only stores with stock > 0 (sales person sees available stock and knows which store to fetch from)
   getStoresForVariant(variantId: number): StoreSimple[] {
-    console.log('Getting stores for variant:', variantId);
-    console.log('All stores:', this.allStores);
-    console.log('Order Type ID:', this.orderTypeId);
+    console.log('🔍 Getting stores for variant:', variantId);
+    console.log('📦 Order Type ID:', this.orderTypeId);
+    console.log('📊 All stores count:', this.allStores.length);
+    console.log('💾 Variant stock data:', this.variantStockData);
     
-    // For purchases (orderTypeId === 1), show all stores so admin can choose
-    // For sales (orderTypeId === 2), only show stores with variant stock
+    // For purchase orders, show all stores so admin can choose where to add inventory
     if (this.orderTypeId === 1) {
       return this.allStores;
     } else {
-      // Filter stores that have this variant in stock
+      // For sale orders, only show stores that have this variant in stock (quantity > 0)
+      // This way sales people know which store has available stock to fetch from
       const stores = this.allStores.filter(store => {
         const stock = this.getVariantStock(this.product!.id, variantId, store.id);
-        console.log(`Variant ${variantId} stock in store ${store.id}:`, stock);
+        console.log(`🏪 Checking variant ${variantId} in store ${store.id} (${store.name}): stock = ${stock}`);
+        
+        // Also check if inventory exists directly in product.inventories (fallback check)
+        // This handles cases where variant stock data wasn't loaded properly
+        if (stock === 0 && this.product?.inventories) {
+          const directInventory = this.product.inventories.find(inv => {
+            const invVariantId = inv.variantId != null ? Number(inv.variantId) : null;
+            const invQuantity = Number(inv.quantity) || 0;
+            const matchesVariant = invVariantId === variantId;
+            const matchesStore = inv.storeId === store.id;
+            const hasStock = invQuantity > 0;
+            
+            if (matchesVariant && matchesStore && hasStock) {
+              console.log(`🔍 Found matching inventory: variantId=${invVariantId}, storeId=${store.id}, quantity=${invQuantity}`);
+            }
+            
+            return matchesVariant && matchesStore && hasStock;
+          });
+          
+          if (directInventory) {
+            const quantity = Number(directInventory.quantity) || 0;
+            console.log(`✅ Found direct inventory: ${quantity} for variant ${variantId} in store ${store.id}`);
+            // Update variant stock data cache
+            const key = `${this.product!.id}-${variantId}-${store.id}`;
+            this.variantStockData[key] = quantity;
+            return true;
+          }
+        }
+        
         return stock > 0;
       });
       
-      console.log('Filtered stores for variant:', stores);
-      
-      // If no stores have stock, return empty array (don't show variant if no stock)
-      if (stores.length === 0) {
-        console.log('No stores with stock found for variant:', variantId);
-        return [];
-      }
-      
+      console.log(`✅ Filtered stores for variant ${variantId} (sale order):`, stores.length, 'stores');
       return stores;
     }
   }

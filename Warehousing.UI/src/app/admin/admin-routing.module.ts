@@ -10,7 +10,6 @@ import { CompanyComponent } from "./components/Companies/company.component/compa
 import { CustomersFormComponent } from "./components/Customers/customers-form.component/customers-form.component";
 import { CustomersComponent } from "./components/Customers/customers.component/customers.component";
 import { Dashboard } from "./components/dashboard/dashboard";
-import { MainComponent } from "./components/main/main.component";
 import { ProductFormComponent } from "./components/Products/product-form/product-form.component";
 import { InventoryReportComponent } from "./components/reports/inventory-report.component/inventory-report.component";
 import { TransactionsComponent } from "./components/reports/transactions.component/transactions.component";
@@ -56,13 +55,7 @@ const routes: Routes = [
     component: AdminComponent,
     canActivate: [AuthGuard],
     children: [
-      { path: '', redirectTo: 'main', pathMatch: 'full' },
-      { 
-        path: 'main', 
-        component: MainComponent,
-        canActivate: [PermissionGuard],
-        data: { permission: [PermissionsEnum.VIEW_ADMIN] }
-      },
+      { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
       { 
         path: 'dashboard', 
         component: Dashboard,

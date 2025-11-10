@@ -10,17 +10,27 @@ export interface WorkingHoursException {
   createdBy: string;
 }
 
+export interface WorkingHoursDay {
+  id?: number;
+  workingHoursId?: number;
+  dayOfWeek: number; // 0 = Sunday, 1 = Monday, etc.
+  startTime?: string;
+  endTime?: string;
+  isEnabled: boolean;
+}
+
 export interface WorkingHours {
   id: number;
   name: string;
   description: string;
-  startTime: string;
-  endTime: string;
-  startDay: number; // 0 = Sunday, 1 = Monday, etc.
-  endDay: number;
+  startTime?: string; // Deprecated: kept for backward compatibility
+  endTime?: string; // Deprecated: kept for backward compatibility
+  startDay?: number | string; // Deprecated: kept for backward compatibility
+  endDay?: number | string; // Deprecated: kept for backward compatibility
   isActive: boolean;
   allowWeekends: boolean;
   allowHolidays: boolean;
+  days: WorkingHoursDay[]; // Per-day configuration
   exceptions: WorkingHoursException[];
   createdAt: string;
   createdBy: string;

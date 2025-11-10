@@ -1,6 +1,14 @@
 {
   "ADMIN": {
     "TITLE": "الإدارة",
+    "SYSTEM_ADMIN": "مدير النظام",
+    "MENU_GROUPS": {
+      "MAIN": "الرئيسي",
+      "PRODUCTS": "المنتجات",
+      "INVENTORY": "المخزون",
+      "PEOPLE": "الأشخاص",
+      "SYSTEM": "النظام"
+    },
     "SIDEBAR": {
       "DASHBOARD": "الرئيسية",
       "PRODUCTS": "المنتجات",
@@ -27,6 +35,7 @@
     "SALE_DESCRIPTION": "إدارة طلبات البيع والعملاء"
   },
   "COMMON": {
+    "CURRENCY": "د.أ",
     "PURCHASE_PRICE": "سعر الشراء",
     "SELLING_PRICE": "سعر البيع",
     "PURCHASE_ORDERS": "طلبات الشراء",
@@ -127,6 +136,20 @@
     "SAVING": "جاري الحفظ...",
     "CURRENT_TIME": "الوقت الحالي",
     "CLICK_TO_EDIT": "انقر للتحرير",
+    "WITHIN_WORKING_HOURS": "ضمن ساعات العمل",
+    "OUTSIDE_WORKING_HOURS": "خارج ساعات العمل",
+    "ENABLED_WORKING_DAYS": "أيام العمل المفعلة",
+    "CONFIGURED_DAYS": "الأيام المكونة",
+    "DAYS": "أيام",
+    "SUNDAY": "الأحد",
+    "MONDAY": "الإثنين",
+    "TUESDAY": "الثلاثاء",
+    "WEDNESDAY": "الأربعاء",
+    "THURSDAY": "الخميس",
+    "FRIDAY": "الجمعة",
+    "SATURDAY": "السبت",
+    "EXCEPTIONS_INFO_TITLE": "كيفية استخدام استثناءات ساعات العمل",
+    "EXCEPTIONS_INFO_DESCRIPTION": "تسمح الاستثناءات بتجاوز جدول العمل العادي لتواريخ محددة. استخدمها للأعياد (حددها كأيام إغلاق)، أيام عمل خاصة بساعات مخصصة، أو تغييرات مؤقتة في الجدول. اترك الأوقات فارغة للسماح بالوصول طوال اليوم أو حدد ساعات مخصصة.",
     "MONITOR_ACTIVITIES": "مراقبة وتتبع أنشطة المستخدمين عبر النظام",
     "CONFIGURE_WORKING_HOURS": "تكوين ساعات العمل وإدارة الاستثناءات للوصول إلى النظام",
     "WORKING_HOURS_CONFIGURATION": "تكوين ساعات العمل",
@@ -391,6 +414,21 @@
     "ORDER_SAVED": "تم حفظ الطلب بنجاح",
     "ORDER_SAVE_ERROR": "خطأ في حفظ الطلب"
   },
+  "AUTH": {
+    "LOGIN": "تسجيل الدخول",
+    "LOGOUT": "تسجيل الخروج",
+    "USERNAME": "اسم المستخدم",
+    "PASSWORD": "كلمة المرور",
+    "USERNAME_PLACEHOLDER": "يرجى ادخال اسم المستخدم",
+    "PASSWORD_PLACEHOLDER": "يرجى ادخال كلمة المرور",
+    "USERNAME_REQUIRED": "اسم المستخدم مطلوب",
+    "PASSWORD_REQUIRED": "كلمة المرور مطلوبة",
+    "LOGIN_BUTTON": "دخول",
+    "WELCOME_MESSAGE": "مرحباً بكم في نظام إدارة مواد البناء",
+    "SHOW_PASSWORD": "إظهار كلمة المرور",
+    "HIDE_PASSWORD": "إخفاء كلمة المرور",
+    "LOGIN_FAILED": "فشل تسجيل الدخول. يرجى التحقق من البيانات."
+  },
   "NAVIGATION": {
     "BACK": "العودة",
     "NEXT": "التالي",
@@ -450,6 +488,7 @@
     "USER_DEVICES": "أجهزة المستخدمين"
   },
   "CART_DETAILS": {
+    "TITLE": "سلة الطلبات",
     "TOTAL": "الإجمالي",
     "SUBTOTAL": "المجموع الفرعي",
     "GRAND_TOTAL": "المجموع الكلي",
@@ -458,7 +497,13 @@
     "SALE_DOCUMENT": "سند بيع",
     "DATE": "التاريخ",
     "SUPPLIER": "المورد",
+    "SELECT_SUPPLIER": "اختر المورد",
+    "ADD_SUPPLIER": "إضافة مورد",
+    "ADD_NEW_SUPPLIER": "إضافة مورد جديد",
     "CUSTOMER": "الزبون",
+    "SELECT_CUSTOMER": "اختر العميل",
+    "ADD_CUSTOMER": "إضافة عميل",
+    "ADD_NEW_CUSTOMER": "إضافة عميل جديد",
     "PRODUCT": "المنتج",
     "UNIT": "الوحدة",
     "QUANTITY": "الكمية",
@@ -469,6 +514,15 @@
     "ORDER_EDITABLE_NOTE": "يمكنك تعديل الطلب بعد إرساله لغاية أن يتم البدء بتجهيزه",
     "EMPTY_CART": "السلة فارغة",
     "NO_ITEMS": "لا توجد عناصر مضافة",
+    "REMOVE_PRODUCT": "حذف المنتج",
+    "CLEAR_CART": "مسح السلة",
+    "SAVE_ORDER": "حفظ الطلب",
+    "SEND_ORDER": "إرسال الطلب",
+    "APPROVE_ORDER": "اعتماد الطلب",
+    "QUICK_PRINT": "طباعة سريعة",
+    "PRINT_PDF": "طباعة PDF",
+    "DOWNLOAD_PDF": "تحميل PDF",
+    "ADD_PRODUCTS_TO_START": "أضف منتجات إلى سلة التسوق لبدء الطلب",
     "CUSTOMER_SIGNATURE": "توقيع العميل",
     "AUTHORIZED_SIGNATURE": "التوقيع المعتمد",
     "PHONE": "الهاتف",

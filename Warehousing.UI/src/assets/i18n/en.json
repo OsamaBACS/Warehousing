@@ -1,6 +1,14 @@
 {
   "ADMIN": {
     "TITLE": "Admin Panel",
+    "SYSTEM_ADMIN": "System Admin",
+    "MENU_GROUPS": {
+      "MAIN": "Main",
+      "PRODUCTS": "Products",
+      "INVENTORY": "Inventory",
+      "PEOPLE": "People",
+      "SYSTEM": "System"
+    },
     "SIDEBAR": {
       "DASHBOARD": "Dashboard",
       "PRODUCTS": "Products",
@@ -27,6 +35,7 @@
     "SALE_DESCRIPTION": "Sale orders and customers management"
   },
   "COMMON": {
+    "CURRENCY": "JOD",
     "PURCHASE_PRICE": "Purchase Price",
     "SELLING_PRICE": "Selling Price",
     "PURCHASE_ORDERS": "Purchase Orders",
@@ -127,6 +136,20 @@
     "SAVING": "Saving...",
     "CURRENT_TIME": "Current Time",
     "CLICK_TO_EDIT": "Click to edit",
+    "WITHIN_WORKING_HOURS": "Within Working Hours",
+    "OUTSIDE_WORKING_HOURS": "Outside Working Hours",
+    "ENABLED_WORKING_DAYS": "Enabled Working Days",
+    "CONFIGURED_DAYS": "Configured Days",
+    "DAYS": "days",
+    "SUNDAY": "Sunday",
+    "MONDAY": "Monday",
+    "TUESDAY": "Tuesday",
+    "WEDNESDAY": "Wednesday",
+    "THURSDAY": "Thursday",
+    "FRIDAY": "Friday",
+    "SATURDAY": "Saturday",
+    "EXCEPTIONS_INFO_TITLE": "How to Use Working Hours Exceptions",
+    "EXCEPTIONS_INFO_DESCRIPTION": "Exceptions allow you to override the regular working schedule for specific dates. Use them for: holidays (set as closed days), special working days with custom hours, or temporary schedule changes. Leave times empty to allow all-day access or specify custom hours.",
     "MONITOR_ACTIVITIES": "Monitor and track user activities across the system",
     "CONFIGURE_WORKING_HOURS": "Configure working hours and manage exceptions for system access",
     "WORKING_HOURS_CONFIGURATION": "Working Hours Configuration",
@@ -392,6 +415,21 @@
     "ORDER_SAVED": "Order saved successfully",
     "ORDER_SAVE_ERROR": "Error saving order"
   },
+  "AUTH": {
+    "LOGIN": "Login",
+    "LOGOUT": "Logout",
+    "USERNAME": "Username",
+    "PASSWORD": "Password",
+    "USERNAME_PLACEHOLDER": "Enter your username",
+    "PASSWORD_PLACEHOLDER": "Enter your password",
+    "USERNAME_REQUIRED": "Username is required",
+    "PASSWORD_REQUIRED": "Password is required",
+    "LOGIN_BUTTON": "Sign In",
+    "WELCOME_MESSAGE": "Welcome to Building Materials Management System",
+    "SHOW_PASSWORD": "Show password",
+    "HIDE_PASSWORD": "Hide password",
+    "LOGIN_FAILED": "Login failed. Please check your credentials."
+  },
   "NAVIGATION": {
     "BACK": "Back",
     "NEXT": "Next",
@@ -451,6 +489,7 @@
     "USER_DEVICES": "User Devices"
   },
   "CART_DETAILS": {
+    "TITLE": "Cart",
     "TOTAL": "Total",
     "SUBTOTAL": "Subtotal",
     "GRAND_TOTAL": "Grand Total",
@@ -459,7 +498,13 @@
     "SALE_DOCUMENT": "Sale Document",
     "DATE": "Date",
     "SUPPLIER": "Supplier",
+    "SELECT_SUPPLIER": "Select Supplier",
+    "ADD_SUPPLIER": "Add Supplier",
+    "ADD_NEW_SUPPLIER": "Add New Supplier",
     "CUSTOMER": "Customer",
+    "SELECT_CUSTOMER": "Select Customer",
+    "ADD_CUSTOMER": "Add Customer",
+    "ADD_NEW_CUSTOMER": "Add New Customer",
     "PRODUCT": "Product",
     "UNIT": "Unit",
     "QUANTITY": "Quantity",
@@ -470,6 +515,15 @@
     "ORDER_EDITABLE_NOTE": "You can edit the order after sending it until it starts being prepared",
     "EMPTY_CART": "Cart is empty",
     "NO_ITEMS": "No items added",
+    "REMOVE_PRODUCT": "Remove Product",
+    "CLEAR_CART": "Clear Cart",
+    "SAVE_ORDER": "Save Order",
+    "SEND_ORDER": "Send Order",
+    "APPROVE_ORDER": "Approve Order",
+    "QUICK_PRINT": "Quick Print",
+    "PRINT_PDF": "Print PDF",
+    "DOWNLOAD_PDF": "Download PDF",
+    "ADD_PRODUCTS_TO_START": "Add products to cart to start ordering",
     "ADD_PRODUCT_NOTE": "Click \"Add Product\" to start entering initial stock"
   },
   "FORMS": {

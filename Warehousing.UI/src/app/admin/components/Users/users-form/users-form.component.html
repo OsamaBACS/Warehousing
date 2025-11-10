@@ -130,36 +130,189 @@
 
         <!-- Print Settings Section -->
         <div class="border-b border-gray-200 pb-8">
-          <h2 class="text-xl font-bold text-gray-900 mb-6 flex items-center">
-            <i class="bi bi-printer text-gray-600 mr-3"></i>
-            إعدادات الطباعة
-          </h2>
-          
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <!-- Print Header -->
+          <div class="flex items-center justify-between mb-6">
+            <h2 class="text-xl font-bold text-gray-900 flex items-center">
+              <i class="bi bi-printer text-gray-600 mr-3"></i>
+              إعدادات الطباعة
+            </h2>
+            <button type="button"
+                    (click)="togglePrintSettingsExpanded()"
+                    class="text-sm text-blue-600 hover:text-blue-700 flex items-center">
+              <i [class]="printSettingsExpanded ? 'bi bi-chevron-up' : 'bi bi-chevron-down'"></i>
+              <span class="mr-1">{{ printSettingsExpanded ? 'إخفاء التفاصيل' : 'إظهار التفاصيل' }}</span>
+            </button>
+          </div>
+
+          <!-- Simple Mode: Text Areas (for backward compatibility) -->
+          <div *ngIf="!printSettingsExpanded" class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div class="space-y-2">
               <label class="block text-sm font-semibold text-gray-700">
                 <i class="bi bi-file-text mr-2 text-gray-600"></i>
-                عنوان الطباعة
+                عنوان الطباعة (نص بسيط)
               </label>
               <textarea formControlName="printHeader" 
-                        id="printHeader"
                         rows="4"
                         class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-gray-500 transition-all duration-200 bg-gray-50 focus:bg-white resize-none"
                         placeholder="أدخل عنوان الطباعة"></textarea>
             </div>
-
-            <!-- Print Footer -->
             <div class="space-y-2">
               <label class="block text-sm font-semibold text-gray-700">
                 <i class="bi bi-file-text mr-2 text-gray-600"></i>
-                تذييل الطباعة
+                تذييل الطباعة (نص بسيط)
               </label>
               <textarea formControlName="printFooter" 
-                        id="printFooter"
                         rows="4"
                         class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-gray-500 transition-all duration-200 bg-gray-50 focus:bg-white resize-none"
                         placeholder="أدخل تذييل الطباعة"></textarea>
+            </div>
+          </div>
+
+          <!-- Advanced Mode: Structured Settings with Visibility Toggles -->
+          <div *ngIf="printSettingsExpanded" class="space-y-6">
+            <!-- Print Header Settings -->
+            <div class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 border-2 border-blue-200">
+              <h3 class="text-lg font-bold text-gray-900 mb-4 flex items-center">
+                <i class="bi bi-heading text-blue-600 mr-2"></i>
+                إعدادات رأس المستند
+              </h3>
+              
+              <!-- Custom Header Text -->
+              <div class="mb-6">
+                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                  <i class="bi bi-file-text mr-2 text-blue-600"></i>
+                  نص مخصص في الرأس (HTML/نص عادي)
+                </label>
+                <textarea formControlName="printHeaderCustomText" 
+                          rows="3"
+                          class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white resize-none"
+                          placeholder="أدخل نص مخصص للرأس (اختياري)"></textarea>
+              </div>
+
+              <!-- Visibility Toggles -->
+              <div class="bg-white rounded-lg p-4">
+                <h4 class="text-md font-semibold text-gray-800 mb-4">إظهار/إخفاء العناصر</h4>
+                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                  <label class="flex items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer">
+                    <input type="checkbox" formControlName="showCompanyName" class="w-4 h-4 text-blue-600 rounded">
+                    <span class="mr-2 text-sm text-gray-700">اسم الشركة</span>
+                  </label>
+                  <label class="flex items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer">
+                    <input type="checkbox" formControlName="showCompanyLogo" class="w-4 h-4 text-blue-600 rounded">
+                    <span class="mr-2 text-sm text-gray-700">شعار الشركة</span>
+                  </label>
+                  <label class="flex items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer">
+                    <input type="checkbox" formControlName="showCompanyAddress" class="w-4 h-4 text-blue-600 rounded">
+                    <span class="mr-2 text-sm text-gray-700">عنوان الشركة</span>
+                  </label>
+                  <label class="flex items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer">
+                    <input type="checkbox" formControlName="showCompanyPhone" class="w-4 h-4 text-blue-600 rounded">
+                    <span class="mr-2 text-sm text-gray-700">هاتف الشركة</span>
+                  </label>
+                  <label class="flex items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer">
+                    <input type="checkbox" formControlName="showCompanyFax" class="w-4 h-4 text-blue-600 rounded">
+                    <span class="mr-2 text-sm text-gray-700">فاكس الشركة</span>
+                  </label>
+                  <label class="flex items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer">
+                    <input type="checkbox" formControlName="showCompanyEmail" class="w-4 h-4 text-blue-600 rounded">
+                    <span class="mr-2 text-sm text-gray-700">بريد الشركة</span>
+                  </label>
+                  <label class="flex items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer">
+                    <input type="checkbox" formControlName="showRegistrationNumber" class="w-4 h-4 text-blue-600 rounded">
+                    <span class="mr-2 text-sm text-gray-700">رقم التسجيل</span>
+                  </label>
+                  <label class="flex items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer">
+                    <input type="checkbox" formControlName="showCapital" class="w-4 h-4 text-blue-600 rounded">
+                    <span class="mr-2 text-sm text-gray-700">رأس المال</span>
+                  </label>
+                  <label class="flex items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer">
+                    <input type="checkbox" formControlName="showTaxNumber" class="w-4 h-4 text-blue-600 rounded">
+                    <span class="mr-2 text-sm text-gray-700">الرقم الضريبي</span>
+                  </label>
+                  <label class="flex items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer">
+                    <input type="checkbox" formControlName="showSlogan" class="w-4 h-4 text-blue-600 rounded">
+                    <span class="mr-2 text-sm text-gray-700">الشعار</span>
+                  </label>
+                  <label class="flex items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer">
+                    <input type="checkbox" formControlName="showDocumentTitle" class="w-4 h-4 text-blue-600 rounded">
+                    <span class="mr-2 text-sm text-gray-700">عنوان المستند</span>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <!-- Print Footer Settings -->
+            <div class="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-6 border-2 border-green-200">
+              <h3 class="text-lg font-bold text-gray-900 mb-4 flex items-center">
+                <i class="bi bi-file-earmark-text text-green-600 mr-2"></i>
+                إعدادات تذييل المستند
+              </h3>
+              
+              <!-- Custom Footer Text -->
+              <div class="mb-4">
+                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                  <i class="bi bi-file-text mr-2 text-green-600"></i>
+                  نص مخصص في التذييل (HTML/نص عادي)
+                </label>
+                <textarea formControlName="printFooterCustomText" 
+                          rows="3"
+                          class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 bg-white resize-none"
+                          placeholder="أدخل نص مخصص للتذييل (اختياري)"></textarea>
+              </div>
+
+              <!-- Custom Terms -->
+              <div class="mb-4">
+                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                  <i class="bi bi-file-earmark-check mr-2 text-green-600"></i>
+                  شروط وأحكام مخصصة (تتجاوز شروط الشركة)
+                </label>
+                <textarea formControlName="printFooterCustomTerms" 
+                          rows="4"
+                          class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 bg-white resize-none"
+                          placeholder="أدخل شروط وأحكام مخصصة (اختياري)"></textarea>
+              </div>
+
+              <!-- Custom Notes -->
+              <div class="mb-6">
+                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                  <i class="bi bi-sticky mr-2 text-green-600"></i>
+                  ملاحظات مخصصة
+                </label>
+                <textarea formControlName="printFooterCustomNotes" 
+                          rows="3"
+                          class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 bg-white resize-none"
+                          placeholder="أدخل ملاحظات مخصصة (اختياري)"></textarea>
+              </div>
+
+              <!-- Visibility Toggles -->
+              <div class="bg-white rounded-lg p-4">
+                <h4 class="text-md font-semibold text-gray-800 mb-4">إظهار/إخفاء العناصر</h4>
+                <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  <label class="flex items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer">
+                    <input type="checkbox" formControlName="showTerms" class="w-4 h-4 text-green-600 rounded">
+                    <span class="mr-2 text-sm text-gray-700">الشروط والأحكام</span>
+                  </label>
+                  <label class="flex items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer">
+                    <input type="checkbox" formControlName="showNotes" class="w-4 h-4 text-green-600 rounded">
+                    <span class="mr-2 text-sm text-gray-700">الملاحظات</span>
+                  </label>
+                  <label class="flex items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer">
+                    <input type="checkbox" formControlName="showCustomerSignature" class="w-4 h-4 text-green-600 rounded">
+                    <span class="mr-2 text-sm text-gray-700">توقيع العميل</span>
+                  </label>
+                  <label class="flex items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer">
+                    <input type="checkbox" formControlName="showAuthorizedSignature" class="w-4 h-4 text-green-600 rounded">
+                    <span class="mr-2 text-sm text-gray-700">التوقيع المعتمد</span>
+                  </label>
+                  <label class="flex items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer">
+                    <input type="checkbox" formControlName="showCompanyFooterNote" class="w-4 h-4 text-green-600 rounded">
+                    <span class="mr-2 text-sm text-gray-700">ملاحظة الشركة</span>
+                  </label>
+                  <label class="flex items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer">
+                    <input type="checkbox" formControlName="showDocumentGenerationDate" class="w-4 h-4 text-green-600 rounded">
+                    <span class="mr-2 text-sm text-gray-700">تاريخ الإنشاء</span>
+                  </label>
+                </div>
+              </div>
             </div>
           </div>
         </div>

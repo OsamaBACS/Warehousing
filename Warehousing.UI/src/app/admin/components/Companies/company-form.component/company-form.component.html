@@ -1,142 +1,389 @@
-<div class="dialog-container p-3 p-md-4">
-  <h5 class="mb-4 text-center">Add / Edit Company</h5>
-
-  <form [formGroup]="companyForm">
-
-    <div class="row g-3">
-
-      <!-- Name EN -->
-      <div class="col-12 col-md-6">
-        <label class="form-label">Name (EN) <span class="text-danger">*</span></label>
-        <input type="text" class="form-control" formControlName="nameEn" />
-        <div *ngIf="nameEn.invalid && (nameEn.dirty || nameEn.touched)" class="text-danger">
-          Name (EN) is required.
+<div class="min-h-screen bg-gray-50 py-8" dir="rtl">
+  <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+    <!-- Header -->
+    <div class="bg-white rounded-2xl shadow-lg p-6 mb-8">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center">
+          <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center mr-4">
+            <i class="bi bi-building text-white text-xl"></i>
+          </div>
+          <div>
+            <h1 class="text-3xl font-bold text-gray-900">
+              {{ companyForm.get('id')?.value > 0 ? 'تعديل الشركة' : 'إضافة شركة جديدة' }}
+            </h1>
+            <p class="text-gray-600 mt-1">املأ البيانات المطلوبة لإدارة معلومات الشركة</p>
+          </div>
         </div>
+        <button class="w-10 h-10 bg-gray-100 hover:bg-gray-200 rounded-full flex items-center justify-center transition-colors" 
+                (click)="cancel()">
+          <i class="bi bi-x-lg text-gray-600"></i>
+        </button>
       </div>
-
-      <!-- Name AR -->
-      <div class="col-12 col-md-6">
-        <label class="form-label">Name (AR) <span class="text-danger">*</span></label>
-        <input type="text" class="form-control" formControlName="nameAr" />
-        <div *ngIf="nameAr.invalid && (nameAr.dirty || nameAr.touched)" class="text-danger">
-          Name (AR) is required.
-        </div>
-      </div>
-
-      <!-- Address EN -->
-      <div class="col-12 col-md-6">
-        <label class="form-label">Address (EN) <span class="text-danger">*</span></label>
-        <input type="text" class="form-control" formControlName="addressEn" />
-        <div *ngIf="addressEn.invalid && (addressEn.dirty || addressEn.touched)" class="text-danger">
-          Address (EN) is required.
-        </div>
-      </div>
-
-      <!-- Address AR -->
-      <div class="col-12 col-md-6">
-        <label class="form-label">Address (AR) <span class="text-danger">*</span></label>
-        <input type="text" class="form-control" formControlName="addressAr" />
-        <div *ngIf="addressAr.invalid && (addressAr.dirty || addressAr.touched)" class="text-danger">
-          Address (AR) is required.
-        </div>
-      </div>
-
-      <!-- Phone -->
-      <div class="col-12 col-md-6">
-        <label class="form-label">Phone <span class="text-danger">*</span></label>
-        <input type="tel" class="form-control" formControlName="phone" />
-        <div *ngIf="phone.invalid && (phone.dirty || phone.touched)" class="text-danger">
-          <div *ngIf="phone.errors?.['required']">Phone is required.</div>
-          <div *ngIf="phone.errors?.['pattern']">Invalid phone format.</div>
-        </div>
-      </div>
-
-      <!-- Email -->
-      <div class="col-12 col-md-6">
-        <label class="form-label">Email <span class="text-danger">*</span></label>
-        <input type="email" class="form-control" formControlName="email" />
-        <div *ngIf="email.invalid && (email.dirty || email.touched)" class="text-danger">
-          <div *ngIf="email.errors?.['required']">Email is required.</div>
-          <div *ngIf="email.errors?.['email']">Invalid email format.</div>
-        </div>
-      </div>
-
-      <!-- Website -->
-      <div class="col-12 col-md-6">
-        <label class="form-label">Website</label>
-        <input type="url" class="form-control" formControlName="website" />
-      </div>
-
-      <!-- Tax Number -->
-      <div class="col-12 col-md-6">
-        <label class="form-label">Tax Number</label>
-        <input type="text" class="form-control" formControlName="taxNumber" />
-      </div>
-
-      <!-- Currency Code -->
-      <div class="col-12 col-md-6">
-        <label class="form-label">Currency Code <span class="text-danger">*</span></label>
-        <input type="text" class="form-control" formControlName="currencyCode" />
-        <div *ngIf="currencyCode.invalid && (currencyCode.dirty || currencyCode.touched)" class="text-danger">
-          Currency code is required.
-        </div>
-      </div>
-
-      <!-- Footer Note EN -->
-      <div class="col-12 col-md-6">
-        <label class="form-label">Footer Note (EN)</label>
-        <textarea rows="3" class="form-control" formControlName="footerNoteEn"></textarea>
-      </div>
-
-      <!-- Footer Note AR -->
-      <div class="col-12 col-md-6">
-        <label class="form-label">Footer Note (AR)</label>
-        <textarea rows="3" class="form-control" formControlName="footerNoteAr"></textarea>
-      </div>
-
-      <!-- Terms EN -->
-      <div class="col-12 col-md-6">
-        <label class="form-label">Terms (EN)</label>
-        <textarea rows="5" class="form-control" formControlName="termsEn"></textarea>
-      </div>
-
-      <!-- Terms AR -->
-      <div class="col-12 col-md-6">
-        <label class="form-label">Terms (AR)</label>
-        <textarea rows="5" class="form-control" formControlName="termsAr"></textarea>
-      </div>
-
-      <!-- Print Template Id -->
-      <div class="col-12 col-md-6">
-        <label class="form-label">Print Template Id</label>
-        <input type="number" class="form-control" formControlName="printTemplateId" />
-      </div>
-
-      <!-- Is Active -->
-      <div class="col-12 col-md-6 d-flex align-items-center">
-        <div class="form-check form-switch">
-          <input class="form-check-input" type="checkbox" formControlName="isActive" />
-          <label class="form-check-label">Is Active</label>
-        </div>
-      </div>
-
-      <!-- Image Upload -->
-      <div class="col-12">
-        <label class="form-label">Image Upload</label>
-        <app-image-uploader
-          formControlName="image"
-          [initialImageUrl]="initialImageUrl"
-          (imageSelected)="detectFiles($event)">
-        </app-image-uploader>
-      </div>
-
     </div>
 
-    <!-- Actions -->
-    <div class="col-12 mt-4 d-flex justify-content-end gap-2 flex-wrap">
-      <button type="button" class="btn btn-secondary flex-fill" (click)="cancel()">Cancel</button>
-      <button type="submit" class="btn btn-primary flex-fill" [disabled]="!companyForm.valid" (click)="save()">Save</button>
-    </div>
+    <!-- Form -->
+    <div class="bg-white rounded-2xl shadow-xl p-8">
+      <form [formGroup]="companyForm" (ngSubmit)="save()" class="space-y-8">
+        
+        <!-- Basic Company Information Section -->
+        <div class="border-b border-gray-200 pb-8">
+          <h2 class="text-xl font-bold text-gray-900 mb-6 flex items-center">
+            <i class="bi bi-building text-blue-600 mr-3"></i>
+            المعلومات الأساسية للشركة
+          </h2>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Name (Arabic) -->
+            <div class="space-y-2">
+              <label class="block text-sm font-semibold text-gray-700">
+                <i class="bi bi-translate mr-2 text-blue-600"></i>
+                اسم الشركة بالعربية <span class="text-red-500">*</span>
+              </label>
+              <input type="text" 
+                     formControlName="nameAr"
+                     class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-gray-50 focus:bg-white"
+                     placeholder="أدخل اسم الشركة بالعربية">
+              <div *ngIf="nameAr.invalid && (nameAr.dirty || nameAr.touched)" class="text-red-500 text-sm mt-1">
+                اسم الشركة بالعربية مطلوب
+              </div>
+            </div>
 
-  </form>
+            <!-- Name (English) -->
+            <div class="space-y-2">
+              <label class="block text-sm font-semibold text-gray-700">
+                <i class="bi bi-translate mr-2 text-blue-600"></i>
+                اسم الشركة بالإنجليزية <span class="text-red-500">*</span>
+              </label>
+              <input type="text" 
+                     formControlName="nameEn"
+                     class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-gray-50 focus:bg-white"
+                     placeholder="Enter company name in English">
+              <div *ngIf="nameEn.invalid && (nameEn.dirty || nameEn.touched)" class="text-red-500 text-sm mt-1">
+                اسم الشركة بالإنجليزية مطلوب
+              </div>
+            </div>
+
+            <!-- Address (Arabic) -->
+            <div class="space-y-2">
+              <label class="block text-sm font-semibold text-gray-700">
+                <i class="bi bi-geo-alt mr-2 text-green-600"></i>
+                العنوان بالعربية <span class="text-red-500">*</span>
+              </label>
+              <input type="text" 
+                     formControlName="addressAr"
+                     class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 bg-gray-50 focus:bg-white"
+                     placeholder="أدخل العنوان بالعربية">
+              <div *ngIf="addressAr.invalid && (addressAr.dirty || addressAr.touched)" class="text-red-500 text-sm mt-1">
+                العنوان بالعربية مطلوب
+              </div>
+            </div>
+
+            <!-- Address (English) -->
+            <div class="space-y-2">
+              <label class="block text-sm font-semibold text-gray-700">
+                <i class="bi bi-geo-alt mr-2 text-green-600"></i>
+                العنوان بالإنجليزية <span class="text-red-500">*</span>
+              </label>
+              <input type="text" 
+                     formControlName="addressEn"
+                     class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 bg-gray-50 focus:bg-white"
+                     placeholder="Enter address in English">
+              <div *ngIf="addressEn.invalid && (addressEn.dirty || addressEn.touched)" class="text-red-500 text-sm mt-1">
+                العنوان بالإنجليزية مطلوب
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Contact Information Section -->
+        <div class="border-b border-gray-200 pb-8">
+          <h2 class="text-xl font-bold text-gray-900 mb-6 flex items-center">
+            <i class="bi bi-telephone text-green-600 mr-3"></i>
+            معلومات الاتصال
+          </h2>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Phone -->
+            <div class="space-y-2">
+              <label class="block text-sm font-semibold text-gray-700">
+                <i class="bi bi-phone mr-2 text-green-600"></i>
+                رقم الهاتف <span class="text-red-500">*</span>
+              </label>
+              <input type="tel" 
+                     formControlName="phone"
+                     class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 bg-gray-50 focus:bg-white"
+                     placeholder="أدخل رقم الهاتف">
+              <div *ngIf="phone.invalid && (phone.dirty || phone.touched)" class="text-red-500 text-sm mt-1">
+                <div *ngIf="phone.errors?.['required']">رقم الهاتف مطلوب</div>
+                <div *ngIf="phone.errors?.['pattern']">صيغة رقم الهاتف غير صحيحة</div>
+              </div>
+            </div>
+
+            <!-- Fax -->
+            <div class="space-y-2">
+              <label class="block text-sm font-semibold text-gray-700">
+                <i class="bi bi-printer mr-2 text-green-600"></i>
+                الفاكس
+              </label>
+              <input type="tel" 
+                     formControlName="fax"
+                     class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 bg-gray-50 focus:bg-white"
+                     placeholder="أدخل رقم الفاكس">
+            </div>
+
+            <!-- Email -->
+            <div class="space-y-2">
+              <label class="block text-sm font-semibold text-gray-700">
+                <i class="bi bi-envelope mr-2 text-purple-600"></i>
+                البريد الإلكتروني <span class="text-red-500">*</span>
+              </label>
+              <input type="email" 
+                     formControlName="email"
+                     class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all duration-200 bg-gray-50 focus:bg-white"
+                     placeholder="أدخل البريد الإلكتروني">
+              <div *ngIf="email.invalid && (email.dirty || email.touched)" class="text-red-500 text-sm mt-1">
+                <div *ngIf="email.errors?.['required']">البريد الإلكتروني مطلوب</div>
+                <div *ngIf="email.errors?.['email']">صيغة البريد الإلكتروني غير صحيحة</div>
+              </div>
+            </div>
+
+            <!-- Website -->
+            <div class="space-y-2">
+              <label class="block text-sm font-semibold text-gray-700">
+                <i class="bi bi-globe mr-2 text-purple-600"></i>
+                الموقع الإلكتروني
+              </label>
+              <input type="url" 
+                     formControlName="website"
+                     class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all duration-200 bg-gray-50 focus:bg-white"
+                     placeholder="https://example.com">
+            </div>
+          </div>
+        </div>
+
+        <!-- Legal & Financial Information Section -->
+        <div class="border-b border-gray-200 pb-8">
+          <h2 class="text-xl font-bold text-gray-900 mb-6 flex items-center">
+            <i class="bi bi-shield-check text-amber-600 mr-3"></i>
+            المعلومات القانونية والمالية
+          </h2>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Tax Number -->
+            <div class="space-y-2">
+              <label class="block text-sm font-semibold text-gray-700">
+                <i class="bi bi-receipt mr-2 text-amber-600"></i>
+                الرقم الضريبي
+              </label>
+              <input type="text" 
+                     formControlName="taxNumber"
+                     class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-200 bg-gray-50 focus:bg-white"
+                     placeholder="أدخل الرقم الضريبي">
+            </div>
+
+            <!-- Registration Number -->
+            <div class="space-y-2">
+              <label class="block text-sm font-semibold text-gray-700">
+                <i class="bi bi-file-earmark-text mr-2 text-amber-600"></i>
+                رقم التسجيل
+              </label>
+              <input type="text" 
+                     formControlName="registrationNumber"
+                     class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-200 bg-gray-50 focus:bg-white"
+                     placeholder="أدخل رقم التسجيل">
+            </div>
+
+            <!-- Capital -->
+            <div class="space-y-2">
+              <label class="block text-sm font-semibold text-gray-700">
+                <i class="bi bi-currency-exchange mr-2 text-amber-600"></i>
+                رأس المال
+              </label>
+              <input type="number" 
+                     step="0.01"
+                     formControlName="capital"
+                     class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-200 bg-gray-50 focus:bg-white"
+                     placeholder="0.00">
+            </div>
+
+            <!-- Currency Code -->
+            <div class="space-y-2">
+              <label class="block text-sm font-semibold text-gray-700">
+                <i class="bi bi-cash-stack mr-2 text-amber-600"></i>
+                رمز العملة <span class="text-red-500">*</span>
+              </label>
+              <input type="text" 
+                     formControlName="currencyCode"
+                     class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-200 bg-gray-50 focus:bg-white"
+                     placeholder="JOD أو د.أ">
+              <div *ngIf="currencyCode.invalid && (currencyCode.dirty || currencyCode.touched)" class="text-red-500 text-sm mt-1">
+                رمز العملة مطلوب
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Branding Section -->
+        <div class="border-b border-gray-200 pb-8">
+          <h2 class="text-xl font-bold text-gray-900 mb-6 flex items-center">
+            <i class="bi bi-palette text-pink-600 mr-3"></i>
+            الهوية البصرية
+          </h2>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Slogan (Arabic) -->
+            <div class="space-y-2">
+              <label class="block text-sm font-semibold text-gray-700">
+                <i class="bi bi-quote mr-2 text-pink-600"></i>
+                الشعار بالعربية
+              </label>
+              <input type="text" 
+                     formControlName="sloganAr"
+                     class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-pink-500 transition-all duration-200 bg-gray-50 focus:bg-white"
+                     placeholder="مثال: سراميك ، مورستان - رخام ، حواليت أدوات صحية">
+            </div>
+
+            <!-- Slogan (English) -->
+            <div class="space-y-2">
+              <label class="block text-sm font-semibold text-gray-700">
+                <i class="bi bi-quote mr-2 text-pink-600"></i>
+                الشعار بالإنجليزية
+              </label>
+              <input type="text" 
+                     formControlName="sloganEn"
+                     class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-pink-500 transition-all duration-200 bg-gray-50 focus:bg-white"
+                     placeholder="e.g., Ceramic, Moristan - Marble, Granite, Sanitary Ware">
+            </div>
+
+            <!-- Logo Upload -->
+            <div class="space-y-2 md:col-span-2">
+              <label class="block text-sm font-semibold text-gray-700 mb-3">
+                <i class="bi bi-image mr-2 text-pink-600"></i>
+                شعار الشركة
+              </label>
+              <app-image-uploader
+                formControlName="image"
+                [initialImageUrl]="initialImageUrl"
+                (imageSelected)="detectFiles($event)">
+              </app-image-uploader>
+            </div>
+          </div>
+        </div>
+
+        <!-- Footer & Terms Section -->
+        <div class="border-b border-gray-200 pb-8">
+          <h2 class="text-xl font-bold text-gray-900 mb-6 flex items-center">
+            <i class="bi bi-file-earmark-text text-indigo-600 mr-3"></i>
+            التذييل والشروط
+          </h2>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Footer Note (Arabic) -->
+            <div class="space-y-2">
+              <label class="block text-sm font-semibold text-gray-700">
+                <i class="bi bi-chat-dots mr-2 text-indigo-600"></i>
+                ملاحظة التذييل بالعربية
+              </label>
+              <textarea rows="3" 
+                        formControlName="footerNoteAr"
+                        class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 bg-gray-50 focus:bg-white resize-none"
+                        placeholder="أدخل ملاحظة التذييل بالعربية"></textarea>
+            </div>
+
+            <!-- Footer Note (English) -->
+            <div class="space-y-2">
+              <label class="block text-sm font-semibold text-gray-700">
+                <i class="bi bi-chat-dots mr-2 text-indigo-600"></i>
+                ملاحظة التذييل بالإنجليزية
+              </label>
+              <textarea rows="3" 
+                        formControlName="footerNoteEn"
+                        class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 bg-gray-50 focus:bg-white resize-none"
+                        placeholder="Enter footer note in English"></textarea>
+            </div>
+
+            <!-- Terms (Arabic) -->
+            <div class="space-y-2">
+              <label class="block text-sm font-semibold text-gray-700">
+                <i class="bi bi-file-earmark-check mr-2 text-indigo-600"></i>
+                الشروط والأحكام بالعربية
+              </label>
+              <textarea rows="5" 
+                        formControlName="termsAr"
+                        class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 bg-gray-50 focus:bg-white resize-none"
+                        placeholder="أدخل الشروط والأحكام بالعربية"></textarea>
+            </div>
+
+            <!-- Terms (English) -->
+            <div class="space-y-2">
+              <label class="block text-sm font-semibold text-gray-700">
+                <i class="bi bi-file-earmark-check mr-2 text-indigo-600"></i>
+                الشروط والأحكام بالإنجليزية
+              </label>
+              <textarea rows="5" 
+                        formControlName="termsEn"
+                        class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 bg-gray-50 focus:bg-white resize-none"
+                        placeholder="Enter terms and conditions in English"></textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- Additional Settings Section -->
+        <div class="pb-8">
+          <h2 class="text-xl font-bold text-gray-900 mb-6 flex items-center">
+            <i class="bi bi-gear text-gray-600 mr-3"></i>
+            الإعدادات الإضافية
+          </h2>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Print Template Id -->
+            <div class="space-y-2">
+              <label class="block text-sm font-semibold text-gray-700">
+                <i class="bi bi-printer mr-2 text-gray-600"></i>
+                معرف قالب الطباعة
+              </label>
+              <input type="number" 
+                     formControlName="printTemplateId"
+                     class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-gray-500 transition-all duration-200 bg-gray-50 focus:bg-white"
+                     placeholder="معرف قالب الطباعة">
+            </div>
+
+            <!-- Is Active -->
+            <div class="space-y-2 flex items-center">
+              <div class="flex items-center p-4 bg-gray-50 rounded-xl border-2 border-gray-200">
+                <input type="checkbox" 
+                       formControlName="isActive"
+                       id="isActive"
+                       class="w-5 h-5 text-green-600 bg-gray-100 border-gray-300 rounded focus:ring-green-500 focus:ring-2">
+                <label for="isActive" class="mr-3 text-sm font-medium text-gray-700 cursor-pointer flex-1">
+                  <i class="bi bi-toggle-on mr-2 text-green-600"></i>
+                  الشركة نشطة
+                </label>
+              </div>
+              <div class="text-sm text-gray-500 mr-3">
+                <i class="bi bi-info-circle mr-1"></i>
+                الشركة النشطة ستظهر في النظام
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="flex justify-end space-x-4 space-x-reverse pt-8 border-t border-gray-200">
+          <button type="button" 
+                  (click)="cancel()"
+                  class="px-8 py-3 bg-gray-100 text-gray-700 rounded-xl font-semibold hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-offset-2 transition-all duration-200 border border-gray-300">
+            <i class="bi bi-x-lg mr-2"></i>
+            إلغاء
+          </button>
+          <button type="submit" 
+                  [disabled]="!companyForm.valid"
+                  class="px-8 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-semibold hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg transform hover:scale-105">
+            <i class="bi bi-check-lg mr-2"></i>
+            {{ companyForm.get('id')?.value > 0 ? 'تحديث الشركة' : 'حفظ الشركة' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
 </div>

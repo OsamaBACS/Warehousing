@@ -56,6 +56,11 @@ export class CompanyFormComponent implements OnInit {
       email: [company?.email || '', [Validators.required, Validators.email]],
       website: [company?.website || ''],
       taxNumber: [company?.taxNumber || ''],
+      fax: [company?.fax || ''],
+      registrationNumber: [company?.registrationNumber || ''],
+      capital: [company?.capital || null],
+      sloganEn: [company?.sloganEn || ''],
+      sloganAr: [company?.sloganAr || ''],
       currencyCode: [company?.currencyCode || '', Validators.required],
       footerNoteEn: [company?.footerNoteEn || ''],
       footerNoteAr: [company?.footerNoteAr || ''],
@@ -110,6 +115,11 @@ export class CompanyFormComponent implements OnInit {
       formData.append('email', this.email.value);
       formData.append('website', this.website.value);
       formData.append('taxNumber', this.taxNumber.value);
+      formData.append('fax', this.fax.value || '');
+      formData.append('registrationNumber', this.registrationNumber.value || '');
+      formData.append('capital', this.capital.value || '');
+      formData.append('sloganEn', this.sloganEn.value || '');
+      formData.append('sloganAr', this.sloganAr.value || '');
       formData.append('currencyCode', this.currencyCode.value);
       formData.append('footerNoteEn', this.footerNoteEn.value);
       formData.append('footerNoteAr', this.footerNoteAr.value);
@@ -151,6 +161,11 @@ export class CompanyFormComponent implements OnInit {
   get email(): FormControl { return this.companyForm.get('email') as FormControl; }
   get website(): FormControl { return this.companyForm.get('website') as FormControl; }
   get taxNumber(): FormControl { return this.companyForm.get('taxNumber') as FormControl; }
+  get fax(): FormControl { return this.companyForm.get('fax') as FormControl; }
+  get registrationNumber(): FormControl { return this.companyForm.get('registrationNumber') as FormControl; }
+  get capital(): FormControl { return this.companyForm.get('capital') as FormControl; }
+  get sloganEn(): FormControl { return this.companyForm.get('sloganEn') as FormControl; }
+  get sloganAr(): FormControl { return this.companyForm.get('sloganAr') as FormControl; }
   get currencyCode(): FormControl { return this.companyForm.get('currencyCode') as FormControl; }
   get footerNoteEn(): FormControl { return this.companyForm.get('footerNoteEn') as FormControl; }
   get footerNoteAr(): FormControl { return this.companyForm.get('footerNoteAr') as FormControl; }
