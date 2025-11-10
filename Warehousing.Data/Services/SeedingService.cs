@@ -183,7 +183,8 @@ namespace Warehousing.Data.Services
                 // Working Hours Management
                 new Permission { Id = 1009, Code = "VIEW_WORKING_HOURS", NameEn = "View Working Hours", NameAr = "عرض ساعات العمل" },
                 new Permission { Id = 1010, Code = "EDIT_WORKING_HOURS", NameEn = "Edit Working Hours", NameAr = "تعديل ساعات العمل" },
-                new Permission { Id = 1011, Code = "MANAGE_WORKING_HOURS_EXCEPTIONS", NameEn = "Manage Working Hours Exceptions", NameAr = "إدارة استثناءات ساعات العمل" }
+                new Permission { Id = 1011, Code = "MANAGE_WORKING_HOURS_EXCEPTIONS", NameEn = "Manage Working Hours Exceptions", NameAr = "إدارة استثناءات ساعات العمل" },
+                new Permission { Id = 1012, Code = "WORK_OUTSIDE_WORKING_HOURS", NameEn = "Work Outside Working Hours", NameAr = "العمل خارج ساعات العمل" }
             };
 
             _context.Permissions.AddRange(permissions);

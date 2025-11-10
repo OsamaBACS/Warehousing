@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Warehousing.Data.Entities;
 using Warehousing.Repo.Dtos;
 using Warehousing.Repo.Interfaces;
@@ -48,6 +49,9 @@ namespace Warehousing.Api.Controllers
                     return NotFound("No working hours configuration found");
                 }
 
+                // Ensure all 7 days exist
+                await EnsureAllDaysExist(workingHours);
+
                 var dto = new WorkingHoursDto
                 {
                     Id = workingHours.Id,
@@ -60,6 +64,15 @@ namespace Warehousing.Api.Controllers
                     AllowWeekends = workingHours.AllowWeekends,
                     AllowHolidays = workingHours.AllowHolidays,
                     Description = workingHours.Description,
+                    Days = workingHours.Days.Select(d => new WorkingHoursDayDto
+                    {
+                        Id = d.Id,
+                        WorkingHoursId = d.WorkingHoursId,
+                        DayOfWeek = d.DayOfWeek,
+                        StartTime = d.StartTime,
+                        EndTime = d.EndTime,
+                        IsEnabled = d.IsEnabled
+                    }).OrderBy(d => d.DayOfWeek).ToList(),
                     Exceptions = workingHours.Exceptions.Select(e => new WorkingHoursExceptionDto
                     {
                         Id = e.Id,
@@ -97,17 +110,48 @@ namespace Warehousing.Api.Controllers
                     return NotFound("No working hours configuration found");
                 }
 
-                // Update working hours
+                // Update working hours basic info
                 existingWorkingHours.Name = dto.Name;
-                existingWorkingHours.StartTime = dto.StartTime;
-                existingWorkingHours.EndTime = dto.EndTime;
-                existingWorkingHours.StartDay = dto.StartDay;
-                existingWorkingHours.EndDay = dto.EndDay;
                 existingWorkingHours.AllowWeekends = dto.AllowWeekends;
                 existingWorkingHours.AllowHolidays = dto.AllowHolidays;
                 existingWorkingHours.Description = dto.Description;
                 existingWorkingHours.UpdatedAt = DateTime.UtcNow;
                 existingWorkingHours.UpdatedBy = User.FindFirst("UserId")?.Value ?? "system";
+
+                // Update or create days
+                if (dto.Days != null && dto.Days.Any())
+                {
+                    // Ensure all 7 days exist
+                    await EnsureAllDaysExist(existingWorkingHours);
+
+                    foreach (var dayDto in dto.Days)
+                    {
+                        var existingDay = existingWorkingHours.Days.FirstOrDefault(d => d.DayOfWeek == dayDto.DayOfWeek);
+                        if (existingDay != null)
+                        {
+                            existingDay.StartTime = dayDto.StartTime;
+                            existingDay.EndTime = dayDto.EndTime;
+                            existingDay.IsEnabled = dayDto.IsEnabled;
+                            existingDay.UpdatedAt = DateTime.UtcNow;
+                            existingDay.UpdatedBy = User.FindFirst("UserId")?.Value ?? "system";
+                        }
+                        else
+                        {
+                            // Create new day
+                            var newDay = new WorkingHoursDay
+                            {
+                                WorkingHoursId = existingWorkingHours.Id,
+                                DayOfWeek = dayDto.DayOfWeek,
+                                StartTime = dayDto.StartTime,
+                                EndTime = dayDto.EndTime,
+                                IsEnabled = dayDto.IsEnabled,
+                                CreatedAt = DateTime.UtcNow,
+                                CreatedBy = User.FindFirst("UserId")?.Value ?? "system"
+                            };
+                            _unitOfWork.Context.Set<WorkingHoursDay>().Add(newDay);
+                        }
+                    }
+                }
 
                 await _unitOfWork.WorkingHoursRepo.UpdateAsync(existingWorkingHours);
                 await _unitOfWork.SaveAsync();
@@ -145,7 +189,11 @@ namespace Warehousing.Api.Controllers
                     IsWithinWorkingHours = isWithinWorkingHours,
                     CurrentTime = now.ToString("HH:mm:ss"),
                     WorkingHoursDescription = workingHours != null 
-                        ? $"{workingHours.StartDay} - {workingHours.EndDay}, {workingHours.StartTime:hh\\:mm} - {workingHours.EndTime:hh\\:mm}"
+                        ? (workingHours.Days != null && workingHours.Days.Any() 
+                            ? string.Join(", ", workingHours.Days.Where(d => d.IsEnabled).Select(d => $"{d.DayOfWeek} {d.StartTime:hh\\:mm}-{d.EndTime:hh\\:mm}"))
+                            : (workingHours.StartDay.HasValue && workingHours.EndDay.HasValue && workingHours.StartTime.HasValue && workingHours.EndTime.HasValue
+                                ? $"{workingHours.StartDay} - {workingHours.EndDay}, {workingHours.StartTime:hh\\:mm} - {workingHours.EndTime:hh\\:mm}"
+                                : "No working hours configured"))
                         : "No working hours configured"
                 };
 
@@ -227,19 +275,38 @@ namespace Warehousing.Api.Controllers
                     continue;
                 }
 
-                // Check if it's within working days range
-                if (workingHours.StartDay <= workingHours.EndDay)
+                // Check per-day configuration first
+                if (workingHours.Days != null && workingHours.Days.Any())
                 {
-                    if (dayOfWeek >= workingHours.StartDay && dayOfWeek <= workingHours.EndDay)
+                    var dayConfig = workingHours.Days.FirstOrDefault(d => d.DayOfWeek == dayOfWeek && d.IsEnabled);
+                    if (dayConfig != null && dayConfig.StartTime.HasValue)
                     {
-                        return nextDay.Add(workingHours.StartTime);
+                        return nextDay.Add(dayConfig.StartTime.Value);
                     }
+                    // Day not configured as working day, continue to next day
+                    nextDay = nextDay.AddDays(1);
+                    continue;
                 }
-                else // Weekend spans across Sunday
+
+                // Fallback to old period-based logic for backward compatibility
+                if (workingHours.StartDay.HasValue && workingHours.EndDay.HasValue)
                 {
-                    if (dayOfWeek >= workingHours.StartDay || dayOfWeek <= workingHours.EndDay)
+                    // Check if it's within working days range
+                    if (workingHours.StartDay.Value <= workingHours.EndDay.Value)
                     {
-                        return nextDay.Add(workingHours.StartTime);
+                        if (dayOfWeek >= workingHours.StartDay.Value && dayOfWeek <= workingHours.EndDay.Value)
+                        {
+                            var startTime = workingHours.StartTime ?? new TimeSpan(8, 0, 0);
+                            return nextDay.Add(startTime);
+                        }
+                    }
+                    else // Weekend spans across Sunday
+                    {
+                        if (dayOfWeek >= workingHours.StartDay.Value || dayOfWeek <= workingHours.EndDay.Value)
+                        {
+                            var startTime = workingHours.StartTime ?? new TimeSpan(8, 0, 0);
+                            return nextDay.Add(startTime);
+                        }
                     }
                 }
 
@@ -276,6 +343,43 @@ namespace Warehousing.Api.Controllers
                 _logger.LogError(ex, "Error testing working hours");
                 return StatusCode(500, "An error occurred while testing working hours.");
             }
+        }
+
+        private async Task EnsureAllDaysExist(WorkingHours workingHours)
+        {
+            var allDays = Enum.GetValues(typeof(DayOfWeek)).Cast<DayOfWeek>().ToList();
+            
+            // Load existing days
+            var existingDays = await _unitOfWork.Context.Set<WorkingHoursDay>()
+                .Where(d => d.WorkingHoursId == workingHours.Id)
+                .ToListAsync();
+
+            foreach (var dayOfWeek in allDays)
+            {
+                var existingDay = existingDays.FirstOrDefault(d => d.DayOfWeek == dayOfWeek);
+                if (existingDay == null)
+                {
+                    // Create default day entry (disabled by default)
+                    var newDay = new WorkingHoursDay
+                    {
+                        WorkingHoursId = workingHours.Id,
+                        DayOfWeek = dayOfWeek,
+                        StartTime = null,
+                        EndTime = null,
+                        IsEnabled = false,
+                        CreatedAt = DateTime.UtcNow,
+                        CreatedBy = "system"
+                    };
+                    _unitOfWork.Context.Set<WorkingHoursDay>().Add(newDay);
+                }
+            }
+
+            await _unitOfWork.SaveAsync();
+            
+            // Reload working hours with days
+            await _unitOfWork.Context.Entry(workingHours)
+                .Collection(wh => wh.Days)
+                .LoadAsync();
         }
     }
 }

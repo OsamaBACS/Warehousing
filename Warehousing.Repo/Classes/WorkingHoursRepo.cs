@@ -24,6 +24,7 @@ namespace Warehousing.Repo.Classes
             {
                 return await _context.WorkingHours
                     .Include(wh => wh.Exceptions)
+                    .Include(wh => wh.Days)
                     .FirstOrDefaultAsync(wh => wh.IsActive);
             }
             catch (Exception ex)
@@ -44,23 +45,7 @@ namespace Warehousing.Repo.Classes
                 var currentTime = dateTime.TimeOfDay;
                 var currentDay = dateTime.DayOfWeek;
 
-                // Check if it's a weekend
-                if (!workingHours.AllowWeekends && (currentDay == DayOfWeek.Friday || currentDay == DayOfWeek.Saturday))
-                    return false;
-
-                // Check if current day is within working days range
-                if (workingHours.StartDay <= workingHours.EndDay)
-                {
-                    if (currentDay < workingHours.StartDay || currentDay > workingHours.EndDay)
-                        return false;
-                }
-                else // Weekend spans across Sunday (e.g., Sunday to Thursday)
-                {
-                    if (currentDay < workingHours.StartDay && currentDay > workingHours.EndDay)
-                        return false;
-                }
-
-                // Check for exceptions (holidays, special days)
+                // Check for exceptions (holidays, special days) first
                 var exception = await _context.WorkingHoursExceptions
                     .FirstOrDefaultAsync(e => e.WorkingHoursId == workingHours.Id && 
                                             e.ExceptionDate.Date == dateTime.Date);
@@ -70,15 +55,63 @@ namespace Warehousing.Repo.Classes
                     if (!exception.IsWorkingDay)
                         return false; // It's a holiday
                     
-                    // Use exception times if provided
-                    var startTime = exception.StartTime ?? workingHours.StartTime;
-                    var endTime = exception.EndTime ?? workingHours.EndTime;
-                    
-                    return currentTime >= startTime && currentTime <= endTime;
+                    // Use exception times if provided, otherwise check the day's configuration
+                    if (exception.StartTime.HasValue && exception.EndTime.HasValue)
+                    {
+                        return currentTime >= exception.StartTime.Value && currentTime <= exception.EndTime.Value;
+                    }
+                    // If exception doesn't specify times, fall through to check day configuration
                 }
 
-                // Check regular working hours
-                return currentTime >= workingHours.StartTime && currentTime <= workingHours.EndTime;
+                // Check per-day configuration
+                if (workingHours.Days != null && workingHours.Days.Any())
+                {
+                    var dayConfig = workingHours.Days.FirstOrDefault(d => d.DayOfWeek == currentDay);
+                    
+                    if (dayConfig != null && dayConfig.IsEnabled)
+                    {
+                        // If day is enabled but has no times set, allow access
+                        if (!dayConfig.StartTime.HasValue || !dayConfig.EndTime.HasValue)
+                            return true;
+                        
+                        return currentTime >= dayConfig.StartTime.Value && currentTime <= dayConfig.EndTime.Value;
+                    }
+                    
+                    // Day is not enabled or doesn't exist in configuration
+                    // Check if weekends are allowed for Friday/Saturday
+                    if (!workingHours.AllowWeekends && (currentDay == DayOfWeek.Friday || currentDay == DayOfWeek.Saturday))
+                        return false;
+                    
+                    return false; // Day is not configured as a working day
+                }
+
+                // Fallback to old period-based logic for backward compatibility
+                // (in case days haven't been configured yet)
+                if (!workingHours.AllowWeekends && (currentDay == DayOfWeek.Friday || currentDay == DayOfWeek.Saturday))
+                    return false;
+
+                if (workingHours.StartDay.HasValue && workingHours.EndDay.HasValue)
+                {
+                    // Check if current day is within working days range
+                    if (workingHours.StartDay.Value <= workingHours.EndDay.Value)
+                    {
+                        if (currentDay < workingHours.StartDay.Value || currentDay > workingHours.EndDay.Value)
+                            return false;
+                    }
+                    else // Weekend spans across Sunday (e.g., Sunday to Thursday)
+                    {
+                        if (currentDay < workingHours.StartDay.Value && currentDay > workingHours.EndDay.Value)
+                            return false;
+                    }
+                }
+
+                // Check regular working hours (old way)
+                if (workingHours.StartTime.HasValue && workingHours.EndTime.HasValue)
+                {
+                    return currentTime >= workingHours.StartTime.Value && currentTime <= workingHours.EndTime.Value;
+                }
+
+                return true; // If no time restrictions, allow access
             }
             catch (Exception ex)
             {
@@ -100,10 +133,10 @@ namespace Warehousing.Repo.Classes
                 {
                     Name = "Default Working Hours",
                     Description = "Standard working hours (Sunday to Thursday, 8:00 AM to 5:00 PM)",
-                    StartTime = new TimeSpan(8, 0, 0), // 8:00 AM
-                    EndTime = new TimeSpan(17, 0, 0), // 5:00 PM
-                    StartDay = DayOfWeek.Sunday,
-                    EndDay = DayOfWeek.Thursday,
+                    StartTime = new TimeSpan(8, 0, 0), // 8:00 AM (deprecated, kept for backward compatibility)
+                    EndTime = new TimeSpan(17, 0, 0), // 5:00 PM (deprecated, kept for backward compatibility)
+                    StartDay = DayOfWeek.Sunday, // Deprecated
+                    EndDay = DayOfWeek.Thursday, // Deprecated
                     AllowWeekends = false,
                     AllowHolidays = false,
                     IsActive = true,
@@ -114,7 +147,30 @@ namespace Warehousing.Repo.Classes
                 _context.WorkingHours.Add(defaultWorkingHours);
                 await _context.SaveChangesAsync();
 
-                return defaultWorkingHours;
+                // Create default days configuration (Sunday to Thursday, 8 AM - 5 PM)
+                var defaultDays = new List<WorkingHoursDay>();
+                var defaultDaysOfWeek = new[] { DayOfWeek.Sunday, DayOfWeek.Monday, DayOfWeek.Tuesday, DayOfWeek.Wednesday, DayOfWeek.Thursday };
+                
+                foreach (var dayOfWeek in Enum.GetValues(typeof(DayOfWeek)).Cast<DayOfWeek>())
+                {
+                    var isDefaultWorkingDay = defaultDaysOfWeek.Contains(dayOfWeek);
+                    defaultDays.Add(new WorkingHoursDay
+                    {
+                        WorkingHoursId = defaultWorkingHours.Id,
+                        DayOfWeek = dayOfWeek,
+                        StartTime = isDefaultWorkingDay ? new TimeSpan(8, 0, 0) : null,
+                        EndTime = isDefaultWorkingDay ? new TimeSpan(17, 0, 0) : null,
+                        IsEnabled = isDefaultWorkingDay,
+                        CreatedAt = DateTime.UtcNow,
+                        CreatedBy = "system"
+                    });
+                }
+
+                _context.WorkingHoursDays.AddRange(defaultDays);
+                await _context.SaveChangesAsync();
+
+                // Reload to include days
+                return await GetActiveWorkingHoursAsync();
             }
             catch (Exception ex)
             {

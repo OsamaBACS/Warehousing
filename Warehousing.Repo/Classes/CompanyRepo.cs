@@ -48,6 +48,11 @@ namespace Warehousing.Repo.Classes
                 company.Email = dto.Email;
                 company.Website = dto.Website;
                 company.TaxNumber = dto.TaxNumber;
+                company.Fax = dto.Fax ?? string.Empty;
+                company.RegistrationNumber = dto.RegistrationNumber ?? string.Empty;
+                company.Capital = dto.Capital;
+                company.SloganEn = dto.SloganEn ?? string.Empty;
+                company.SloganAr = dto.SloganAr ?? string.Empty;
                 company.CurrencyCode = dto.CurrencyCode;
                 company.FooterNoteEn = dto.FooterNoteEn;
                 company.FooterNoteAr = dto.FooterNoteAr;
@@ -111,6 +116,11 @@ namespace Warehousing.Repo.Classes
                 company.Email = dto.Email;
                 company.Website = dto.Website;
                 company.TaxNumber = dto.TaxNumber;
+                company.Fax = dto.Fax ?? string.Empty;
+                company.RegistrationNumber = dto.RegistrationNumber ?? string.Empty;
+                company.Capital = dto.Capital;
+                company.SloganEn = dto.SloganEn ?? string.Empty;
+                company.SloganAr = dto.SloganAr ?? string.Empty;
                 company.CurrencyCode = dto.CurrencyCode;
                 company.FooterNoteEn = dto.FooterNoteEn;
                 company.FooterNoteAr = dto.FooterNoteAr;

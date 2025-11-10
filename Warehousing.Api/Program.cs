@@ -112,6 +112,7 @@ app.UseCors("myCORS");
 app.UseAuthentication();
 app.UseMiddleware<ValidateUserClaimsMiddleware>();
 app.UseAuthorization();
+app.UseMiddleware<Warehousing.Api.Middlewares.WorkingHoursMiddleware>();
 
 app.MapControllers();
 app.MapFallbackToFile("index.html");

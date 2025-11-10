@@ -86,10 +86,25 @@ namespace Warehousing.Repo.Classes
                     permissions = await _context.RolePermissions
                         .Where(rp => roleIds.Contains(rp.RoleId))
                         .Include(rp => rp.Permission)
+                        .Where(rp => rp.Permission != null)
                         .Select(rp => rp.Permission!.Code)
                         .Distinct()
                         .ToListAsync();
-                    _logger.LogInformation("Permissions loaded: {Count}", permissions.Count);
+                    
+                    _logger.LogInformation("Permissions loaded for user {Username}: {Count} permissions. RoleIds: {RoleIds}", 
+                        user.Username, permissions.Count, string.Join(",", roleIds));
+                    
+                    // Log if WORK_OUTSIDE_WORKING_HOURS is found
+                    var hasWorkOutside = permissions.Any(p => p.Equals("WORK_OUTSIDE_WORKING_HOURS", StringComparison.OrdinalIgnoreCase));
+                    if (hasWorkOutside)
+                    {
+                        _logger.LogInformation("✓ WORK_OUTSIDE_WORKING_HOURS permission found in database for user {Username}", user.Username);
+                    }
+                    else
+                    {
+                        _logger.LogWarning("✗ WORK_OUTSIDE_WORKING_HOURS permission NOT found in database for user {Username}. Loaded permissions: {Permissions}", 
+                            user.Username, string.Join(", ", permissions.Take(10)));
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -140,7 +155,28 @@ namespace Warehousing.Repo.Classes
 
                 // ✅ Add claims with smaller size limits to prevent token explosion
                 // Apply the same limits to all users (including TestUser) to prevent token size issues
-                claims.Add(new Claim("Permission", string.Join(",", permissions.Take(50) ?? new List<string>()))); // Limit to 50 permissions
+                // IMPORTANT: Ensure WORK_OUTSIDE_WORKING_HOURS is always included if present (priority handling)
+                
+                // Separate WORK_OUTSIDE_WORKING_HOURS from other permissions
+                var workOutsidePermission = permissions.FirstOrDefault(p => p.Equals("WORK_OUTSIDE_WORKING_HOURS", StringComparison.OrdinalIgnoreCase));
+                var otherPermissions = permissions.Where(p => !p.Equals("WORK_OUTSIDE_WORKING_HOURS", StringComparison.OrdinalIgnoreCase)).ToList();
+                
+                // Build permission list: WORK_OUTSIDE_WORKING_HOURS first (if exists), then others up to limit
+                var permissionList = new List<string>();
+                if (workOutsidePermission != null)
+                {
+                    permissionList.Add(workOutsidePermission);
+                    _logger.LogInformation("✓ WORK_OUTSIDE_WORKING_HOURS permission added to token for user {Username}", user.Username);
+                }
+                
+                // Add other permissions up to remaining slots (49 if WORK_OUTSIDE_WORKING_HOURS exists, 50 otherwise)
+                var remainingSlots = workOutsidePermission != null ? 49 : 50;
+                permissionList.AddRange(otherPermissions.Take(remainingSlots));
+                
+                _logger.LogInformation("Final permission list for user {Username}: {Count} permissions. Includes WORK_OUTSIDE_WORKING_HOURS: {HasWorkOutside}", 
+                    user.Username, permissionList.Count, workOutsidePermission != null);
+                
+                claims.Add(new Claim("Permission", string.Join(",", permissionList))); // Limit to 50 permissions
                 claims.Add(new Claim("Category", string.Join(",", categoryIds.Take(100) ?? new List<int>()))); // Limit to 100 categories
                 claims.Add(new Claim("Product", string.Join(",", productIds.Take(500) ?? new List<int>()))); // Limit to 500 products
                 claims.Add(new Claim("SubCategory", string.Join(",", subCategoryIds.Take(100) ?? new List<int>()))); // Limit to 100 subcategories

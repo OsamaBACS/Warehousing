@@ -11,17 +11,17 @@ namespace Warehousing.Data.Entities
         [MaxLength(50)]
         public string Name { get; set; } = string.Empty; // "Default Working Hours", "Holiday Schedule", etc.
 
-        [Required]
-        public TimeSpan StartTime { get; set; } // e.g., 08:00
+        // Deprecated: Kept for backward compatibility, use Days collection instead
+        public TimeSpan? StartTime { get; set; } // e.g., 08:00
 
-        [Required]
-        public TimeSpan EndTime { get; set; } // e.g., 17:00
+        // Deprecated: Kept for backward compatibility, use Days collection instead
+        public TimeSpan? EndTime { get; set; } // e.g., 17:00
 
-        [Required]
-        public DayOfWeek StartDay { get; set; } = DayOfWeek.Sunday; // 0 = Sunday
+        // Deprecated: Kept for backward compatibility, use Days collection instead
+        public DayOfWeek? StartDay { get; set; } = DayOfWeek.Sunday; // 0 = Sunday
 
-        [Required]
-        public DayOfWeek EndDay { get; set; } = DayOfWeek.Thursday; // 4 = Thursday
+        // Deprecated: Kept for backward compatibility, use Days collection instead
+        public DayOfWeek? EndDay { get; set; } = DayOfWeek.Thursday; // 4 = Thursday
 
         public bool IsActive { get; set; } = true;
 
@@ -34,6 +34,7 @@ namespace Warehousing.Data.Entities
 
         // Navigation properties
         public virtual ICollection<WorkingHoursException> Exceptions { get; set; } = new List<WorkingHoursException>();
+        public virtual ICollection<WorkingHoursDay> Days { get; set; } = new List<WorkingHoursDay>();
     }
 
     public class WorkingHoursException : BaseClass

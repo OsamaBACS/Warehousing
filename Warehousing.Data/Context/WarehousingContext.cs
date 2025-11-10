@@ -134,6 +134,18 @@ namespace Warehousing.Data.Context
                 .HasForeignKey(whe => whe.WorkingHoursId)
                 .OnDelete(DeleteBehavior.Cascade);
 
+            // Working Hours Day Configuration
+            modelBuilder.Entity<WorkingHoursDay>()
+                .HasOne(whd => whd.WorkingHours)
+                .WithMany(wh => wh.Days)
+                .HasForeignKey(whd => whd.WorkingHoursId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Unique constraint: One WorkingHoursDay per WorkingHours per DayOfWeek
+            modelBuilder.Entity<WorkingHoursDay>()
+                .HasIndex(whd => new { whd.WorkingHoursId, whd.DayOfWeek })
+                .IsUnique();
+
             // Inventory Variants Configuration
             modelBuilder.Entity<Inventory>()
                 .HasOne(i => i.Variant)
@@ -193,6 +205,7 @@ namespace Warehousing.Data.Context
         // Working Hours Configuration
         public DbSet<WorkingHours> WorkingHours { get; set; }
         public DbSet<WorkingHoursException> WorkingHoursExceptions { get; set; }
+        public DbSet<WorkingHoursDay> WorkingHoursDays { get; set; }
 
 
         private string HashPassword(string password)

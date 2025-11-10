@@ -27,6 +27,59 @@ namespace Warehousing.Api.Controllers
             _logger = logger;
         }
 
+        /// <summary>
+        /// Checks if the current user can perform actions outside working hours.
+        /// Returns true if allowed, false if blocked.
+        /// Sets response and returns false if access should be denied.
+        /// </summary>
+        private async Task<bool> CheckWorkingHoursPermissionAsync()
+        {
+            var username = User?.FindFirst(ClaimTypes.Name)?.Value;
+            
+            // Check if user is admin (admins can access anytime)
+            var isAdmin = username == "admin" || 
+                         User?.HasClaim("IsAdmin", "true") == true ||
+                         User?.FindFirst("IsAdmin")?.Value == "true";
+            
+            if (isAdmin)
+            {
+                _logger.LogInformation("Admin user {Username} bypassing working hours check", username);
+                return true;
+            }
+            
+            // Check if user has permission to work outside working hours
+            var permissionClaim = User?.FindFirst("Permission")?.Value ?? string.Empty;
+            
+            // Split permissions and check more carefully
+            var permissionList = string.IsNullOrEmpty(permissionClaim) 
+                ? new List<string>() 
+                : permissionClaim.Split(',', StringSplitOptions.RemoveEmptyEntries)
+                    .Select(p => p.Trim())
+                    .ToList();
+            
+            // Check if WORK_OUTSIDE_WORKING_HOURS is in the permission list
+            var hasWorkOutsidePermission = permissionList.Any(p => 
+                string.Equals(p, "WORK_OUTSIDE_WORKING_HOURS", StringComparison.OrdinalIgnoreCase));
+            
+            if (hasWorkOutsidePermission)
+            {
+                _logger.LogInformation("User {Username} has WORK_OUTSIDE_WORKING_HOURS permission, allowing action", username);
+                return true;
+            }
+            
+            // Check working hours for users without the permission
+            var withinHours = await _workingHoursRepo.IsWithinWorkingHoursAsync(DateTime.Now);
+            
+            if (!withinHours)
+            {
+                _logger.LogWarning("Blocked action for user {Username} outside working hours. Permission claim: '{PermissionClaim}'", 
+                    username, permissionClaim);
+                return false; // Access denied
+            }
+            
+            return true; // Within working hours, allow access
+        }
+
         [HttpGet]
         [Route("GetOrdersPagination")]
         public async Task<ActionResult> GetOrdersPagination(int pageIndex, int pageSize, int OrderTypeId = 0)
@@ -267,16 +320,14 @@ namespace Warehousing.Api.Controllers
         {
             try
             {
-                // Working hours enforcement with per-role exceptions
-                var allowedRolesOutsideHours = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "Client" };
-                var userRoles = User?.Claims?.Where(c => c.Type == ClaimTypes.Role).Select(c => c.Value).ToList() ?? new List<string>();
-                var isAdmin = userRoles.Contains("Admin");
-                var isExceptionRole = userRoles.Any(r => allowedRolesOutsideHours.Contains(r));
-                var withinHours = await _workingHoursRepo.IsWithinWorkingHoursAsync(DateTime.Now);
-                if (!isAdmin && !isExceptionRole && !withinHours)
+                // Check working hours permission
+                if (!await CheckWorkingHoursPermissionAsync())
                 {
-                    _logger.LogWarning("Blocked SaveOrder outside working hours. User roles: {Roles}", string.Join(',', userRoles));
-                    return StatusCode(403, new { errorMessage = "Actions are restricted outside working hours. Please try during working hours." });
+                    return StatusCode(403, new 
+                    { 
+                        errorMessage = "Actions are restricted outside working hours. Please try during working hours. Note: If you were just assigned the 'Work Outside Working Hours' permission, please log out and log back in to refresh your session.",
+                        message = "Actions are restricted outside working hours. Please try during working hours. Note: If you were just assigned the 'Work Outside Working Hours' permission, please log out and log back in to refresh your session."
+                    });
                 }
 
                 if (dto == null)
@@ -413,6 +464,15 @@ namespace Warehousing.Api.Controllers
         {
             try
             {
+                // Check working hours permission
+                if (!await CheckWorkingHoursPermissionAsync())
+                {
+                    return StatusCode(403, new 
+                    { 
+                        errorMessage = "Actions are restricted outside working hours. Please try during working hours. Note: If you were just assigned the 'Work Outside Working Hours' permission, please log out and log back in to refresh your session.",
+                        message = "Actions are restricted outside working hours. Please try during working hours. Note: If you were just assigned the 'Work Outside Working Hours' permission, please log out and log back in to refresh your session."
+                    });
+                }
                 var order = await _unitOfWork.OrderRepo
                             .GetAll()
                             .Include(o => o.Items)
@@ -469,6 +529,16 @@ namespace Warehousing.Api.Controllers
         {
             try
             {
+                // Check working hours permission
+                if (!await CheckWorkingHoursPermissionAsync())
+                {
+                    return StatusCode(403, new 
+                    { 
+                        errorMessage = "Actions are restricted outside working hours. Please try during working hours. Note: If you were just assigned the 'Work Outside Working Hours' permission, please log out and log back in to refresh your session.",
+                        message = "Actions are restricted outside working hours. Please try during working hours. Note: If you were just assigned the 'Work Outside Working Hours' permission, please log out and log back in to refresh your session."
+                    });
+                }
+
                 // Use EF Core execution strategy to handle retries correctly
                 var strategy = _unitOfWork.GetExecutionStrategy();
 
@@ -683,6 +753,16 @@ namespace Warehousing.Api.Controllers
         {
             try
             {
+                // Check working hours permission
+                if (!await CheckWorkingHoursPermissionAsync())
+                {
+                    return StatusCode(403, new 
+                    { 
+                        errorMessage = "Actions are restricted outside working hours. Please try during working hours. Note: If you were just assigned the 'Work Outside Working Hours' permission, please log out and log back in to refresh your session.",
+                        message = "Actions are restricted outside working hours. Please try during working hours. Note: If you were just assigned the 'Work Outside Working Hours' permission, please log out and log back in to refresh your session."
+                    });
+                }
+
                 var strategy = _unitOfWork.GetExecutionStrategy();
 
                 return await strategy.ExecuteAsync(async () =>
@@ -858,6 +938,16 @@ namespace Warehousing.Api.Controllers
         {
             try
             {
+                // Check working hours permission
+                if (!await CheckWorkingHoursPermissionAsync())
+                {
+                    return StatusCode(403, new 
+                    { 
+                        errorMessage = "Actions are restricted outside working hours. Please try during working hours. Note: If you were just assigned the 'Work Outside Working Hours' permission, please log out and log back in to refresh your session.",
+                        message = "Actions are restricted outside working hours. Please try during working hours. Note: If you were just assigned the 'Work Outside Working Hours' permission, please log out and log back in to refresh your session."
+                    });
+                }
+
                 var strategy = _unitOfWork.GetExecutionStrategy();
 
                 return await strategy.ExecuteAsync(async () =>
@@ -1016,6 +1106,16 @@ namespace Warehousing.Api.Controllers
         {
             try
             {
+                // Check working hours permission
+                if (!await CheckWorkingHoursPermissionAsync())
+                {
+                    return StatusCode(403, new 
+                    { 
+                        errorMessage = "Actions are restricted outside working hours. Please try during working hours. Note: If you were just assigned the 'Work Outside Working Hours' permission, please log out and log back in to refresh your session.",
+                        message = "Actions are restricted outside working hours. Please try during working hours. Note: If you were just assigned the 'Work Outside Working Hours' permission, please log out and log back in to refresh your session."
+                    });
+                }
+
                 using var transaction = await _unitOfWork.BeginTransactionAsync();
 
                 try
