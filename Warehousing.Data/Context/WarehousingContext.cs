@@ -161,6 +161,13 @@ namespace Warehousing.Data.Context
             modelBuilder.Entity<ProductModifierGroup>()
                 .HasIndex(pmg => new { pmg.ProductId, pmg.ModifierId })
                 .IsUnique();
+
+            // Printer Configuration - Role Relationship
+            modelBuilder.Entity<Role>()
+                .HasOne(r => r.PrinterConfiguration)
+                .WithMany(pc => pc.Roles)
+                .HasForeignKey(r => r.PrinterConfigurationId)
+                .OnDelete(DeleteBehavior.SetNull);
         }
 
 
@@ -206,6 +213,9 @@ namespace Warehousing.Data.Context
         public DbSet<WorkingHours> WorkingHours { get; set; }
         public DbSet<WorkingHoursException> WorkingHoursExceptions { get; set; }
         public DbSet<WorkingHoursDay> WorkingHoursDays { get; set; }
+        
+        // Printer Configuration
+        public DbSet<PrinterConfiguration> PrinterConfigurations { get; set; }
 
 
         private string HashPassword(string password)

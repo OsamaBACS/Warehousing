@@ -117,7 +117,8 @@ namespace Warehousing.Api.Controllers
                     Permissions = permissions,
                     CategoryIds = categoryIds,
                     ProductIds = productIds,
-                    SubCategoryIds = subCategoryIds
+                    SubCategoryIds = subCategoryIds,
+                    PrinterConfigurationId = role.PrinterConfigurationId
                 };
 
                 return Ok(roleDto);
@@ -175,6 +176,9 @@ namespace Warehousing.Api.Controllers
                     roleToUpdate.Code = dto.Code;
                     roleToUpdate.NameEn = dto.NameEn;
                     roleToUpdate.NameAr = dto.NameAr;
+                    roleToUpdate.PrinterConfigurationId = dto.PrinterConfigurationId;
+                    
+                    Console.WriteLine($"[DEBUG] Setting PrinterConfigurationId to: {dto.PrinterConfigurationId}");
 
                     // ✅ OPTIMIZED: Get permission IDs from DTO with null check and performance optimization
                     Console.WriteLine("[DEBUG] Getting permission IDs...");
@@ -213,6 +217,11 @@ namespace Warehousing.Api.Controllers
                         Console.WriteLine("[DEBUG] Products synced with SQL");
                         await SyncRoleSubCategoriesWithSql(roleToUpdate.Id, subCategoryIds);
                         Console.WriteLine("[DEBUG] SubCategories synced with SQL");
+                        
+                        // Update the role entity itself (including PrinterConfigurationId)
+                        await _unitOfWork.RoleRepo.UpdateAsync(roleToUpdate);
+                        await _unitOfWork.SaveAsync();
+                        Console.WriteLine("[DEBUG] Role entity updated and saved");
                     }
                     else
                     {
@@ -223,7 +232,8 @@ namespace Warehousing.Api.Controllers
                         await SyncRoleProductsWithId(roleToUpdate.Id, productIds);
                         await SyncRoleSubCategoriesWithId(roleToUpdate.Id, subCategoryIds);
                         
-                        // Save changes
+                        // Update the role entity itself (including PrinterConfigurationId)
+                        await _unitOfWork.RoleRepo.UpdateAsync(roleToUpdate);
                         await _unitOfWork.SaveAsync();
                         Console.WriteLine("[DEBUG] Changes saved with EF");
                     }
@@ -237,7 +247,8 @@ namespace Warehousing.Api.Controllers
                     {
                         Code = dto.Code,
                         NameEn = dto.NameEn,
-                        NameAr = dto.NameAr
+                        NameAr = dto.NameAr,
+                        PrinterConfigurationId = dto.PrinterConfigurationId
                     };
 
                     // Add permissions

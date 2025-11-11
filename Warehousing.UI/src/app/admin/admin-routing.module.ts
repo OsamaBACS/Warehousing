@@ -47,6 +47,8 @@ import { InitialStockComponent } from "./components/initial-stock/initial-stock.
 import { ModifierManagementComponent } from "./components/Products/modifier-management/modifier-management.component";
 import { ActivityLogsComponent } from "./components/ActivityLogs/activity-logs.component";
 import { WorkingHoursComponent } from "./components/WorkingHours/working-hours.component";
+import { PrinterConfigurationsComponent } from "./components/PrinterConfigurations/printer-configurations/printer-configurations.component";
+import { PrinterConfigurationFormComponent } from "./components/PrinterConfigurations/printer-configuration-form/printer-configuration-form.component";
 
 
 const routes: Routes = [
@@ -319,6 +321,18 @@ const routes: Routes = [
         component: WorkingHoursComponent,
         canActivate: [PermissionGuard],
         data: { permission: [PermissionsEnum.VIEW_WORKING_HOURS] }
+      },
+      {
+        path: 'printer-configurations',
+        component: PrinterConfigurationsComponent,
+        canActivate: [PermissionGuard],
+        data: { permission: [PermissionsEnum.VIEW_PRINTER_CONFIGURATIONS] }
+      },
+      {
+        path: 'printer-configuration-form',
+        component: PrinterConfigurationFormComponent,
+        canActivate: [PermissionGuard],
+        data: { permission: [PermissionsEnum.VIEW_PRINTER_CONFIGURATIONS, PermissionsEnum.ADD_PRINTER_CONFIGURATION, PermissionsEnum.EDIT_PRINTER_CONFIGURATION] }
       },
       { path: '**', redirectTo: 'dashboard' }
     ]

@@ -56,7 +56,8 @@ export class MainComponent implements OnInit {
     { label: 'BREADCRUMB.ORDERS', route: '/admin/order-list', icon: 'bi bi-cart-check', permission: this.permissionsEnum.VIEW_SALE_ORDERS },
     { label: 'BREADCRUMB.COMPANIES', route: '/admin/company', icon: 'bi bi-building', permission: this.permissionsEnum.VIEW_SETTINGS },
     { label: 'BREADCRUMB.ACTIVITY_LOGS', route: '/admin/activity-logs', icon: 'bi bi-clock-history', permission: this.permissionsEnum.VIEW_ADMIN },
-    { label: 'BREADCRUMB.WORKING_HOURS', route: '/admin/working-hours', icon: 'bi bi-calendar-check', permission: this.permissionsEnum.VIEW_ADMIN }
+    { label: 'BREADCRUMB.WORKING_HOURS', route: '/admin/working-hours', icon: 'bi bi-calendar-check', permission: this.permissionsEnum.VIEW_ADMIN },
+    { label: 'إعدادات الطابعة', route: '/admin/printer-configurations', icon: 'bi bi-printer', permission: this.permissionsEnum.VIEW_PRINTER_CONFIGURATIONS }
   ];
 
   reportCards = [

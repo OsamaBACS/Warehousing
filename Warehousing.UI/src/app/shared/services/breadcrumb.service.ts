@@ -47,6 +47,8 @@ export class BreadcrumbService {
     'inventory-report': 'تقرير المخزون',
     'transactions': 'المعاملات',
     'company': 'الشركة',
+    'printer-configurations': 'إعدادات الطابعة',
+    'printer-configuration-form': 'نموذج إعدادات الطابعة',
     'company-form': 'نموذج الشركة',
     'reports': 'التقارير',
     'analysis': 'التحليل'

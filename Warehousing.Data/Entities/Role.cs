@@ -13,5 +13,11 @@ namespace Warehousing.Data.Entities
         public List<RoleCategory> RoleCategories { get; set; } = new();
         public List<RoleProduct> RoleProducts { get; set; } = new();
         public List<RoleSubCategory> RoleSubCategories { get; set; } = new();
+
+        /// <summary>
+        /// Printer configuration assigned to this role
+        /// </summary>
+        public int? PrinterConfigurationId { get; set; }
+        public PrinterConfiguration? PrinterConfiguration { get; set; }
     }
 }

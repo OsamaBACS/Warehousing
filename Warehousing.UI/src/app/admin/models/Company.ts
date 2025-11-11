@@ -20,6 +20,7 @@ export interface Company {
     termsAr: string;
     logoUrl: string;
     printTemplateId: number | null;
+    printerConfiguration?: string | null;
     isActive: boolean;
 }
 

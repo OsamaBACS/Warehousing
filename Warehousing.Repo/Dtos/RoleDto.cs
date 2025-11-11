@@ -11,6 +11,7 @@ namespace Warehousing.Repo.Dtos
         public List<int>? CategoryIds { get; set; }
         public List<int>? ProductIds { get; set; }
         public List<int>? SubCategoryIds { get; set; }
+        public int? PrinterConfigurationId { get; set; }
     }
 
     public class RoleCreateUpdateDto
@@ -24,5 +25,6 @@ namespace Warehousing.Repo.Dtos
         public List<int>? CategoryIds { get; set; }
         public List<int>? ProductIds { get; set; }
         public List<int>? SubCategoryIds { get; set; }
+        public int? PrinterConfigurationId { get; set; }
     }
 }

@@ -21,7 +21,8 @@ export interface RoleDto {
     permissions: RolePermissionDto[];
     categoryIds : number[],
     productIds : number[],
-    subCategoryIds : number[]
+    subCategoryIds : number[],
+    printerConfigurationId?: number | null
 }
 
 export interface RoleDtoForAdd {
@@ -32,5 +33,6 @@ export interface RoleDtoForAdd {
     rolePermissionIds: number[];
     categoryIds : number[],
     productIds : number[],
-    subCategoryIds : number[]
+    subCategoryIds : number[],
+    printerConfigurationId?: number | null
 }

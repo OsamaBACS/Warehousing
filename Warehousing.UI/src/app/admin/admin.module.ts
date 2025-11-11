@@ -43,6 +43,8 @@ import { ModifierManagementComponent } from './components/Products/modifier-mana
 // Standalone components are imported via 'imports' array, not declared
 import { ActivityLogsComponent } from './components/ActivityLogs/activity-logs.component';
 import { WorkingHoursComponent } from './components/WorkingHours/working-hours.component';
+import { PrinterConfigurationsComponent } from './components/PrinterConfigurations/printer-configurations/printer-configurations.component';
+import { PrinterConfigurationFormComponent } from './components/PrinterConfigurations/printer-configuration-form/printer-configuration-form.component';
 
 
 
@@ -78,7 +80,9 @@ import { WorkingHoursComponent } from './components/WorkingHours/working-hours.c
     OrderItemsListComponent,
     StoreTransferFormComponent,
     InventoryManagementComponent,
-    InitialStockComponent
+    InitialStockComponent,
+    PrinterConfigurationsComponent,
+    PrinterConfigurationFormComponent
   ],
   imports: [
     CommonModule,

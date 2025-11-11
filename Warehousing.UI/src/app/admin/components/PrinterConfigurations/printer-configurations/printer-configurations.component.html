@@ -1,0 +1,137 @@
+<div class="min-h-screen bg-gray-50 py-8" dir="rtl">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <!-- Header -->
+    <div class="bg-white rounded-2xl shadow-lg p-6 mb-8">
+      <div class="flex justify-between items-center">
+        <div class="flex items-center">
+          <div class="w-12 h-12 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-2xl flex items-center justify-center mr-4">
+            <i class="bi bi-printer text-white text-xl"></i>
+          </div>
+          <div>
+            <h1 class="text-3xl font-bold text-gray-900">إعدادات الطابعة</h1>
+            <p class="text-gray-600 mt-1">إدارة إعدادات الطابعة وتكويناتها</p>
+          </div>
+        </div>
+        <button class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-xl font-semibold hover:from-purple-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 transition-all duration-200 transform hover:scale-105 shadow-lg" 
+                (click)="openForm(null)">
+          <i class="bi bi-plus-circle mr-2 text-lg"></i>
+          إضافة إعدادات جديدة
+        </button>
+      </div>
+    </div>
+
+    <!-- Loading State -->
+    <div *ngIf="loading" class="bg-white rounded-2xl shadow-lg p-12 text-center">
+      <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto"></div>
+      <p class="mt-4 text-gray-600">جاري التحميل...</p>
+    </div>
+
+    <!-- Configurations Grid -->
+    <div *ngIf="!loading && configurations.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div *ngFor="let config of configurations" class="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100">
+        <!-- Header -->
+        <div class="bg-gradient-to-r from-purple-100 to-indigo-100 p-6">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center">
+              <div class="w-12 h-12 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-xl flex items-center justify-center mr-3">
+                <i class="bi bi-printer text-white text-lg"></i>
+              </div>
+              <div>
+                <h3 class="text-lg font-bold text-gray-900">{{ config.nameAr }}</h3>
+                <p class="text-sm text-gray-600">{{ config.nameEn }}</p>
+              </div>
+            </div>
+            <span *ngIf="config.isDefault" class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+              <i class="bi bi-star-fill mr-1"></i>
+              افتراضي
+            </span>
+          </div>
+        </div>
+
+        <!-- Content -->
+        <div class="p-6">
+          <div class="space-y-4">
+            <!-- Description -->
+            <div *ngIf="config.description">
+              <p class="text-sm text-gray-600">{{ config.description }}</p>
+            </div>
+
+            <!-- Printer Type -->
+            <div class="flex items-center justify-between">
+              <span class="text-sm text-gray-500">نوع الطابعة:</span>
+              <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium" 
+                    [ngClass]="getPrinterTypeColor(config.printerType)">
+                {{ getPrinterTypeLabel(config.printerType) }}
+              </span>
+            </div>
+
+            <!-- Paper Format -->
+            <div class="flex items-center justify-between">
+              <span class="text-sm text-gray-500">تنسيق الورق:</span>
+              <span class="text-sm font-medium text-gray-900">{{ config.paperFormat }}</span>
+            </div>
+
+            <!-- Paper Size -->
+            <div class="flex items-center justify-between">
+              <span class="text-sm text-gray-500">حجم الورق:</span>
+              <span class="text-sm font-medium text-gray-900">
+                {{ config.paperWidth }}mm × {{ config.paperHeight > 0 ? config.paperHeight + 'mm' : 'لفة مستمرة' }}
+              </span>
+            </div>
+
+            <!-- Orientation -->
+            <div class="flex items-center justify-between">
+              <span class="text-sm text-gray-500">الاتجاه:</span>
+              <span class="text-sm font-medium text-gray-900">
+                {{ config.orientation === 'Portrait' ? 'عمودي' : 'أفقي' }}
+              </span>
+            </div>
+
+            <!-- Status -->
+            <div class="flex items-center justify-between pt-2 border-t border-gray-200">
+              <span class="text-sm text-gray-500">الحالة:</span>
+              <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium"
+                    [ngClass]="config.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'">
+                <i class="bi mr-1" [ngClass]="config.isActive ? 'bi-check-circle' : 'bi-x-circle'"></i>
+                {{ config.isActive ? 'نشط' : 'غير نشط' }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-between items-center">
+          <span class="text-xs text-gray-500">ID: {{ config.id }}</span>
+          <div class="flex gap-2">
+            <button class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors" 
+                    (click)="openForm(config.id)">
+              <i class="bi bi-pencil mr-2"></i>
+              تعديل
+            </button>
+            <button *ngIf="!config.isDefault" 
+                    class="inline-flex items-center px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors" 
+                    (click)="deleteConfiguration(config)">
+              <i class="bi bi-trash mr-2"></i>
+              حذف
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Empty State -->
+    <div *ngIf="!loading && configurations.length === 0" class="bg-white rounded-2xl shadow-lg p-12 text-center">
+      <div class="w-24 h-24 bg-gray-100 rounded-full mx-auto flex items-center justify-center mb-6">
+        <i class="bi bi-printer text-gray-400 text-4xl"></i>
+      </div>
+      <h3 class="text-xl font-semibold text-gray-900 mb-2">لا توجد إعدادات طابعة</h3>
+      <p class="text-gray-600 mb-6">لم يتم العثور على أي إعدادات طابعة في النظام</p>
+      <button class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-xl font-semibold hover:from-purple-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 transition-all duration-200 transform hover:scale-105 shadow-lg" 
+              (click)="openForm(null)">
+        <i class="bi bi-plus-circle mr-2"></i>
+        إضافة أول إعدادات طابعة
+      </button>
+    </div>
+  </div>
+</div>
+

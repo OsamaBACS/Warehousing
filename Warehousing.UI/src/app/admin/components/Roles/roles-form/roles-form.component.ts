@@ -6,6 +6,7 @@ import { Product } from '../../../models/product';
 import { SubCategory } from '../../../models/SubCategory';
 import { RoleService } from '../../../services/role.service';
 import { PermissionService } from '../../../services/permission.service';
+import { PrinterConfigurationService, PrinterConfigurationDto } from '../../../services/printer-configuration.service';
 import { ActivatedRoute, Router } from '@angular/router';
 import { LanguageService } from '../../../../core/services/language.service';
 import { ToastrService } from 'ngx-toastr';
@@ -25,11 +26,13 @@ export class RolesFormComponent implements OnInit {
   products!: Product[];
   subCategories!: SubCategory[];
   groupedPermissions!: { [key: string]: Permission[] };
+  printerConfigurations: PrinterConfigurationDto[] = [];
 
   constructor(
     private fb: FormBuilder,
     private roleService: RoleService,
     private permissionService: PermissionService,
+    private printerConfigService: PrinterConfigurationService,
     private router: Router,
     private route: ActivatedRoute,
     public lang: LanguageService,
@@ -42,7 +45,14 @@ export class RolesFormComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    // Debug: Check if permissions are loaded
+    console.log('Permissions loaded:', this.permissions?.length);
+    if (this.permissions) {
+      const printerPerms = this.permissions.filter(p => p.code?.includes('PRINTER'));
+      console.log('Printer permissions found:', printerPerms);
+    }
     this.groupPermissions();
+    this.loadPrinterConfigurations();
     this.initializingForm(null);
     this.route.queryParams.subscribe(params => {
       const roleId = +params['roleId'];
@@ -58,7 +68,8 @@ export class RolesFormComponent implements OnInit {
                 rolePermissionIds: res?.permissions.map(p => p.permissionId),
                 categoryIds: res?.categoryIds || [],
                 productIds: res?.productIds || [],
-                subCategoryIds: res?.subCategoryIds || []
+                subCategoryIds: res?.subCategoryIds || [],
+                printerConfigurationId: res?.printerConfigurationId
               };
               this.initializingForm(roleDtoForAdd)
             },
@@ -70,16 +81,48 @@ export class RolesFormComponent implements OnInit {
     });
   }
 
+  loadPrinterConfigurations(): void {
+    this.printerConfigService.GetPrinterConfigurations().subscribe({
+      next: (configs) => {
+        this.printerConfigurations = configs;
+      },
+      error: (err) => {
+        console.error('Error loading printer configurations:', err);
+      }
+    });
+  }
+
   groupPermissions(): void {
     this.groupedPermissions = {};
     
+    if (!this.permissions || this.permissions.length === 0) {
+      console.warn('No permissions loaded!');
+      return;
+    }
+    
     this.permissions.forEach(permission => {
+      if (!permission.code) {
+        console.warn('Permission without code:', permission);
+        return;
+      }
+      // Debug: Log printer-related permissions
+      if (permission.code.includes('PRINTER') || permission.code.includes('printer')) {
+        console.log('Found printer permission:', permission.code, permission.nameAr);
+      }
       let module = this.getModuleFromCode(permission.code);
       if (!this.groupedPermissions[module]) {
         this.groupedPermissions[module] = [];
       }
       this.groupedPermissions[module].push(permission);
     });
+    
+    // Debug: Check if printer config module was created
+    if (this.groupedPermissions['admin/printer-configurations']) {
+      console.log('Printer configurations module found with', this.groupedPermissions['admin/printer-configurations'].length, 'permissions');
+    } else {
+      console.warn('Printer configurations module NOT found in grouped permissions');
+      console.log('Available modules:', Object.keys(this.groupedPermissions));
+    }
   }
 
   getModuleFromCode(code: string): string {
@@ -147,6 +190,18 @@ export class RolesFormComponent implements OnInit {
     // Working Hours (admin/working-hours)
     if (code === 'VIEW_WORKING_HOURS' || code === 'EDIT_WORKING_HOURS' || code === 'MANAGE_WORKING_HOURS_EXCEPTIONS') return 'admin/working-hours';
     
+    // Printer Configuration Management (admin/printer-configurations)
+    if (code === 'VIEW_PRINTER_CONFIGURATIONS' || 
+        code === 'ADD_PRINTER_CONFIGURATION' || 
+        code === 'EDIT_PRINTER_CONFIGURATION' || 
+        code === 'DELETE_PRINTER_CONFIGURATION' ||
+        code?.toUpperCase() === 'VIEW_PRINTER_CONFIGURATIONS' ||
+        code?.toUpperCase() === 'ADD_PRINTER_CONFIGURATION' ||
+        code?.toUpperCase() === 'EDIT_PRINTER_CONFIGURATION' ||
+        code?.toUpperCase() === 'DELETE_PRINTER_CONFIGURATION') {
+      return 'admin/printer-configurations';
+    }
+    
     // Additional permissions that don't fit specific pages
     if (code === 'EDIT_APPROVED_INVOICE') return 'admin/orders'; // Invoice editing is part of orders
     
@@ -170,6 +225,7 @@ export class RolesFormComponent implements OnInit {
       'admin/company': 'إعدادات الشركة',
       'admin/activity-logs': 'سجل الأنشطة',
       'admin/working-hours': 'ساعات العمل',
+      'admin/printer-configurations': 'إعدادات الطابعة',
       'admin/general': 'عام'
     };
     
@@ -189,7 +245,8 @@ export class RolesFormComponent implements OnInit {
       rolePermissionIds: [role?.rolePermissionIds || []],
       categoryIds: [role?.categoryIds || []],
       productIds: [role?.productIds || []],
-      subCategoryIds: [role?.subCategoryIds || []]
+      subCategoryIds: [role?.subCategoryIds || []],
+      printerConfigurationId: [role?.printerConfigurationId || null]
     });
   }
 
@@ -316,7 +373,8 @@ export class RolesFormComponent implements OnInit {
         permissionCodes: permissionCodes,
         categoryIds: this.roleForm.get('categoryIds')?.value || [],
         productIds: this.roleForm.get('productIds')?.value || [],
-        subCategoryIds: this.roleForm.get('subCategoryIds')?.value || []
+        subCategoryIds: this.roleForm.get('subCategoryIds')?.value || [],
+        printerConfigurationId: this.roleForm.get('printerConfigurationId')?.value || null
       };
 
       this.roleService.saveRole(roleData).subscribe({

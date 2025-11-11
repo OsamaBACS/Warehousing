@@ -15,14 +15,18 @@ namespace Warehousing.Data.Services
 
         public async Task SeedDataAsync()
         {
+            // Always seed permissions first (they may be missing even if roles exist)
+            await SeedPermissionsAsync();
+            
             // Check if data already exists
             if (await _context.Roles.AnyAsync())
             {
+                // If roles exist, only seed printer configurations if they don't exist
+                await SeedPrinterConfigurationsAsync();
                 return; // Data already seeded
             }
 
             await SeedRolesAsync();
-            await SeedPermissionsAsync();
             await SeedUsersAsync();
             await SeedCategoriesAsync();
             await SeedSubCategoriesAsync();
@@ -35,6 +39,7 @@ namespace Warehousing.Data.Services
             await SeedRolePermissionsAsync();
             await SeedUserRolesAsync();
             await SeedWorkingHoursAsync();
+            await SeedPrinterConfigurationsAsync();
         }
 
         private async Task SeedRolesAsync()
@@ -54,12 +59,9 @@ namespace Warehousing.Data.Services
 
         private async Task SeedPermissionsAsync()
         {
-            // Get permissions from existing database
+            // Get existing permissions
             var existingPermissions = await _context.Permissions.ToListAsync();
-            if (existingPermissions.Any())
-            {
-                return; // Permissions already exist
-            }
+            var existingCodes = existingPermissions.Select(p => p.Code).ToHashSet();
 
             // Add all the permissions from your existing database
             var permissions = new List<Permission>
@@ -184,11 +186,35 @@ namespace Warehousing.Data.Services
                 new Permission { Id = 1009, Code = "VIEW_WORKING_HOURS", NameEn = "View Working Hours", NameAr = "عرض ساعات العمل" },
                 new Permission { Id = 1010, Code = "EDIT_WORKING_HOURS", NameEn = "Edit Working Hours", NameAr = "تعديل ساعات العمل" },
                 new Permission { Id = 1011, Code = "MANAGE_WORKING_HOURS_EXCEPTIONS", NameEn = "Manage Working Hours Exceptions", NameAr = "إدارة استثناءات ساعات العمل" },
-                new Permission { Id = 1012, Code = "WORK_OUTSIDE_WORKING_HOURS", NameEn = "Work Outside Working Hours", NameAr = "العمل خارج ساعات العمل" }
+                new Permission { Id = 1012, Code = "WORK_OUTSIDE_WORKING_HOURS", NameEn = "Work Outside Working Hours", NameAr = "العمل خارج ساعات العمل" },
+                
+                // Printer Configuration Management
+                new Permission { Code = "VIEW_PRINTER_CONFIGURATIONS", NameEn = "View Printer Configurations", NameAr = "عرض إعدادات الطابعة" },
+                new Permission { Code = "ADD_PRINTER_CONFIGURATION", NameEn = "Add Printer Configuration", NameAr = "إضافة إعدادات طابعة" },
+                new Permission { Code = "EDIT_PRINTER_CONFIGURATION", NameEn = "Edit Printer Configuration", NameAr = "تعديل إعدادات طابعة" },
+                new Permission { Code = "DELETE_PRINTER_CONFIGURATION", NameEn = "Delete Printer Configuration", NameAr = "حذف إعدادات طابعة" }
             };
 
-            _context.Permissions.AddRange(permissions);
-            await _context.SaveChangesAsync();
+            // Only add permissions that don't already exist
+            var permissionsToAdd = permissions.Where(p => !existingCodes.Contains(p.Code)).ToList();
+            
+            if (permissionsToAdd.Any())
+            {
+                // Ensure all new permissions have Id = 0 to let database auto-generate IDs
+                // (Identity column requires no explicit ID values)
+                foreach (var perm in permissionsToAdd)
+                {
+                    perm.Id = 0;
+                }
+                
+                _context.Permissions.AddRange(permissionsToAdd);
+                await _context.SaveChangesAsync();
+                Console.WriteLine($"Seeded {permissionsToAdd.Count} new permissions.");
+            }
+            else
+            {
+                Console.WriteLine("All permissions already exist in database.");
+            }
         }
 
         private async Task SeedUsersAsync()
@@ -429,6 +455,122 @@ namespace Warehousing.Data.Services
             };
 
             _context.WorkingHours.Add(workingHours);
+            await _context.SaveChangesAsync();
+        }
+
+        private async Task SeedPrinterConfigurationsAsync()
+        {
+            var existingConfigs = await _context.PrinterConfigurations.AnyAsync();
+            if (existingConfigs)
+            {
+                return; // Printer configurations already exist
+            }
+
+            // A4 Default Configuration
+            var a4Config = new PrinterConfiguration
+            {
+                NameAr = "طابعة A4 الافتراضية",
+                NameEn = "Default A4 Printer",
+                Description = "إعدادات افتراضية لطابعة A4",
+                PrinterType = "A4",
+                PaperFormat = "A4",
+                PaperWidth = 210,
+                PaperHeight = 297,
+                Margins = System.Text.Json.JsonSerializer.Serialize(new
+                {
+                    top = "20mm",
+                    right = "20mm",
+                    bottom = "20mm",
+                    left = "20mm"
+                }),
+                FontSettings = System.Text.Json.JsonSerializer.Serialize(new
+                {
+                    fontFamily = "Arial",
+                    baseFontSize = 12,
+                    headerFontSize = 16,
+                    footerFontSize = 10,
+                    tableFontSize = 11
+                }),
+                PrintInColor = true,
+                PrintBackground = true,
+                Orientation = "Portrait",
+                Scale = 1.0,
+                IsActive = true,
+                IsDefault = true,
+                CreatedAt = DateTime.UtcNow,
+                CreatedBy = "system"
+            };
+
+            // POS/Thermal Default Configuration
+            var posConfig = new PrinterConfiguration
+            {
+                NameAr = "طابعة نقاط البيع الحرارية",
+                NameEn = "POS Thermal Printer",
+                Description = "إعدادات افتراضية لطابعة نقاط البيع الحرارية 80مم",
+                PrinterType = "POS",
+                PaperFormat = "Thermal",
+                PaperWidth = 80,
+                PaperHeight = 0, // Continuous roll
+                Margins = System.Text.Json.JsonSerializer.Serialize(new
+                {
+                    top = "5mm",
+                    right = "5mm",
+                    bottom = "5mm",
+                    left = "5mm"
+                }),
+                FontSettings = System.Text.Json.JsonSerializer.Serialize(new
+                {
+                    fontFamily = "Courier",
+                    baseFontSize = 10,
+                    headerFontSize = 12,
+                    footerFontSize = 8,
+                    tableFontSize = 9
+                }),
+                PosSettings = System.Text.Json.JsonSerializer.Serialize(new
+                {
+                    encoding = "UTF-8",
+                    copies = 1,
+                    autoCut = true,
+                    openCashDrawer = false,
+                    printDensity = 8,
+                    printSpeed = 3,
+                    useEscPos = true,
+                    connectionType = "USB",
+                    connectionString = (string?)null
+                }),
+                PrintInColor = false,
+                PrintBackground = false,
+                Orientation = "Portrait",
+                Scale = 1.0,
+                IsActive = true,
+                IsDefault = true,
+                CreatedAt = DateTime.UtcNow,
+                CreatedBy = "system"
+            };
+
+            _context.PrinterConfigurations.AddRange(a4Config, posConfig);
+            await _context.SaveChangesAsync();
+
+            // Assign A4 config to Admin and Warehouse Manager roles
+            var adminRole = await _context.Roles.FirstOrDefaultAsync(r => r.Code == "ADMIN");
+            var warehouseManagerRole = await _context.Roles.FirstOrDefaultAsync(r => r.Code == "WAREHOUSE_MANAGER");
+            
+            if (adminRole != null)
+            {
+                adminRole.PrinterConfigurationId = a4Config.Id;
+            }
+            if (warehouseManagerRole != null)
+            {
+                warehouseManagerRole.PrinterConfigurationId = a4Config.Id;
+            }
+
+            // Assign POS config to Sales Manager role
+            var salesManagerRole = await _context.Roles.FirstOrDefaultAsync(r => r.Code == "SALES_MANAGER");
+            if (salesManagerRole != null)
+            {
+                salesManagerRole.PrinterConfigurationId = posConfig.Id;
+            }
+
             await _context.SaveChangesAsync();
         }
 

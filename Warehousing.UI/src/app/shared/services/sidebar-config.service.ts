@@ -153,6 +153,12 @@ export class SidebarConfigService {
               route: '/admin/working-hours', 
               icon: 'bi bi-calendar-check', 
               permission: PermissionsEnum.VIEW_ADMIN 
+            },
+            { 
+              label: 'إعدادات الطابعة', 
+              route: '/admin/printer-configurations', 
+              icon: 'bi bi-printer', 
+              permission: PermissionsEnum.VIEW_PRINTER_CONFIGURATIONS 
             }
           ]
         },
