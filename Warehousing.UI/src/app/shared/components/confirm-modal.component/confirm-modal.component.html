@@ -1,7 +1,26 @@
-<div class="modal-body">
-    <p>{{ message }}</p>
-</div>
-<div class="modal-footer d-flex justify-content-between">
-    <button class="btn btn-danger" (click)="cancel()">{{ cancelBtn }}</button>
-    <button class="btn btn-secondary" (click)="confirm()">{{ confirmBtn }}</button>
+<div class="modal-container">
+  <!-- Header -->
+  <div class="modal-header">
+    <div class="header-icon">
+      <i class="bi bi-question-circle"></i>
+    </div>
+    <h3 class="header-title">تأكيد الإجراء</h3>
+  </div>
+
+  <!-- Body -->
+  <div class="modal-body">
+    <p class="message-text">{{ message }}</p>
+  </div>
+
+  <!-- Footer -->
+  <div class="modal-footer">
+    <button class="btn btn-cancel" (click)="cancel()">
+      <i class="bi bi-x-circle"></i>
+      {{ cancelBtn }}
+    </button>
+    <button class="btn btn-confirm" (click)="confirm()">
+      <i class="bi bi-check-circle"></i>
+      {{ confirmBtn }}
+    </button>
+  </div>
 </div>

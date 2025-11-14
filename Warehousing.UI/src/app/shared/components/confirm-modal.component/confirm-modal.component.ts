@@ -1,5 +1,5 @@
-import { Component, EventEmitter, Input, Output } from '@angular/core';
-import { BsModalRef } from 'ngx-bootstrap/modal';
+import { Component, Inject } from '@angular/core';
+import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 
 @Component({
   selector: 'app-confirm-modal.component',
@@ -9,21 +9,24 @@ import { BsModalRef } from 'ngx-bootstrap/modal';
 })
 export class ConfirmModalComponent {
 
-  message!: string;
-  cancelBtn!: string;
-  confirmBtn!: string;
+  message: string;
+  cancelBtn: string;
+  confirmBtn: string;
 
-  @Output() onClose = new EventEmitter<boolean>();
-
-  constructor(public bsModalRef: BsModalRef) {}
+  constructor(
+    public dialogRef: MatDialogRef<ConfirmModalComponent>,
+    @Inject(MAT_DIALOG_DATA) public data: any
+  ) {
+    this.message = data.message;
+    this.cancelBtn = data.cancelBtn;
+    this.confirmBtn = data.confirmBtn;
+  }
 
   confirm(): void {
-    this.onClose.emit(true);
-    this.bsModalRef.hide();
+    this.dialogRef.close(true);
   }
 
   cancel(): void {
-    this.onClose.emit(false);
-    this.bsModalRef.hide();
+    this.dialogRef.close(false);
   }
 }

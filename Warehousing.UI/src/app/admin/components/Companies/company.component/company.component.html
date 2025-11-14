@@ -1,39 +1,79 @@
-<div class="container-fluid">
-  <div class="d-flex justify-content-between align-items-center mb-4">
-    <h4 class="fw-bold dark-mode-text">Companies</h4>
-    <!-- <button class="btn btn-primary" (click)="openForm(null)">
-      <i class="bi bi-plus-lg me-1"></i> Add Company
-    </button> -->
-  </div>
+<div class="min-h-screen bg-gray-50 py-8" dir="rtl">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <!-- Header -->
+    <div class="bg-white rounded-2xl shadow-lg p-6 mb-8">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center">
+          <div class="w-12 h-12 bg-gradient-to-br from-violet-500 to-purple-600 rounded-2xl flex items-center justify-center mr-4">
+            <i class="bi bi-building text-white text-xl"></i>
+          </div>
+          <div>
+            <h1 class="text-3xl font-bold text-gray-900">إدارة الشركات</h1>
+            <p class="text-gray-600 mt-1">إدارة بيانات الشركات والمؤسسات في النظام</p>
+          </div>
+        </div>
+        <button class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-violet-600 to-purple-600 text-white rounded-xl font-semibold hover:from-violet-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:ring-offset-2 transition-all duration-200 transform hover:scale-105 shadow-lg"
+                (click)="openForm(null)">
+          <i class="bi bi-plus-circle mr-2 text-lg"></i>
+          إضافة شركة جديدة
+        </button>
+      </div>
+    </div>
 
-  <div *ngIf="(companies$ | async) as companies">
-    <div class="row g-4">
-      <div class="col-sm-6 col-md-4 col-lg-3" *ngFor="let company of companies.companies">
-        <div class="card h-100 border-0 shadow-sm rounded dark-mode-bg">
-
-          <!-- Image Upload Preview -->
-          <div class="card-img-top bg-light d-flex justify-content-center align-items-center p-3">
+    <!-- Companies Grid -->
+    <div *ngIf="(companies$ | async) as companies" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+      <div *ngFor="let company of companies.companies" class="group h-full">
+        <div class="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 overflow-hidden border border-gray-100 h-full flex flex-col">
+          <!-- Company Logo -->
+          <div class="aspect-square bg-gradient-to-br from-violet-50 to-purple-100 flex items-center justify-center p-6 flex-shrink-0">
             <app-image-uploader 
               [initialImageUrl]="serverUrl + company.logoUrl"
               [readonly]="true">
             </app-image-uploader>
           </div>
 
-          <!-- Card Body -->
-          <div class="card-body d-flex flex-column">
-            <h6 class="card-title fw-bold text-primary mb-1">{{ company.nameAr }}</h6>
-            <span class="badge bg-info bg-opacity-25 text-info mb-2 align-self-start">
-              {{ company.taxNumber || 'No Tax Number' }}
-            </span>
+          <!-- Company Info -->
+          <div class="p-6 flex flex-col flex-grow">
+            <div class="text-center mb-4">
+              <h3 class="font-bold text-gray-900 text-lg mb-2 group-hover:text-violet-600 transition-colors">
+                {{ company.nameAr }}
+              </h3>
+              <p class="text-gray-500 text-sm">{{ company.nameEn }}</p>
+            </div>
 
-            <p class="card-text text-muted small mb-2">
-              {{ lang.currentLang === 'ar' ? company.addressAr : company.addressEn }}
-            </p>
+            <!-- Tax Number -->
+            <div class="mb-4">
+              <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-violet-100 text-violet-800">
+                <i class="bi bi-hash mr-1"></i>
+                {{ company.taxNumber || 'لا يوجد رقم ضريبي' }}
+              </span>
+            </div>
 
-            <div class="mt-auto d-flex justify-content-between align-items-center">
-              <span class="fw-semibold text-secondary">{{ company.currencyCode }}</span>
-              <button class="btn btn-sm btn-outline-secondary" (click)="openForm(company.id)">
-                <i class="bi bi-pencil-fill"></i>
+            <!-- Address -->
+            <div class="flex-grow mb-4">
+              <div class="flex items-start">
+                <div class="w-6 h-6 bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg flex items-center justify-center mr-2 flex-shrink-0 mt-0.5">
+                  <i class="bi bi-geo-alt text-gray-600 text-xs"></i>
+                </div>
+                <p class="text-gray-600 text-sm leading-relaxed">
+                  {{ lang.currentLang === 'ar' ? company.addressAr : company.addressEn }}
+                </p>
+              </div>
+            </div>
+
+            <!-- Currency and Actions -->
+            <div class="flex justify-between items-center pt-4 border-t border-gray-100 flex-shrink-0">
+              <div class="flex items-center">
+                <div class="w-6 h-6 bg-gradient-to-br from-amber-100 to-orange-100 rounded-lg flex items-center justify-center mr-2">
+                  <i class="bi bi-currency-exchange text-amber-600 text-xs"></i>
+                </div>
+                <span class="text-sm font-semibold text-gray-700">{{ company.currencyCode }}</span>
+              </div>
+              <button class="inline-flex items-center px-3 py-2 bg-violet-600 text-white rounded-lg text-sm font-medium hover:bg-violet-700 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:ring-offset-2 transition-colors"
+                      (click)="openForm(company.id)" 
+                      title="تعديل الشركة">
+                <i class="bi bi-pencil-square mr-1"></i>
+                تعديل
               </button>
             </div>
           </div>
@@ -41,42 +81,91 @@
       </div>
     </div>
 
+    <!-- Empty State -->
+    <div *ngIf="(companies$ | async) as companies; else loadingTemplate">
+      <div *ngIf="!companies.companies || companies.companies.length === 0" 
+           class="bg-white rounded-2xl shadow-lg p-12 text-center">
+        <div class="w-24 h-24 bg-gray-100 rounded-full mx-auto flex items-center justify-center mb-6">
+          <i class="bi bi-building text-gray-400 text-4xl"></i>
+        </div>
+        <h3 class="text-xl font-semibold text-gray-900 mb-2">لا توجد شركات</h3>
+        <p class="text-gray-600 mb-6">لم يتم العثور على أي شركات في النظام</p>
+        <button class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-violet-600 to-purple-600 text-white rounded-xl font-semibold hover:from-violet-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:ring-offset-2 transition-all duration-200 transform hover:scale-105 shadow-lg"
+                (click)="openForm(null)">
+          <i class="bi bi-plus-circle mr-2"></i>
+          إضافة أول شركة
+        </button>
+      </div>
+    </div>
+
+    <!-- Loading Template -->
+    <ng-template #loadingTemplate>
+      <div class="bg-white rounded-2xl shadow-lg p-12 text-center">
+        <div class="w-16 h-16 border-4 border-violet-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+        <p class="text-lg text-gray-600">جاري تحميل الشركات...</p>
+      </div>
+    </ng-template>
+
     <!-- Pagination -->
-    <nav aria-label="Page navigation" class="mt-4 d-flex justify-content-center">
-      <ul class="pagination">
-        <li class="page-item" [class.disabled]="pageIndex === 1">
-          <button class="page-link btn" (click)="changePage(pageIndex - 1)">«</button>
-        </li>
+    <div class="bg-white rounded-2xl shadow-lg p-6 mt-8" *ngIf="(companies$ | async) as companies">
+      <nav aria-label="Page navigation" class="flex justify-center">
+        <div class="flex items-center space-x-2 space-x-reverse">
+          <!-- Previous Button -->
+          <button class="px-3 py-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  [disabled]="pageIndex === 1"
+                  (click)="changePage(pageIndex - 1)">
+            <i class="bi bi-chevron-right text-lg"></i>
+          </button>
 
-        <!-- First page -->
-        <li class="page-item" [class.active]="pageIndex === 1">
-          <button class="page-link btn" (click)="changePage(1)">1</button>
-        </li>
+          <!-- First Page -->
+          <button class="px-4 py-2 rounded-lg font-medium transition-colors"
+                  [class.bg-violet-600]="pageIndex === 1"
+                  [class.text-white]="pageIndex === 1"
+                  [class.bg-gray-100]="pageIndex !== 1"
+                  [class.text-gray-700]="pageIndex !== 1"
+                  [class.hover:bg-gray-200]="pageIndex !== 1"
+                  (click)="changePage(1)">
+            1
+          </button>
 
-        <!-- Left Ellipsis -->
-        <li class="page-item disabled" *ngIf="pageIndex > 4">
-          <span class="page-link">...</span>
-        </li>
+          <!-- Left Ellipsis -->
+          <span *ngIf="pageIndex > 4" class="px-2 text-gray-500">...</span>
 
-        <!-- Dynamic middle pages -->
-        <li class="page-item" *ngFor="let page of getPageRange()" [class.active]="page === pageIndex">
-          <button class="page-link btn" (click)="changePage(page)">{{ page }}</button>
-        </li>
+          <!-- Dynamic Middle Pages -->
+          <button *ngFor="let page of getPageRange()" 
+                  class="px-4 py-2 rounded-lg font-medium transition-colors"
+                  [class.bg-violet-600]="page === pageIndex"
+                  [class.text-white]="page === pageIndex"
+                  [class.bg-gray-100]="page !== pageIndex"
+                  [class.text-gray-700]="page !== pageIndex"
+                  [class.hover:bg-gray-200]="page !== pageIndex"
+                  (click)="changePage(page)">
+            {{ page }}
+          </button>
 
-        <!-- Right Ellipsis -->
-        <li class="page-item disabled" *ngIf="pageIndex < totalPages - 3">
-          <span class="page-link">...</span>
-        </li>
+          <!-- Right Ellipsis -->
+          <span *ngIf="pageIndex < totalPages - 3" class="px-2 text-gray-500">...</span>
 
-        <!-- Last page -->
-        <li class="page-item" [class.active]="pageIndex === totalPages" *ngIf="totalPages > 1">
-          <button class="page-link btn" (click)="changePage(totalPages)">{{ totalPages }}</button>
-        </li>
+          <!-- Last Page -->
+          <button *ngIf="totalPages > 1"
+                  class="px-4 py-2 rounded-lg font-medium transition-colors"
+                  [class.bg-violet-600]="pageIndex === totalPages"
+                  [class.text-white]="pageIndex === totalPages"
+                  [class.bg-gray-100]="pageIndex !== totalPages"
+                  [class.text-gray-700]="pageIndex !== totalPages"
+                  [class.hover:bg-gray-200]="pageIndex !== totalPages"
+                  (click)="changePage(totalPages)">
+            {{ totalPages }}
+          </button>
 
-        <li class="page-item" [class.disabled]="pageIndex === totalPages || totalPages === 0">
-          <button class="page-link btn" (click)="changePage(pageIndex + 1)">»</button>
-        </li>
-      </ul>
-    </nav>
+          <!-- Next Button -->
+          <button class="px-3 py-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  [disabled]="pageIndex === totalPages || totalPages === 0"
+                  (click)="changePage(pageIndex + 1)">
+            <i class="bi bi-chevron-left text-lg"></i>
+          </button>
+        </div>
+      </nav>
+    </div>
   </div>
 </div>

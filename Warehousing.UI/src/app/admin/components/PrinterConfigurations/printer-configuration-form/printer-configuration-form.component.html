@@ -1,0 +1,330 @@
+<div class="min-h-screen bg-gray-50 py-8" dir="rtl">
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+    <!-- Header -->
+    <div class="bg-white rounded-2xl shadow-lg p-6 mb-8">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center">
+          <div class="w-12 h-12 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-2xl flex items-center justify-center mr-4">
+            <i class="bi bi-printer text-white text-xl"></i>
+          </div>
+          <div>
+            <h1 class="text-3xl font-bold text-gray-900">
+              {{ configForm.get('id')?.value > 0 ? 'تعديل إعدادات الطابعة' : 'إضافة إعدادات طابعة جديدة' }}
+            </h1>
+            <p class="text-gray-600 mt-1">إدارة إعدادات وتكوينات الطابعة</p>
+          </div>
+        </div>
+        <button class="w-10 h-10 bg-gray-100 hover:bg-gray-200 rounded-full flex items-center justify-center transition-colors" 
+                (click)="cancel()">
+          <i class="bi bi-x-lg text-gray-600"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Form -->
+    <div class="bg-white rounded-2xl shadow-xl p-8">
+      <form [formGroup]="configForm" (ngSubmit)="save()" class="space-y-8">
+        <input type="hidden" formControlName="id" />
+
+        <!-- Basic Information -->
+        <div class="border-b border-gray-200 pb-8">
+          <h2 class="text-xl font-bold text-gray-900 mb-6 flex items-center">
+            <i class="bi bi-info-circle text-purple-600 mr-3"></i>
+            المعلومات الأساسية
+          </h2>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="space-y-2">
+              <label class="block text-sm font-semibold text-gray-700">
+                الاسم بالعربية <span class="text-red-500">*</span>
+              </label>
+              <input type="text" formControlName="nameAr"
+                     class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all duration-200 bg-gray-50 focus:bg-white"
+                     placeholder="أدخل الاسم بالعربية">
+            </div>
+
+            <div class="space-y-2">
+              <label class="block text-sm font-semibold text-gray-700">
+                الاسم بالإنجليزية
+              </label>
+              <input type="text" formControlName="nameEn"
+                     class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all duration-200 bg-gray-50 focus:bg-white"
+                     placeholder="Enter name in English">
+            </div>
+
+            <div class="space-y-2 md:col-span-2">
+              <label class="block text-sm font-semibold text-gray-700">
+                الوصف
+              </label>
+              <textarea formControlName="description" rows="3"
+                        class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all duration-200 bg-gray-50 focus:bg-white resize-none"
+                        placeholder="أدخل وصف إعدادات الطابعة"></textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- Printer Settings -->
+        <div class="border-b border-gray-200 pb-8">
+          <h2 class="text-xl font-bold text-gray-900 mb-6 flex items-center">
+            <i class="bi bi-printer-fill text-blue-600 mr-3"></i>
+            إعدادات الطابعة
+          </h2>
+          
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="space-y-2">
+              <label class="block text-sm font-semibold text-gray-700">
+                نوع الطابعة <span class="text-red-500">*</span>
+              </label>
+              <select formControlName="printerType"
+                      class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all duration-200 bg-gray-50 focus:bg-white">
+                <option value="A4">طابعة A4</option>
+                <option value="POS">طابعة نقاط البيع</option>
+                <option value="Thermal">طابعة حرارية</option>
+                <option value="Label">طابعة ملصقات</option>
+              </select>
+            </div>
+
+            <div class="space-y-2" *ngIf="!isPosPrinter">
+              <label class="block text-sm font-semibold text-gray-700">
+                تنسيق الورق
+              </label>
+              <select formControlName="paperFormat"
+                      class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all duration-200 bg-gray-50 focus:bg-white">
+                <option value="A4">A4</option>
+                <option value="Letter">Letter</option>
+                <option value="Legal">Legal</option>
+                <option value="A3">A3</option>
+                <option value="A5">A5</option>
+              </select>
+            </div>
+
+            <div class="space-y-2">
+              <label class="block text-sm font-semibold text-gray-700">
+                عرض الورق (مم) <span class="text-red-500">*</span>
+              </label>
+              <input type="number" formControlName="paperWidth"
+                     class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all duration-200 bg-gray-50 focus:bg-white">
+            </div>
+
+            <div class="space-y-2">
+              <label class="block text-sm font-semibold text-gray-700">
+                ارتفاع الورق (مم) - 0 للفة مستمرة
+              </label>
+              <input type="number" formControlName="paperHeight"
+                     class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all duration-200 bg-gray-50 focus:bg-white">
+            </div>
+
+            <div class="space-y-2">
+              <label class="block text-sm font-semibold text-gray-700">
+                الاتجاه
+              </label>
+              <select formControlName="orientation"
+                      class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all duration-200 bg-gray-50 focus:bg-white">
+                <option value="Portrait">عمودي</option>
+                <option value="Landscape">أفقي</option>
+              </select>
+            </div>
+
+            <div class="space-y-2">
+              <label class="block text-sm font-semibold text-gray-700">
+                مقياس الطباعة (0.1 - 2.0)
+              </label>
+              <input type="number" step="0.1" formControlName="scale"
+                     class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all duration-200 bg-gray-50 focus:bg-white">
+            </div>
+
+            <div class="space-y-2" *ngIf="!isPosPrinter">
+              <label class="flex items-center">
+                <input type="checkbox" formControlName="printInColor"
+                       class="w-5 h-5 text-purple-600 rounded focus:ring-purple-500">
+                <span class="mr-2 text-sm font-semibold text-gray-700">طباعة ملونة</span>
+              </label>
+            </div>
+
+            <div class="space-y-2" *ngIf="!isPosPrinter">
+              <label class="flex items-center">
+                <input type="checkbox" formControlName="printBackground"
+                       class="w-5 h-5 text-purple-600 rounded focus:ring-purple-500">
+                <span class="mr-2 text-sm font-semibold text-gray-700">طباعة الخلفية</span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Margins -->
+        <div class="border-b border-gray-200 pb-8">
+          <h2 class="text-xl font-bold text-gray-900 mb-6 flex items-center">
+            <i class="bi bi-border text-green-600 mr-3"></i>
+            الهوامش
+          </h2>
+          
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+            <div class="space-y-2">
+              <label class="block text-sm font-semibold text-gray-700">أعلى</label>
+              <input type="text" formControlName="marginTop"
+                     class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all duration-200 bg-gray-50 focus:bg-white"
+                     placeholder="20mm">
+            </div>
+            <div class="space-y-2">
+              <label class="block text-sm font-semibold text-gray-700">يمين</label>
+              <input type="text" formControlName="marginRight"
+                     class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all duration-200 bg-gray-50 focus:bg-white"
+                     placeholder="20mm">
+            </div>
+            <div class="space-y-2">
+              <label class="block text-sm font-semibold text-gray-700">أسفل</label>
+              <input type="text" formControlName="marginBottom"
+                     class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all duration-200 bg-gray-50 focus:bg-white"
+                     placeholder="20mm">
+            </div>
+            <div class="space-y-2">
+              <label class="block text-sm font-semibold text-gray-700">يسار</label>
+              <input type="text" formControlName="marginLeft"
+                     class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all duration-200 bg-gray-50 focus:bg-white"
+                     placeholder="20mm">
+            </div>
+          </div>
+        </div>
+
+        <!-- Font Settings -->
+        <div class="border-b border-gray-200 pb-8">
+          <h2 class="text-xl font-bold text-gray-900 mb-6 flex items-center">
+            <i class="bi bi-fonts text-orange-600 mr-3"></i>
+            إعدادات الخط
+          </h2>
+          
+          <div class="grid grid-cols-1 md:grid-cols-5 gap-6">
+            <div class="space-y-2">
+              <label class="block text-sm font-semibold text-gray-700">عائلة الخط</label>
+              <input type="text" formControlName="fontFamily"
+                     class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all duration-200 bg-gray-50 focus:bg-white">
+            </div>
+            <div class="space-y-2">
+              <label class="block text-sm font-semibold text-gray-700">حجم الخط الأساسي</label>
+              <input type="number" formControlName="baseFontSize"
+                     class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all duration-200 bg-gray-50 focus:bg-white">
+            </div>
+            <div class="space-y-2">
+              <label class="block text-sm font-semibold text-gray-700">حجم خط العنوان</label>
+              <input type="number" formControlName="headerFontSize"
+                     class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all duration-200 bg-gray-50 focus:bg-white">
+            </div>
+            <div class="space-y-2">
+              <label class="block text-sm font-semibold text-gray-700">حجم خط التذييل</label>
+              <input type="number" formControlName="footerFontSize"
+                     class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all duration-200 bg-gray-50 focus:bg-white">
+            </div>
+            <div class="space-y-2">
+              <label class="block text-sm font-semibold text-gray-700">حجم خط الجدول</label>
+              <input type="number" formControlName="tableFontSize"
+                     class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all duration-200 bg-gray-50 focus:bg-white">
+            </div>
+          </div>
+        </div>
+
+        <!-- POS Settings -->
+        <div class="border-b border-gray-200 pb-8" *ngIf="showPosSettings">
+          <h2 class="text-xl font-bold text-gray-900 mb-6 flex items-center">
+            <i class="bi bi-receipt text-red-600 mr-3"></i>
+            إعدادات طابعة نقاط البيع
+          </h2>
+          
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="space-y-2">
+              <label class="block text-sm font-semibold text-gray-700">الترميز</label>
+              <select formControlName="posEncoding"
+                      class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all duration-200 bg-gray-50 focus:bg-white">
+                <option value="UTF-8">UTF-8</option>
+                <option value="Windows-1256">Windows-1256</option>
+                <option value="ISO-8859-6">ISO-8859-6</option>
+              </select>
+            </div>
+            <div class="space-y-2">
+              <label class="block text-sm font-semibold text-gray-700">عدد النسخ</label>
+              <input type="number" formControlName="posCopies"
+                     class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all duration-200 bg-gray-50 focus:bg-white">
+            </div>
+            <div class="space-y-2">
+              <label class="block text-sm font-semibold text-gray-700">كثافة الطباعة (0-15)</label>
+              <input type="number" formControlName="posPrintDensity"
+                     class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all duration-200 bg-gray-50 focus:bg-white">
+            </div>
+            <div class="space-y-2">
+              <label class="block text-sm font-semibold text-gray-700">سرعة الطباعة (1-5)</label>
+              <input type="number" formControlName="posPrintSpeed"
+                     class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all duration-200 bg-gray-50 focus:bg-white">
+            </div>
+            <div class="space-y-2">
+              <label class="block text-sm font-semibold text-gray-700">نوع الاتصال</label>
+              <select formControlName="posConnectionType"
+                      class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all duration-200 bg-gray-50 focus:bg-white">
+                <option value="USB">USB</option>
+                <option value="Network">شبكة</option>
+                <option value="Serial">سيريال</option>
+                <option value="Bluetooth">بلوتوث</option>
+              </select>
+            </div>
+            <div class="space-y-2">
+              <label class="block text-sm font-semibold text-gray-700">سلسلة الاتصال</label>
+              <input type="text" formControlName="posConnectionString"
+                     class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all duration-200 bg-gray-50 focus:bg-white"
+                     placeholder="مثال: COM1 أو 192.168.1.100">
+            </div>
+            <div class="space-y-2">
+              <label class="flex items-center">
+                <input type="checkbox" formControlName="posAutoCut"
+                       class="w-5 h-5 text-purple-600 rounded focus:ring-purple-500">
+                <span class="mr-2 text-sm font-semibold text-gray-700">قطع تلقائي</span>
+              </label>
+            </div>
+            <div class="space-y-2">
+              <label class="flex items-center">
+                <input type="checkbox" formControlName="posOpenCashDrawer"
+                       class="w-5 h-5 text-purple-600 rounded focus:ring-purple-500">
+                <span class="mr-2 text-sm font-semibold text-gray-700">فتح درج النقد</span>
+              </label>
+            </div>
+            <div class="space-y-2">
+              <label class="flex items-center">
+                <input type="checkbox" formControlName="posUseEscPos"
+                       class="w-5 h-5 text-purple-600 rounded focus:ring-purple-500">
+                <span class="mr-2 text-sm font-semibold text-gray-700">استخدام ESC/POS</span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Status -->
+        <div class="pb-8">
+          <h2 class="text-xl font-bold text-gray-900 mb-6 flex items-center">
+            <i class="bi bi-toggle-on text-green-600 mr-3"></i>
+            الحالة
+          </h2>
+          
+          <div class="flex items-center">
+            <input type="checkbox" formControlName="isActive"
+                   class="w-5 h-5 text-green-600 rounded focus:ring-green-500">
+            <label class="mr-2 text-sm font-semibold text-gray-700">
+              {{ configForm.get('isActive')?.value ? 'الإعدادات نشطة' : 'الإعدادات غير نشطة' }}
+            </label>
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="flex justify-end space-x-4 space-x-reverse pt-8 border-t border-gray-200">
+          <button type="button" (click)="cancel()"
+                  class="px-8 py-3 bg-gray-100 text-gray-700 rounded-xl font-semibold hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-offset-2 transition-all duration-200 border border-gray-300">
+            <i class="bi bi-x-lg mr-2"></i>
+            إلغاء
+          </button>
+          <button type="submit" [disabled]="configForm.invalid || isDefault"
+                  class="px-8 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-xl font-semibold hover:from-purple-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg transform hover:scale-105">
+            <i class="bi bi-check-lg mr-2"></i>
+            {{ configForm.get('id')?.value > 0 ? 'تحديث الإعدادات' : 'حفظ الإعدادات' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+

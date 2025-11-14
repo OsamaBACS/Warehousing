@@ -5,6 +5,7 @@ import { AuthGuard } from '../core/guards/auth-guard.guard';
 import { OrderCategoriesComponent } from './order-categories/order-categories.component';
 import { OrderSubCategoriesComponent } from './order-sub-categories/order-sub-categories.component';
 import { OrderProductsComponent } from './order-products/order-products.component';
+import { ProductDetailComponent } from './product-detail/product-detail.component';
 import { CategoriesResolver } from '../admin/resolvers/categories-resolver';
 import { StoresResolver } from '../admin/resolvers/stores-resolver-resolver';
 import { SubCategoriesResolver } from '../admin/resolvers/sub-categories-resolver';
@@ -29,6 +30,10 @@ const routes: Routes = [
         resolve: {
           subCategoriesResolver: SubCategoriesResolver,
         },
+      },
+      {
+        path: 'product/:productId',
+        component: ProductDetailComponent,
       },
       { path: '', redirectTo: 'categories', pathMatch: 'full' },
     ]

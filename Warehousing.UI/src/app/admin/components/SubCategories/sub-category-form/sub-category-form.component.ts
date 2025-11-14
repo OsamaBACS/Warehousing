@@ -52,13 +52,28 @@ export class SubCategoryFormComponent implements OnInit {
       nameAr: [subCategory ? subCategory.nameAr : '', Validators.required],
       categoryId: [subCategory ? subCategory.categoryId : null, Validators.required],
       description: [subCategory ? subCategory.description : ''],
+      imagePath: [subCategory ? subCategory.imagePath : ''],
+      image: [null],
       isActive: [subCategory ? subCategory.isActive : true]
     });
   }
 
   onSubmit() {
     if (this.subCategoryForm.valid) {
-      this.subCategoryService.SaveSubCategory(this.subCategoryForm.value).subscribe({
+      const formData = new FormData();
+      formData.append('id', this.subCategoryForm.get('id')?.value);
+      formData.append('nameEn', this.subCategoryForm.get('nameEn')?.value);
+      formData.append('nameAr', this.subCategoryForm.get('nameAr')?.value);
+      formData.append('categoryId', this.subCategoryForm.get('categoryId')?.value);
+      formData.append('description', this.subCategoryForm.get('description')?.value);
+      formData.append('isActive', this.subCategoryForm.get('isActive')?.value);
+
+      const imageFile = this.subCategoryForm.get('image')?.value;
+      if (imageFile instanceof File) {
+        formData.append('image', imageFile, imageFile.name);
+      }
+
+      this.subCategoryService.SaveSubCategory(formData).subscribe({
         next: (res) => {
           if(res) {
             this.toastr.success('تم اضافة تصنيف بنجاح', 'subCategory');

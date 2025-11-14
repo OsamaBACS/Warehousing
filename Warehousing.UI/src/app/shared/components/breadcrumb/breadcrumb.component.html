@@ -1,15 +1,47 @@
-<nav aria-label="breadcrumb" class="mb-4" dir="rtl">
-  <ol class="breadcrumb shadow-sm p-3 mb-4 bg-body rounded">
-    <li
-      class="breadcrumb-item"
-      *ngFor="let crumb of breadcrumbs; let last = last">
-      <span
-        role="button"
-        (click)="navigate(crumb.route)"
-        class="breadcrumb-item">
-        {{ crumb.label }}
+<nav aria-label="breadcrumb" class="mt-4 mb-6" *ngIf="breadcrumbs.length > 0" [dir]="isRTL ? 'rtl' : 'ltr'">
+  <ol class="flex items-center flex-wrap gap-1.5 sm:gap-2"
+      [ngClass]="{ 'flex-row-reverse': isRTL }">
+    <li *ngFor="let breadcrumb of breadcrumbs; let last = last; let i = index" 
+        class="flex items-center">
+      <!-- Clickable Breadcrumb Item (not last) -->
+      <a *ngIf="!last && breadcrumb.route" 
+         [routerLink]="breadcrumb.route" 
+         class="group inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-medium text-gray-700 hover:text-blue-600 bg-white hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 rounded-lg sm:rounded-xl transition-all duration-300 shadow-sm hover:shadow-md border border-gray-200 hover:border-blue-300"
+         [ngClass]="{
+           'hover:from-blue-50 hover:to-indigo-50': true
+         }">
+        <i *ngIf="i === 0" class="bi bi-house-door text-sm sm:text-base text-gray-500 group-hover:text-blue-600 transition-colors"></i>
+        <span class="relative truncate max-w-[120px] sm:max-w-none">
+          {{ breadcrumb.label }}
+          <span class="absolute bottom-0 w-0 h-0.5 bg-gradient-to-r from-blue-500 to-indigo-500 group-hover:w-full transition-all duration-300"
+                [ngClass]="{
+                  'right-0': isRTL,
+                  'left-0': !isRTL
+                }"></span>
+        </span>
+      </a>
+      
+      <!-- Current/Last Breadcrumb Item (non-clickable) -->
+      <span *ngIf="last || !breadcrumb.route" 
+            class="inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold text-white bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 rounded-lg sm:rounded-xl shadow-md ring-2 ring-blue-300 ring-opacity-30">
+        <i *ngIf="i > 0" class="bi text-xs sm:text-sm opacity-90" 
+           [ngClass]="{ 'bi-chevron-left': isRTL, 'bi-chevron-right': !isRTL }"></i>
+        <span class="truncate max-w-[150px] sm:max-w-none">{{ breadcrumb.label }}</span>
       </span>
-      <span *ngIf="!last" class="mx-2 text-muted">‹</span>
+      
+      <!-- Modern Separator with Animation -->
+      <div *ngIf="!last" class="flex items-center mx-0.5 sm:mx-1">
+        <svg class="w-4 h-4 sm:w-5 sm:h-5 text-gray-400 transition-all duration-200 hover:text-blue-500" 
+             [ngClass]="{ 'rotate-180': isRTL, 'rotate-0': !isRTL }"
+             fill="none" 
+             stroke="currentColor" 
+             stroke-width="2.5"
+             viewBox="0 0 24 24">
+          <path stroke-linecap="round" 
+                stroke-linejoin="round" 
+                d="M9 5l7 7-7 7"></path>
+        </svg>
+      </div>
     </li>
   </ol>
 </nav>

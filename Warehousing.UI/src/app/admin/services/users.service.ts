@@ -2,8 +2,6 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { environment } from '../../../environments/environment';
 import { User, UserPagination } from '../models/users';
-import { UserDevice, UserDevicePagination } from '../models/UserDevice';
-import { UpdateUserDeviceDto } from '../models/UpdateUserDeviceDto';
 
 @Injectable({
   providedIn: 'root'
@@ -44,13 +42,5 @@ export class UsersService {
 
   ChangePasswordForAdmin(id: number) {
     return this.http.get<any>(`${this.url}ChangePasswordForAdmin?id=${id}`);
-  }
-
-  GetUserDevicesPagination(pageIndex: number, pageSize: number, userId: number) {
-    return this.http.get<UserDevicePagination>(`${this.url}GetUserDevicesPagination?pageIndex=${pageIndex}&pageSize=${pageSize}&userId=${userId}`);
-  }
-
-  UpdateUserDevice(updateUserDevice: UpdateUserDeviceDto) {
-    return this.http.post<UserDevice>(`${this.url}UpdateUserDevice`, updateUserDevice);
   }
 }

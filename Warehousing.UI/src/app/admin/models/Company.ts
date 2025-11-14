@@ -8,6 +8,11 @@ export interface Company {
     email: string;
     website: string;
     taxNumber: string;
+    fax: string;
+    registrationNumber: string;
+    capital: number | null;
+    sloganEn: string;
+    sloganAr: string;
     currencyCode: string;
     footerNoteEn: string;
     footerNoteAr: string;
@@ -15,6 +20,7 @@ export interface Company {
     termsAr: string;
     logoUrl: string;
     printTemplateId: number | null;
+    printerConfiguration?: string | null;
     isActive: boolean;
 }
 

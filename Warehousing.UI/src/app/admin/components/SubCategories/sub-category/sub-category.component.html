@@ -1,38 +1,83 @@
-<div class="container py-4">
-    <div class="d-flex flex-row justify-content-between shadow p-3 mb-5 bg-body-tertiary rounded">
-        <div class="p-2">
-            <h2 class="mb-4 text-center">التصنيفات الفرعيه</h2>
-        </div>
-        <div class="p-2">
-            <button class="btn btn-sm btn-outline-primary" (click)="onEdit(null)" title="Add category">
-            <i class="bi bi-plus-lg"></i>
-          </button>
-        </div>
+<div class="min-h-screen bg-gradient-to-br from-gray-50 via-green-50 to-emerald-100 py-8" dir="rtl">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8">
+      <div>
+        <h1 class="text-3xl font-bold text-gray-900 mb-2">التصنيفات الفرعية</h1>
+        <p class="text-gray-600">إدارة التصنيفات الفرعية للمنتجات</p>
+      </div>
+      <button *ngIf="authService.hasPermission('ADD_SUBCATEGORY')" 
+              class="mt-4 sm:mt-0 inline-flex items-center px-6 py-3 bg-green-600 text-white rounded-xl font-semibold hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-all duration-200 transform hover:scale-105" 
+              (click)="onEdit(null)" title="إضافة تصنيف فرعي">
+        <i class="bi bi-plus-lg mr-2"></i>
+        إضافة تصنيف فرعي
+      </button>
     </div>
 
-  <div *ngIf="(subCategorys$ | async) as subCategories" class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4">
-    <!-- Single category Card -->
-    <div class="col" *ngFor="let subCategory of subCategories">
-      <div class="card h-100 shadow-sm">
-        <div class="card-body d-flex flex-column">
-          <h5 class="card-title">
-            {{ subCategory.nameEn }} <small class="text-muted">({{ subCategory.nameAr }})</small>
-          </h5>
-          <p class="card-text text-muted flex-grow-1">
-            {{ subCategory.description }}
-          </p>
-          <div>
-            <span class="badge bg-success" *ngIf="subCategory.isActive">Active</span>
-            <span class="badge bg-danger" *ngIf="!subCategory.isActive">Inactive</span>
+          <!-- SubCategories Grid -->
+          <div *ngIf="(subCategorys$ | async) as subCategories" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+            <div *ngFor="let subCategory of subCategories" class="group h-full">
+              <div class="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 overflow-hidden border border-gray-100 h-full flex flex-col">
+                <!-- SubCategory Image -->
+                <div class="w-full h-48 bg-gradient-to-br from-green-100 to-emerald-200 flex items-center justify-center flex-shrink-0 overflow-hidden">
+                  <app-image-uploader [initialImageUrl]="serverUrl + subCategory.imagePath" [readonly]="true">
+                  </app-image-uploader>
+                </div>
+                
+                <!-- SubCategory Info -->
+                <div class="p-6 flex flex-col flex-grow">
+                  <div class="text-center mb-4">
+                    <h3 class="font-bold text-gray-900 text-lg mb-1 group-hover:text-green-600 transition-colors">
+                      {{ subCategory.nameAr }}
+                    </h3>
+                    <p class="text-gray-500 text-sm">{{ subCategory.nameEn }}</p>
+                  </div>
+                  
+                  <!-- Description -->
+                  <div class="flex-grow mb-4">
+                    <p class="text-gray-600 text-sm leading-relaxed min-h-[3rem]" 
+                       [title]="subCategory.description">
+                      {{ (subCategory.description?.length || 0) > 60 ? (subCategory.description | slice:0:60) + '...' : subCategory.description }}
+                    </p>
+                  </div>
+                  
+                  <!-- Status Badge -->
+                  <div class="text-center mb-4 flex-shrink-0">
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium"
+                          [ngClass]="subCategory.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'">
+                      <i class="bi mr-1" [ngClass]="subCategory.isActive ? 'bi-check-circle' : 'bi-x-circle'"></i>
+                      {{ subCategory.isActive ? 'نشط' : 'غير نشط' }}
+                    </span>
+                  </div>
+                  
+                  <!-- Actions -->
+                  <div class="flex justify-between items-center pt-4 border-t border-gray-100 flex-shrink-0">
+                    <span class="text-xs text-gray-500">ID: {{ subCategory.id }}</span>
+                    <button *ngIf="authService.hasPermission('EDIT_SUBCATEGORY')" 
+                            class="inline-flex items-center px-3 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors" 
+                            (click)="onEdit(subCategory.id)" title="تعديل التصنيف الفرعي">
+                      <i class="bi bi-pencil-square mr-1"></i>
+                      تعديل
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
-        </div>
-        <div class="card-footer d-flex justify-content-between align-items-center">
-          <small class="text-muted">ID: {{ subCategory.id }}</small>
-          <button class="btn btn-sm btn-outline-primary" (click)="onEdit(subCategory.id)" title="Edit category">
-            <i class="bi bi-pencil-square"></i>
-          </button>
-        </div>
+
+    <!-- Empty State -->
+    <div *ngIf="(subCategorys$ | async)?.length === 0" class="text-center py-16">
+      <div class="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+        <i class="bi bi-tags text-gray-400 text-3xl"></i>
       </div>
+      <h3 class="text-xl font-semibold text-gray-900 mb-2">لا توجد تصنيفات فرعية</h3>
+      <p class="text-gray-500 mb-6">لم يتم العثور على أي تصنيفات فرعية متاحة</p>
+      <button *ngIf="authService.hasPermission('ADD_SUBCATEGORY')" 
+              class="inline-flex items-center px-6 py-3 bg-green-600 text-white rounded-xl font-semibold hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-all duration-200" 
+              (click)="onEdit(null)">
+        <i class="bi bi-plus-lg mr-2"></i>
+        إضافة أول تصنيف فرعي
+      </button>
     </div>
   </div>
 </div>

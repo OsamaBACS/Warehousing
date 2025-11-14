@@ -1,0 +1,207 @@
+<div class="min-h-screen bg-gray-50 py-8" dir="rtl">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <!-- Header -->
+    <div class="bg-white rounded-2xl shadow-lg p-6 mb-8">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center">
+          <div class="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center mr-4">
+            <i class="bi bi-arrow-left-right text-white text-xl"></i>
+          </div>
+          <div>
+            <h1 class="text-3xl font-bold text-gray-900">
+              {{ isEditMode ? 'تعديل تحويل المستودع' : 'إنشاء تحويل مستودع جديد' }}
+            </h1>
+            <p class="text-gray-600 mt-1">إدارة تحويلات المنتجات بين المستودعات</p>
+          </div>
+        </div>
+        <button class="w-10 h-10 bg-gray-100 hover:bg-gray-200 rounded-full flex items-center justify-center transition-colors" 
+                (click)="cancel()">
+          <i class="bi bi-x-lg text-gray-600"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Form -->
+    <div class="bg-white rounded-2xl shadow-xl p-8">
+      <form [formGroup]="transferForm" (ngSubmit)="saveTransfer()" class="space-y-8">
+        <!-- Basic Information Section -->
+        <div class="border-b border-gray-200 pb-8">
+          <h2 class="text-xl font-bold text-gray-900 mb-6 flex items-center">
+            <i class="bi bi-info-circle text-indigo-600 mr-3"></i>
+            المعلومات الأساسية
+          </h2>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Transfer Date -->
+            <div class="space-y-2">
+              <label class="block text-sm font-semibold text-gray-700">
+                <i class="bi bi-calendar mr-2 text-indigo-600"></i>
+                تاريخ التحويل <span class="text-red-500">*</span>
+              </label>
+              <input type="date" 
+                     formControlName="transferDate"
+                     id="transferDate"
+                     class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 bg-gray-50 focus:bg-white">
+            </div>
+
+            <!-- Notes -->
+            <div class="space-y-2">
+              <label class="block text-sm font-semibold text-gray-700">
+                <i class="bi bi-file-text mr-2 text-indigo-600"></i>
+                ملاحظات
+              </label>
+              <textarea formControlName="notes" 
+                        id="notes"
+                        rows="3"
+                        class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 bg-gray-50 focus:bg-white resize-none"
+                        placeholder="أدخل أي ملاحظات إضافية"></textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- Store Selection Section -->
+        <div class="border-b border-gray-200 pb-8">
+          <h2 class="text-xl font-bold text-gray-900 mb-6 flex items-center">
+            <i class="bi bi-building mr-3 text-purple-600"></i>
+            اختيار المستودعات
+          </h2>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- From Store -->
+            <div class="space-y-2">
+              <label class="block text-sm font-semibold text-gray-700">
+                <i class="bi bi-arrow-right-circle mr-2 text-red-600"></i>
+                المستودع المصدر <span class="text-red-500">*</span>
+              </label>
+              <select formControlName="fromStoreId"
+                      id="fromStoreId"
+                      class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all duration-200 bg-gray-50 focus:bg-white">
+                <option value="">اختر المستودع المصدر</option>
+                <option *ngFor="let store of stores" [value]="store.id">{{ store.nameAr }}</option>
+              </select>
+            </div>
+
+            <!-- To Store -->
+            <div class="space-y-2">
+              <label class="block text-sm font-semibold text-gray-700">
+                <i class="bi bi-arrow-left-circle mr-2 text-green-600"></i>
+                المستودع الوجهة <span class="text-red-500">*</span>
+              </label>
+              <select formControlName="toStoreId"
+                      id="toStoreId"
+                      class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 bg-gray-50 focus:bg-white">
+                <option value="">اختر المستودع الوجهة</option>
+                <option *ngFor="let store of stores" [value]="store.id">{{ store.nameAr }}</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Transfer Items Section -->
+        <div class="pb-8">
+          <div class="flex justify-between items-center mb-6">
+            <h2 class="text-xl font-bold text-gray-900 flex items-center">
+              <i class="bi bi-box mr-3 text-amber-600"></i>
+              عناصر التحويل
+            </h2>
+            <button type="button" 
+                    class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-amber-600 to-orange-600 text-white rounded-xl font-semibold hover:from-amber-700 hover:to-orange-700 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 transition-all duration-200 transform hover:scale-105 shadow-lg"
+                    (click)="addTransferItem()">
+              <i class="bi bi-plus-circle mr-2"></i>
+              إضافة عنصر
+            </button>
+          </div>
+
+          <div formArrayName="items" class="bg-gray-50 rounded-xl p-6">
+            <div *ngIf="items.length === 0" class="text-center py-8">
+              <div class="w-16 h-16 bg-gray-200 rounded-full mx-auto flex items-center justify-center mb-4">
+                <i class="bi bi-box text-gray-400 text-2xl"></i>
+              </div>
+              <p class="text-gray-500">لا توجد عناصر في التحويل</p>
+              <p class="text-sm text-gray-400">اضغط على "إضافة عنصر" لبدء إضافة المنتجات</p>
+            </div>
+
+            <div *ngIf="items.length > 0" class="space-y-4">
+              <div *ngFor="let item of items.controls; let i = index" 
+                   [formGroupName]="i"
+                   class="bg-white rounded-xl p-6 border border-gray-200 hover:border-amber-300 transition-colors">
+                <div class="grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
+                  <!-- Product Selection -->
+                  <div class="space-y-2">
+                    <label class="block text-sm font-semibold text-gray-700">المنتج</label>
+                    <select formControlName="productId" 
+                            (change)="onProductChange(i, $event)"
+                            class="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-200 bg-gray-50 focus:bg-white">
+                      <option value="">اختر المنتج</option>
+                      <option *ngFor="let product of products" [value]="product.id">
+                        {{ product.nameAr }}
+                      </option>
+                    </select>
+                  </div>
+
+                  <!-- Quantity -->
+                  <div class="space-y-2">
+                    <label class="block text-sm font-semibold text-gray-700">الكمية</label>
+                    <input type="number" 
+                           formControlName="quantity"
+                           step="0.01" 
+                           min="0.01"
+                           class="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-200 bg-gray-50 focus:bg-white"
+                           placeholder="0.00">
+                  </div>
+
+                  <!-- Unit Cost -->
+                  <div class="space-y-2">
+                    <label class="block text-sm font-semibold text-gray-700">تكلفة الوحدة</label>
+                    <input type="number" 
+                           formControlName="unitCost"
+                           step="0.01" 
+                           min="0"
+                           class="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-200 bg-gray-50 focus:bg-white"
+                           placeholder="0.00">
+                  </div>
+
+                  <!-- Notes -->
+                  <div class="space-y-2">
+                    <label class="block text-sm font-semibold text-gray-700">ملاحظات</label>
+                    <input type="text" 
+                           formControlName="notes"
+                           class="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-200 bg-gray-50 focus:bg-white"
+                           placeholder="ملاحظات إضافية">
+                  </div>
+
+                  <!-- Remove Button -->
+                  <div class="space-y-2">
+                    <label class="block text-sm font-semibold text-gray-700 opacity-0">إجراء</label>
+                    <button type="button" 
+                            class="w-full px-4 py-2 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors"
+                            (click)="removeTransferItem(i)">
+                      <i class="bi bi-trash mr-2"></i>
+                      حذف
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="flex justify-end space-x-4 space-x-reverse pt-8 border-t border-gray-200">
+          <button type="button" 
+                  (click)="cancel()"
+                  class="px-8 py-3 bg-gray-100 text-gray-700 rounded-xl font-semibold hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-offset-2 transition-all duration-200 border border-gray-300">
+            <i class="bi bi-x-lg mr-2"></i>
+            إلغاء
+          </button>
+          <button type="submit" 
+                  [disabled]="transferForm.invalid || items.length === 0"
+                  class="px-8 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-semibold hover:from-indigo-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg transform hover:scale-105">
+            <i class="bi bi-check-lg mr-2"></i>
+            {{ isEditMode ? 'تحديث التحويل' : 'إنشاء التحويل' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

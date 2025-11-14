@@ -1,64 +1,132 @@
-<div class="container-fluid">
-  <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap">
-    <h4 class="dark-mode-text fw-bold">الصلاحيات</h4>
-    <button class="btn btn-primary d-flex align-items-center" (click)="openForm(null)">
-      <i class="bi bi-plus-circle me-2"></i>
-    </button>
-  </div>
+<div class="min-h-screen bg-gray-50 py-8" dir="rtl">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <!-- Header -->
+    <div class="bg-white rounded-2xl shadow-lg p-6 mb-8">
+      <div class="flex justify-between items-center">
+        <div class="flex items-center">
+          <div class="w-12 h-12 bg-gradient-to-br from-amber-500 to-orange-600 rounded-2xl flex items-center justify-center mr-4">
+            <i class="bi bi-shield-check text-white text-xl"></i>
+          </div>
+          <div>
+            <h1 class="text-3xl font-bold text-gray-900">إدارة الصلاحيات</h1>
+            <p class="text-gray-600 mt-1">إدارة أدوار المستخدمين والصلاحيات في النظام</p>
+          </div>
+        </div>
+        <button class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white rounded-xl font-semibold hover:from-amber-700 hover:to-orange-700 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 transition-all duration-200 transform hover:scale-105 shadow-lg" 
+                (click)="openForm(null)">
+          <i class="bi bi-plus-circle mr-2 text-lg"></i>
+          إضافة صلاحية جديدة
+        </button>
+      </div>
+    </div>
 
-  <!-- Roles Table -->
-  <div class="table-responsive shadow-sm rounded">
-    <table class="table table-striped table-hover align-middle mb-0" dir="rtl">
-      <thead class="table-light dark-mode-bg">
-        <tr>
-          <th>#</th>
-          <th>الاسم</th>
-          <th>الصلاحيات</th>
-          <th>التصنيفات</th>
-          <th>المنتجات</th>
-          <th>الاجراء</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr *ngFor="let role of roles; let i = index">
-          <td>{{ i + 1 }}</td>
-          <td>{{ lang.currentLang === 'ar' ? role.nameAr : role.nameEn }}</td>
-          <td>
-            <div class="d-flex flex-wrap gap-1">
-              <span *ngFor="let rp of role.rolePermissions" class="badge bg-secondary me-1">
-                {{ lang.currentLang === 'ar' ? rp.permission.nameAr : rp.permission.nameEn }}
-              </span>
-            </div>
-          </td>
-          <td>
-            <div class="d-flex flex-wrap gap-1">
-              <span *ngFor="let rc of role.roleCategories" class="badge bg-secondary me-1">
-                {{ lang.currentLang === 'ar' ? rc.category?.nameAr : rc.category?.nameEn }}
-              </span>
-            </div>
-          </td>
-          <td>
-            <div class="d-flex flex-wrap gap-1">
-              <span *ngFor="let rc of role.roleProducts" class="badge bg-secondary me-1">
-                {{ lang.currentLang === 'ar' ? rc.product?.nameAr : rc.product?.nameEn }}
-              </span>
-            </div>
-          </td>
-          <td class="text-nowrap" dir="ltr">
-            <button class="btn btn-sm btn-outline-info me-2" (click)="openForm(role.id)">
-              <i class="bi bi-pencil"></i>
-            </button>
-            <!-- <button class="btn btn-sm btn-outline-danger">
-              <i class="bi bi-trash"></i>
-            </button> -->
-          </td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
+    <!-- Roles Table -->
+    <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+          <thead class="bg-gradient-to-r from-amber-50 to-orange-50">
+            <tr>
+              <th class="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                #
+              </th>
+              <th class="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <i class="bi bi-tag mr-2"></i>
+                اسم الصلاحية
+              </th>
+              <th class="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <i class="bi bi-shield-check mr-2"></i>
+                الصلاحيات
+              </th>
+              <th class="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <i class="bi bi-grid-3x3-gap mr-2"></i>
+                التصنيفات
+              </th>
+              <th class="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <i class="bi bi-box mr-2"></i>
+                المنتجات
+              </th>
+              <th class="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <i class="bi bi-gear mr-2"></i>
+                الإجراءات
+              </th>
+            </tr>
+          </thead>
+          <tbody class="bg-white divide-y divide-gray-200">
+            <tr *ngFor="let role of roles; let i = index" class="hover:bg-gray-50 transition-colors">
+              <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                <div class="w-8 h-8 bg-gradient-to-br from-amber-500 to-orange-600 rounded-full flex items-center justify-center text-white font-bold">
+                  {{ i + 1 }}
+                </div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="flex items-center">
+                  <div class="w-10 h-10 bg-gradient-to-br from-amber-100 to-orange-100 rounded-lg flex items-center justify-center mr-3">
+                    <i class="bi bi-shield text-amber-600"></i>
+                  </div>
+                  <div>
+                    <div class="text-sm font-medium text-gray-900">{{ role.nameAr }}</div>
+                    <div class="text-sm text-gray-500">{{ role.nameEn }}</div>
+                  </div>
+                </div>
+              </td>
+              <td class="px-6 py-4">
+                <div class="flex flex-wrap gap-1">
+                  <span *ngFor="let rp of role.rolePermissions" 
+                        class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                    <i class="bi bi-check-circle mr-1"></i>
+                    {{ rp.permission.nameAr }}
+                  </span>
+                  <span *ngIf="!role.rolePermissions || role.rolePermissions.length === 0" 
+                        class="text-xs text-gray-400">لا توجد صلاحيات</span>
+                </div>
+              </td>
+              <td class="px-6 py-4">
+                <div class="flex flex-wrap gap-1">
+                  <span *ngFor="let rc of role.roleCategories" 
+                        class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                    <i class="bi bi-grid-3x3-gap mr-1"></i>
+                    {{ rc.category.nameAr }}
+                  </span>
+                  <span *ngIf="!role.roleCategories || role.roleCategories.length === 0" 
+                        class="text-xs text-gray-400">لا توجد تصنيفات</span>
+                </div>
+              </td>
+              <td class="px-6 py-4">
+                <div class="flex flex-wrap gap-1">
+                  <span *ngFor="let rp of role.roleProducts" 
+                        class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                    <i class="bi bi-box mr-1"></i>
+                    {{ rp.product.nameAr }}
+                  </span>
+                  <span *ngIf="!role.roleProducts || role.roleProducts.length === 0" 
+                        class="text-xs text-gray-400">لا توجد منتجات</span>
+                </div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                <button class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors" 
+                        (click)="openForm(role.id)">
+                  <i class="bi bi-pencil mr-2"></i>
+                  تعديل
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
 
-  <!-- Optional: Empty State -->
-  <div *ngIf="!roles || roles.length === 0" class="text-center text-muted py-4">
-    {{ 'SHARED.NO_DATA' | translate }}
+    <!-- Empty State -->
+    <div *ngIf="!roles || roles.length === 0" class="bg-white rounded-2xl shadow-lg p-12 text-center mt-8">
+      <div class="w-24 h-24 bg-gray-100 rounded-full mx-auto flex items-center justify-center mb-6">
+        <i class="bi bi-shield text-gray-400 text-4xl"></i>
+      </div>
+      <h3 class="text-xl font-semibold text-gray-900 mb-2">لا توجد صلاحيات</h3>
+      <p class="text-gray-600 mb-6">لم يتم العثور على أي صلاحيات في النظام</p>
+      <button class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white rounded-xl font-semibold hover:from-amber-700 hover:to-orange-700 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 transition-all duration-200 transform hover:scale-105 shadow-lg" 
+              (click)="openForm(null)">
+        <i class="bi bi-plus-circle mr-2"></i>
+        إضافة أول صلاحية
+      </button>
+    </div>
   </div>
 </div>

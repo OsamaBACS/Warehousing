@@ -1,43 +1,88 @@
-<div class="container-fluid">
-  <div class="d-flex justify-content-between align-items-center mb-4">
-    <h4 class="dark-mode-text">{{ 'CUSTOMERS.TITLE' | translate }}</h4>
-    <button class="btn btn-primary" (click)="openForm(null)">
-      <i class="bi bi-plus-circle me-2"></i> {{ 'SHARED.BUTTONS.ADD' | translate }}
-    </button>
-  </div>
+<div class="min-h-screen bg-gradient-to-br from-gray-50 via-cyan-50 to-blue-100 py-8" dir="rtl">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8">
+      <div>
+        <h1 class="text-3xl font-bold text-gray-900 mb-2">{{ 'CUSTOMERS.TITLE' | translate }}</h1>
+        <p class="text-gray-600">إدارة بيانات العملاء</p>
+      </div>
+      <button class="mt-4 sm:mt-0 inline-flex items-center px-6 py-3 bg-cyan-600 text-white rounded-xl font-semibold hover:bg-cyan-700 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2 transition-all duration-200 transform hover:scale-105" 
+              (click)="openForm(null)">
+        <i class="bi bi-plus-circle mr-2"></i>
+        {{ 'SHARED.BUTTONS.ADD' | translate }}
+      </button>
+    </div>
 
-  <!-- Roles Table -->
-  <div class="table-responsive">
-    <table class="table table-striped table-hover">
-      <thead class="table-light dark-mode-bg">
-        <tr>
-          <th>#</th>
-          <th>{{ 'CUSTOMERS.NAMEAR' | translate }}</th>
-          <th>{{ 'CUSTOMERS.NAMEEN' | translate }}</th>
-          <th>{{ 'CUSTOMERS.PHONE' | translate }}</th>
-          <th>{{ 'CUSTOMERS.EMAIL' | translate }}</th>
-          <th>{{ 'CUSTOMERS.ADDRESS' | translate }}</th>
-          <th>{{ 'SHARED.ACTIONS' | translate }}</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr *ngFor="let customer of customers; let i = index">
-          <td>{{ i + 1 }}</td>
-          <td>{{ customer.nameAr }}</td>
-          <td>{{ customer.nameEn }}</td>
-          <td>{{ customer.phone }}</td>
-          <td>{{ customer.email }}</td>
-          <td>{{ customer.address }}</td>
-          <td dir="ltr">
-            <button class="btn btn-sm btn-outline-info me-2" (click)="openForm(customer.id)">
-              <i class="bi bi-pencil"></i>
-            </button>
-            <button class="btn btn-sm btn-outline-danger">
-              <i class="bi bi-trash"></i>
-            </button>
-          </td>
-        </tr>
-      </tbody>
-    </table>
+    <!-- Customers Table -->
+    <div class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+          <thead class="bg-gradient-to-r from-cyan-500 to-blue-600">
+            <tr>
+              <th class="px-6 py-4 text-right text-xs font-medium text-white uppercase tracking-wider">#</th>
+              <th class="px-6 py-4 text-right text-xs font-medium text-white uppercase tracking-wider">{{ 'CUSTOMERS.NAMEAR' | translate }}</th>
+              <th class="px-6 py-4 text-right text-xs font-medium text-white uppercase tracking-wider">{{ 'CUSTOMERS.NAMEEN' | translate }}</th>
+              <th class="px-6 py-4 text-right text-xs font-medium text-white uppercase tracking-wider">{{ 'CUSTOMERS.PHONE' | translate }}</th>
+              <th class="px-6 py-4 text-right text-xs font-medium text-white uppercase tracking-wider">{{ 'CUSTOMERS.EMAIL' | translate }}</th>
+              <th class="px-6 py-4 text-right text-xs font-medium text-white uppercase tracking-wider">{{ 'CUSTOMERS.ADDRESS' | translate }}</th>
+              <th class="px-6 py-4 text-right text-xs font-medium text-white uppercase tracking-wider">{{ 'SHARED.ACTIONS' | translate }}</th>
+            </tr>
+          </thead>
+          <tbody class="bg-white divide-y divide-gray-200">
+            <tr *ngFor="let customer of customers; let i = index" class="hover:bg-gray-50 transition-colors">
+              <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ i + 1 }}</td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-semibold">{{ customer.nameAr }}</td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{{ customer.nameEn }}</td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                <div class="flex items-center">
+                  <i class="bi bi-telephone mr-2 text-gray-400"></i>
+                  {{ customer.phone }}
+                </div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                <div class="flex items-center">
+                  <i class="bi bi-envelope mr-2 text-gray-400"></i>
+                  {{ customer.email }}
+                </div>
+              </td>
+              <td class="px-6 py-4 text-sm text-gray-600 max-w-xs truncate" [title]="customer.address">
+                <div class="flex items-center">
+                  <i class="bi bi-geo-alt mr-2 text-gray-400"></i>
+                  {{ customer.address }}
+                </div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                <div class="flex items-center space-x-2">
+                  <button class="inline-flex items-center px-3 py-2 bg-cyan-600 text-white rounded-lg text-sm font-medium hover:bg-cyan-700 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2 transition-colors" 
+                          (click)="openForm(customer.id)" title="تعديل العميل">
+                    <i class="bi bi-pencil mr-1"></i>
+                    تعديل
+                  </button>
+                  <button class="inline-flex items-center px-3 py-2 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors" 
+                          title="حذف العميل">
+                    <i class="bi bi-trash mr-1"></i>
+                    حذف
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Empty State -->
+    <div *ngIf="customers?.length === 0" class="text-center py-16">
+      <div class="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+        <i class="bi bi-people text-gray-400 text-3xl"></i>
+      </div>
+      <h3 class="text-xl font-semibold text-gray-900 mb-2">لا توجد عملاء</h3>
+      <p class="text-gray-500 mb-6">لم يتم العثور على أي عملاء مسجلين</p>
+      <button class="inline-flex items-center px-6 py-3 bg-cyan-600 text-white rounded-xl font-semibold hover:bg-cyan-700 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2 transition-all duration-200" 
+              (click)="openForm(null)">
+        <i class="bi bi-plus-circle mr-2"></i>
+        إضافة أول عميل
+      </button>
+    </div>
   </div>
 </div>

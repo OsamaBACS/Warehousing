@@ -16,6 +16,8 @@ namespace Warehousing.Data.Entities
         public Status? Status { get; set; }
         public int? StatusId { get; set; }
 
+        // Navigation properties
         public ICollection<OrderItem> Items { get; set; } = new List<OrderItem>();
+        public ICollection<InventoryTransaction> Transactions { get; set; } = new List<InventoryTransaction>();
     }
 }

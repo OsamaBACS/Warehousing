@@ -1,0 +1,360 @@
+<div class="bg-white rounded-2xl shadow-lg overflow-hidden">
+  <!-- Header -->
+  <div class="bg-gradient-to-r from-purple-500 to-pink-600 px-6 py-4">
+    <div class="flex items-center justify-between">
+      <h3 class="text-xl font-bold text-white flex items-center">
+        <i class="bi bi-list-ul mr-3"></i>
+        مكونات المنتج
+      </h3>
+      <button class="px-4 py-2 bg-white bg-opacity-20 text-white rounded-lg hover:bg-opacity-30 transition-colors" 
+        (click)="resetModifierForm()" *ngIf="!isEditing">
+        <i class="bi bi-plus-lg mr-2"></i>
+        إضافة مكون
+      </button>
+    </div>
+  </div>
+
+  <!-- Modifier Group Form -->
+  <div class="p-6" *ngIf="isEditing || modifierGroups.length === 0 || showAddModifierForm">
+    <form [formGroup]="modifierForm" (ngSubmit)="onModifierSubmit()" class="space-y-6">
+      <!-- Basic Information -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="space-y-2">
+          <label class="block text-sm font-semibold text-gray-700">
+            <i class="bi bi-gear mr-2 text-purple-600"></i>
+            المكون *
+          </label>
+          <select formControlName="modifierId" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors">
+            <option value="">اختر المكون</option>
+            <option *ngFor="let modifier of availableModifiers" [value]="modifier.id">
+              {{ modifier.name }}
+            </option>
+          </select>
+          <div *ngIf="modifierForm.get('modifierId')?.invalid && modifierForm.get('modifierId')?.touched" class="text-red-500 text-sm flex items-center">
+            <i class="bi bi-exclamation-circle mr-1"></i>
+            المكون مطلوب
+          </div>
+        </div>
+
+        <div class="space-y-2">
+          <label class="block text-sm font-semibold text-gray-700">
+            <i class="bi bi-hash mr-2 text-purple-600"></i>
+            الحد الأقصى للاختيار
+          </label>
+          <input type="number" formControlName="maxSelections" min="1" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors" 
+            placeholder="1" />
+        </div>
+
+        <div class="space-y-2">
+          <label class="block text-sm font-semibold text-gray-700">
+            <i class="bi bi-sort-numeric-down mr-2 text-purple-600"></i>
+            ترتيب العرض
+          </label>
+          <input type="number" formControlName="displayOrder" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors" 
+            placeholder="0" />
+        </div>
+      </div>
+
+      <!-- Status Options -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="space-y-2">
+          <label class="block text-sm font-semibold text-gray-700">
+            <i class="bi bi-exclamation-triangle mr-2 text-purple-600"></i>
+            مطلوب
+          </label>
+          <div class="flex items-center space-x-3 p-3 bg-gray-50 rounded-xl">
+            <input type="checkbox" formControlName="isRequired" class="h-5 w-5 text-purple-600 focus:ring-purple-500 border-gray-300 rounded" />
+            <span class="text-sm text-gray-700">مكون مطلوب</span>
+          </div>
+        </div>
+
+        <div class="space-y-2">
+          <label class="block text-sm font-semibold text-gray-700">
+            <i class="bi bi-toggle-on mr-2 text-purple-600"></i>
+            نشط
+          </label>
+          <div class="flex items-center space-x-3 p-3 bg-gray-50 rounded-xl">
+            <input type="checkbox" formControlName="isActive" class="h-5 w-5 text-purple-600 focus:ring-purple-500 border-gray-300 rounded" />
+            <span class="text-sm text-gray-700">مكون نشط</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Form Actions -->
+      <div class="flex flex-col sm:flex-row justify-end gap-4 pt-6 border-t border-gray-200">
+        <button type="button" class="w-full sm:w-auto px-6 py-3 bg-gray-500 text-white rounded-xl hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-all duration-200 font-semibold" 
+          (click)="cancelEdit()">
+          <i class="bi bi-x-circle mr-2"></i>
+          إلغاء
+        </button>
+        <button type="submit" class="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl hover:from-purple-700 hover:to-pink-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 font-semibold shadow-lg" 
+          [disabled]="modifierForm.invalid">
+          <i class="bi bi-check-circle mr-2"></i>
+          {{ isEditing ? 'تحديث المكون' : 'إضافة المكون' }}
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Modifier Groups List -->
+  <div class="p-6" *ngIf="modifierGroups.length > 0">
+    <div class="overflow-x-auto">
+      <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gradient-to-r from-purple-500 to-pink-600">
+          <tr>
+            <th class="px-6 py-4 text-right text-xs font-medium text-white uppercase tracking-wider">المكون</th>
+            <th class="px-6 py-4 text-right text-xs font-medium text-white uppercase tracking-wider">مطلوب</th>
+            <th class="px-6 py-4 text-right text-xs font-medium text-white uppercase tracking-wider">الحد الأقصى</th>
+            <th class="px-6 py-4 text-right text-xs font-medium text-white uppercase tracking-wider">الحالة</th>
+            <th class="px-6 py-4 text-right text-xs font-medium text-white uppercase tracking-wider">الإجراءات</th>
+          </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-200">
+          <tr *ngFor="let group of modifierGroups" class="hover:bg-gray-50 transition-colors">
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ group.modifierName || 'غير محدد' }}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+              <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium" 
+                [class]="group.isRequired ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-100 text-gray-800'">
+                {{ group.isRequired ? 'مطلوب' : 'اختياري' }}
+              </span>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ group.maxSelections }}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+              <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium" 
+                [class]="group.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'">
+                {{ group.isActive ? 'نشط' : 'غير نشط' }}
+              </span>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+              <div class="flex space-x-2">
+                <button class="px-3 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors" 
+                  (click)="editModifierGroup(group)" title="تعديل">
+                  <i class="bi bi-pencil-fill"></i>
+                </button>
+                <button class="px-3 py-1 bg-red-600 text-white rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors" 
+                  (click)="deleteModifierGroup(group)" title="حذف">
+                  <i class="bi bi-trash-fill"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Available Modifiers -->
+  <div class="p-6 border-t border-gray-200" *ngIf="availableModifiers.length > 0">
+    <h4 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+      <i class="bi bi-list-check mr-2 text-purple-600"></i>
+      المكونات المتاحة
+    </h4>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div class="bg-gradient-to-br from-purple-50 to-pink-50 border border-purple-200 rounded-xl p-4 hover:shadow-md transition-all duration-200 cursor-pointer" 
+        *ngFor="let modifier of availableModifiers" (click)="selectModifier(modifier)">
+        <div class="flex items-start justify-between mb-3">
+          <h5 class="font-semibold text-purple-900">{{ modifier.name }}</h5>
+          <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+            {{ modifier.isMultiple ? 'متعدد' : 'واحد' }}
+          </span>
+        </div>
+        <p class="text-purple-700 text-sm mb-3">{{ modifier.description || 'لا يوجد وصف' }}</p>
+        <div class="space-y-1 text-xs text-purple-600">
+          <div class="flex justify-between">
+            <span>تعديل السعر:</span>
+            <span class="font-medium">{{ modifier.priceAdjustment | currency:'JOD':'symbol':'1.2-2':'ar' }}</span>
+          </div>
+          <div class="flex justify-between">
+            <span>الخيارات:</span>
+            <span class="font-medium">{{ modifier.options?.length || 0 }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Selected Modifier Options -->
+  <div class="p-6 border-t border-gray-200" *ngIf="selectedModifier">
+    <div class="flex items-center justify-between mb-6">
+      <h4 class="text-lg font-semibold text-gray-900 flex items-center">
+        <i class="bi bi-list-ul mr-2 text-purple-600"></i>
+        خيارات {{ selectedModifier.name }}
+      </h4>
+      <button class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 transition-colors" 
+        (click)="resetOptionForm()" *ngIf="!isEditingOption">
+        <i class="bi bi-plus-lg mr-2"></i>
+        إضافة خيار
+      </button>
+    </div>
+
+    <!-- Option Form -->
+    <div class="bg-gray-50 rounded-xl p-6 mb-6" *ngIf="isEditingOption || (selectedModifier.options && selectedModifier.options.length === 0) || showAddOptionForm">
+      <form [formGroup]="optionForm" (ngSubmit)="onOptionSubmit()" class="space-y-6">
+        <!-- Basic Information -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="space-y-2">
+            <label class="block text-sm font-semibold text-gray-700">
+              <i class="bi bi-tag mr-2 text-purple-600"></i>
+              اسم الخيار *
+            </label>
+            <input type="text" formControlName="name" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors" 
+              placeholder="مثال: جبن إضافي" />
+            <div *ngIf="optionForm.get('name')?.invalid && optionForm.get('name')?.touched" class="text-red-500 text-sm flex items-center">
+              <i class="bi bi-exclamation-circle mr-1"></i>
+              اسم الخيار مطلوب
+            </div>
+          </div>
+
+          <div class="space-y-2">
+            <label class="block text-sm font-semibold text-gray-700">
+              <i class="bi bi-hash mr-2 text-purple-600"></i>
+              كود الخيار
+            </label>
+            <input type="text" formControlName="code" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors" 
+              placeholder="مثال: CHEESE" />
+          </div>
+        </div>
+
+        <!-- Description -->
+        <div class="space-y-2">
+          <label class="block text-sm font-semibold text-gray-700">
+            <i class="bi bi-file-text mr-2 text-purple-600"></i>
+            الوصف
+          </label>
+          <textarea formControlName="description" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors resize-none" 
+            rows="2" placeholder="وصف اختياري للخيار"></textarea>
+        </div>
+
+        <!-- Pricing and Settings -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div class="space-y-2">
+            <label class="block text-sm font-semibold text-gray-700">
+              <i class="bi bi-currency-dollar mr-2 text-green-600"></i>
+              تعديل السعر
+            </label>
+            <div class="relative">
+              <input type="number" formControlName="priceAdjustment" step="0.01" class="w-full px-4 py-3 pl-10 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors" 
+                placeholder="0.00" />
+              <span class="absolute left-3 top-3 text-gray-500">د.أ</span>
+            </div>
+          </div>
+
+          <div class="space-y-2">
+            <label class="block text-sm font-semibold text-gray-700">
+              <i class="bi bi-cart-dash mr-2 text-green-600"></i>
+              تعديل التكلفة
+            </label>
+            <div class="relative">
+              <input type="number" formControlName="costAdjustment" step="0.01" class="w-full px-4 py-3 pl-10 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors" 
+                placeholder="0.00" />
+              <span class="absolute left-3 top-3 text-gray-500">د.أ</span>
+            </div>
+          </div>
+
+          <div class="space-y-2">
+            <label class="block text-sm font-semibold text-gray-700">
+              <i class="bi bi-sort-numeric-down mr-2 text-indigo-600"></i>
+              ترتيب العرض
+            </label>
+            <input type="number" formControlName="displayOrder" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors" 
+              placeholder="0" />
+          </div>
+
+          <div class="space-y-2">
+            <label class="block text-sm font-semibold text-gray-700">
+              <i class="bi bi-star mr-2 text-indigo-600"></i>
+              افتراضي
+            </label>
+            <div class="flex items-center space-x-3 p-3 bg-gray-50 rounded-xl">
+              <input type="checkbox" formControlName="isDefault" class="h-5 w-5 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded" />
+              <span class="text-sm text-gray-700">خيار افتراضي</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Form Actions -->
+        <div class="flex flex-col sm:flex-row justify-end gap-4 pt-6 border-t border-gray-200">
+          <button type="button" class="w-full sm:w-auto px-6 py-3 bg-gray-500 text-white rounded-xl hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-all duration-200 font-semibold" 
+            (click)="resetOptionForm()">
+            <i class="bi bi-x-circle mr-2"></i>
+            إلغاء
+          </button>
+          <button type="submit" class="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl hover:from-purple-700 hover:to-pink-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 font-semibold shadow-lg" 
+            [disabled]="optionForm.invalid">
+            <i class="bi bi-check-circle mr-2"></i>
+            {{ isEditingOption ? 'تحديث الخيار' : 'إنشاء الخيار' }}
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Options List -->
+    <div class="overflow-x-auto" *ngIf="selectedModifier.options && selectedModifier.options.length > 0">
+      <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gradient-to-r from-purple-500 to-pink-600">
+          <tr>
+            <th class="px-6 py-4 text-right text-xs font-medium text-white uppercase tracking-wider">الاسم</th>
+            <th class="px-6 py-4 text-right text-xs font-medium text-white uppercase tracking-wider">الكود</th>
+            <th class="px-6 py-4 text-right text-xs font-medium text-white uppercase tracking-wider">تعديل السعر</th>
+            <th class="px-6 py-4 text-right text-xs font-medium text-white uppercase tracking-wider">افتراضي</th>
+            <th class="px-6 py-4 text-right text-xs font-medium text-white uppercase tracking-wider">الحالة</th>
+            <th class="px-6 py-4 text-right text-xs font-medium text-white uppercase tracking-wider">الإجراءات</th>
+          </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-200">
+          <tr *ngFor="let option of selectedModifier.options" class="hover:bg-gray-50 transition-colors">
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ option.name }}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ option.code || '-' }}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ option.priceAdjustment | currency:'JOD':'symbol':'1.2-2':'ar' }}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+              <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800" 
+                *ngIf="option.isDefault">افتراضي</span>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+              <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium" 
+                [class]="option.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'">
+                {{ option.isActive ? 'نشط' : 'غير نشط' }}
+              </span>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+              <div class="flex space-x-2">
+                <button class="px-3 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors" 
+                  (click)="editModifierOption(option)" title="تعديل">
+                  <i class="bi bi-pencil-fill"></i>
+                </button>
+                <button class="px-3 py-1 bg-red-600 text-white rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors" 
+                  (click)="deleteModifierOption(option)" title="حذف">
+                  <i class="bi bi-trash-fill"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div class="p-6 text-center" *ngIf="loading">
+    <div class="inline-flex items-center px-4 py-2 bg-purple-50 rounded-lg">
+      <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-purple-600 mr-3"></div>
+      <span class="text-purple-600 font-medium">جاري التحميل...</span>
+    </div>
+  </div>
+
+  <!-- Empty State -->
+  <div class="p-12 text-center" *ngIf="!loading && modifierGroups.length === 0 && !isEditing">
+    <div class="flex flex-col items-center">
+      <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+        <i class="bi bi-gear text-gray-400 text-2xl"></i>
+      </div>
+      <h4 class="text-lg font-semibold text-gray-900 mb-2">لا توجد مكونات</h4>
+      <p class="text-gray-500 mb-4">هذا المنتج لا يحتوي على أي مكونات بعد. اضغط على "إضافة مكون" لإنشاء الأول.</p>
+      <button class="px-6 py-3 bg-purple-600 text-white rounded-xl hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 transition-all duration-200 font-semibold" 
+        (click)="resetModifierForm()">
+        <i class="bi bi-plus-lg mr-2"></i>
+        إضافة مكون
+      </button>
+    </div>
+  </div>
+</div>

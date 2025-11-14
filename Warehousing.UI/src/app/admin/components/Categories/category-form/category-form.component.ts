@@ -45,16 +45,30 @@ export class CategoryFormComponent implements OnInit {
   initializingForm(category: Category | null) {
     this.categoryForm = this.fb.group({
       id: [category ? category.id : 0],
-      nameEn: [category ? category.nameAr : '', Validators.required],
-      nameAr: [category ? category.nameEn : '', Validators.required],
+      nameEn: [category ? category.nameEn : ''],
+      nameAr: [category ? category.nameAr : '', Validators.required],
       description: [category ? category.description : ''],
+      imagePath: [category ? category.imagePath : ''],
+      image: [null],
       isActive: [category ? category.isActive : true]
     });
   }
 
   onSubmit() {
     if (this.categoryForm.valid) {
-      this.categoriesService.SaveCategory(this.categoryForm.value).subscribe({
+      const formData = new FormData();
+      formData.append('id', this.categoryForm.get('id')?.value);
+      formData.append('nameEn', this.categoryForm.get('nameEn')?.value);
+      formData.append('nameAr', this.categoryForm.get('nameAr')?.value);
+      formData.append('description', this.categoryForm.get('description')?.value);
+      formData.append('isActive', this.categoryForm.get('isActive')?.value);
+
+      const imageFile = this.categoryForm.get('image')?.value;
+      if (imageFile instanceof File) {
+        formData.append('image', imageFile, imageFile.name);
+      }
+
+      this.categoriesService.SaveCategory(formData).subscribe({
         next: (res) => {
           if(res) {
             this.toastr.success('تم اضافة تصنيف بنجاح', 'category');

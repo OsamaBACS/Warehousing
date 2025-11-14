@@ -1,65 +1,131 @@
-<!-- app.component.html -->
-<div class="container mt-5">
-    <form [formGroup]="storeForm" class="row g-3">
+<div class="min-h-screen bg-gray-50 py-8" dir="rtl">
+  <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+    <!-- Header -->
+    <div class="bg-white rounded-2xl shadow-lg p-6 mb-8">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center">
+          <div class="w-12 h-12 bg-gradient-to-br from-orange-500 to-red-600 rounded-2xl flex items-center justify-center mr-4">
+            <i class="bi bi-building text-white text-xl"></i>
+          </div>
+          <div>
+            <h1 class="text-3xl font-bold text-gray-900">
+              {{ storeForm.get('id')?.value > 0 ? 'تعديل المستودع' : 'إضافة مستودع جديد' }}
+            </h1>
+            <p class="text-gray-600 mt-1">إدارة المستودعات في النظام</p>
+          </div>
+        </div>
+        <button class="w-10 h-10 bg-gray-100 hover:bg-gray-200 rounded-full flex items-center justify-center transition-colors" 
+                (click)="cancel()">
+          <i class="bi bi-x-lg text-gray-600"></i>
+        </button>
+      </div>
+    </div>
 
-        <!-- ID (hidden or optional) -->
+    <!-- Form -->
+    <div class="bg-white rounded-2xl shadow-xl p-8">
+      <form [formGroup]="storeForm" (ngSubmit)="onSubmit()" class="space-y-8">
+        <!-- Hidden ID field -->
         <input type="hidden" formControlName="id" />
 
-        <!-- Name (English) -->
-        <div class="col-md-6">
-            <div class="form-floating">
-                <input type="text" class="form-control" formControlName="nameEn" id="nameEn" placeholder="English Name">
-                <label for="nameEn">English Name</label>
-                <div *ngIf="storeForm.get('nameEn')?.invalid && storeForm.get('nameEn')?.touched" class="text-danger">
-                    This field is required.
-                </div>
+        <!-- Basic Information Section -->
+        <div class="border-b border-gray-200 pb-8">
+          <h2 class="text-xl font-bold text-gray-900 mb-6 flex items-center">
+            <i class="bi bi-info-circle text-orange-600 mr-3"></i>
+            المعلومات الأساسية
+          </h2>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Name (Arabic) -->
+            <div class="space-y-2">
+              <label class="block text-sm font-semibold text-gray-700">
+                <i class="bi bi-building mr-2 text-orange-600"></i>
+                اسم المستودع بالعربية <span class="text-red-500">*</span>
+              </label>
+              <input type="text" 
+                     formControlName="nameAr"
+                     id="nameAr"
+                     class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200 bg-gray-50 focus:bg-white"
+                     placeholder="أدخل اسم المستودع بالعربية">
+              <div *ngIf="storeForm.get('nameAr')?.invalid && storeForm.get('nameAr')?.touched" 
+                   class="text-red-500 text-sm mt-1 flex items-center">
+                <i class="bi bi-exclamation-circle mr-1"></i>
+                هذا الحقل مطلوب
+              </div>
             </div>
+
+            <!-- Name (English) -->
+            <div class="space-y-2">
+              <label class="block text-sm font-semibold text-gray-700">
+                <i class="bi bi-building mr-2 text-orange-600"></i>
+                اسم المستودع بالإنجليزية <span class="text-red-500">*</span>
+              </label>
+              <input type="text" 
+                     formControlName="nameEn"
+                     id="nameEn"
+                     class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200 bg-gray-50 focus:bg-white"
+                     placeholder="Enter store name in English">
+              <div *ngIf="storeForm.get('nameEn')?.invalid && storeForm.get('nameEn')?.touched" 
+                   class="text-red-500 text-sm mt-1 flex items-center">
+                <i class="bi bi-exclamation-circle mr-1"></i>
+                هذا الحقل مطلوب
+              </div>
+            </div>
+          </div>
+
+          <!-- Description -->
+          <div class="mt-6 space-y-2">
+            <label class="block text-sm font-semibold text-gray-700">
+              <i class="bi bi-file-text mr-2 text-orange-600"></i>
+              الوصف
+            </label>
+            <textarea formControlName="description" 
+                      id="description"
+                      rows="4"
+                      class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200 bg-gray-50 focus:bg-white resize-none"
+                      placeholder="أدخل وصف المستودع"></textarea>
+          </div>
         </div>
 
-        <!-- Name (Arabic) -->
-        <div class="col-md-6">
-            <div class="form-floating">
-                <input type="text" class="form-control" formControlName="nameAr" id="nameAr" placeholder="Arabic Name">
-                <label for="nameAr">Arabic Name</label>
-                <div *ngIf="storeForm.get('nameAr')?.invalid && storeForm.get('nameAr')?.touched" class="text-danger">
-                    This field is required.
-                </div>
+        <!-- Status Section -->
+        <div class="pb-8">
+          <h2 class="text-xl font-bold text-gray-900 mb-6 flex items-center">
+            <i class="bi bi-toggle-on text-green-600 mr-3"></i>
+            حالة المستودع
+          </h2>
+          
+          <div class="flex items-center space-x-4 space-x-reverse">
+            <div class="flex items-center">
+              <input type="checkbox" 
+                     formControlName="isActive"
+                     id="isActive"
+                     class="w-5 h-5 text-green-600 bg-gray-100 border-gray-300 rounded focus:ring-green-500 focus:ring-2">
+              <label for="isActive" class="mr-3 text-sm font-medium text-gray-700">
+                {{ storeForm.get('isActive')?.value ? 'المستودع نشط' : 'المستودع غير نشط' }}
+              </label>
             </div>
+            <div class="text-sm text-gray-500">
+              <i class="bi bi-info-circle mr-1"></i>
+              المستودع النشط يمكن استخدامه في النظام
+            </div>
+          </div>
         </div>
 
-        <!-- Description -->
-        <div class="col-12">
-            <div class="form-floating">
-                <textarea class="form-control" formControlName="description" id="description" placeholder="Description"
-                    style="height: 100px"></textarea>
-                <label for="description">Description</label>
-            </div>
+        <!-- Action Buttons -->
+        <div class="flex justify-end space-x-4 space-x-reverse pt-8 border-t border-gray-200">
+          <button type="button" 
+                  (click)="cancel()"
+                  class="px-8 py-3 bg-gray-100 text-gray-700 rounded-xl font-semibold hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-offset-2 transition-all duration-200 border border-gray-300">
+            <i class="bi bi-x-lg mr-2"></i>
+            إلغاء
+          </button>
+          <button type="submit" 
+                  [disabled]="storeForm.invalid"
+                  class="px-8 py-3 bg-gradient-to-r from-orange-600 to-red-600 text-white rounded-xl font-semibold hover:from-orange-700 hover:to-red-700 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg transform hover:scale-105">
+            <i class="bi bi-check-lg mr-2"></i>
+            {{ storeForm.get('id')?.value > 0 ? 'تحديث المستودع' : 'حفظ المستودع' }}
+          </button>
         </div>
-
-        <!-- Active Toggle -->
-        <div class="col-12">
-            <div class="form-check form-switch">
-                <input class="form-check-input" type="checkbox" formControlName="isActive" id="isActive">
-                <label class="form-check-label" for="isActive">
-                    {{ storeForm.get('isActive')?.value ? 'Active' : 'Inactive' }}
-                </label>
-            </div>
-        </div>
-
-        <!-- Submit Button -->
-        <div class="col-12">
-            <div class="d-flex flex-row justify-content-between">
-                <div class="p-2">
-                    <button type="submit" class="btn btn-primary" (click)="onSubmit()" [disabled]="storeForm.invalid">
-                        <i class="bi bi bi-floppy"></i>
-                    </button>
-                </div>
-                <div class="p-2">
-                    <button class="btn btn-sm btn-outline-primary" (click)="cancel()" title="Add Store">
-                        <i class="bi bi-x-square"></i>
-                    </button>
-                </div>
-            </div>
-        </div>
-    </form>
+      </form>
+    </div>
+  </div>
 </div>

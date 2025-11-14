@@ -1,5 +1,6 @@
 using Warehousing.Repo.Interfaces;
 using Microsoft.EntityFrameworkCore.Storage;
+using Warehousing.Data.Context;
 
 namespace Warehousing.Repo.Shared
 {
@@ -26,7 +27,27 @@ namespace Warehousing.Repo.Shared
         IUserDeviceRepo UserDeviceRepo{ get; }
         IRoleCategoryRepo RoleCategoryRepo{ get; }
         IRoleProductRepo RoleProductRepo{ get; }
+        IRoleSubCategoryRepo RoleSubCategoryRepo{ get; }
         ISubCategoryRepo SubCategoryRepo{ get; }
+        IInventoryRepo InventoryRepo { get; }
+        IStoreTransferRepo StoreTransferRepo { get; }
+        IProductRecipeRepo ProductRecipeRepo { get; }
+        
+        // Variants and Modifiers
+        IProductVariantRepo ProductVariantRepo { get; }
+        IProductModifierRepo ProductModifierRepo { get; }
+        IProductModifierOptionRepo ProductModifierOptionRepo { get; }
+        IProductModifierGroupRepo ProductModifierGroupRepo { get; }
+        IOrderItemModifierRepo OrderItemModifierRepo { get; }
+        
+        // User Activity Logging
+        IUserActivityLogRepo UserActivityLogRepo { get; }
+        
+        // Working Hours Configuration
+        IWorkingHoursRepo WorkingHoursRepo { get; }
+
+        // Context for direct database access
+        WarehousingContext Context { get; }
 
         Task SaveAsync();
         Task<IDbContextTransaction> BeginTransactionAsync();

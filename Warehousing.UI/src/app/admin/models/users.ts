@@ -1,4 +1,3 @@
-import { UserDevice } from "./UserDevice";
 import { UserRole } from "./userRole";
 
 export interface User {
@@ -14,7 +13,6 @@ export interface User {
     printFooter: string;
     isActive: boolean;
     userRoles: UserRole[];
-    devices: UserDevice[];
 }
 
 export interface UserPagination {

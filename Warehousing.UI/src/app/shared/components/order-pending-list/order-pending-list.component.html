@@ -1,95 +1,271 @@
-<div class="container mt-3">
-  <div class="row g-3" *ngIf="(orders$ | async) as data">
-    <div class="col-md-6 col-lg-4" *ngFor="let order of data.orders">
-      <div class="card shadow-sm border-0 h-100">
-        <!-- Card Header -->
-        <div class="card-header d-flex justify-content-between align-items-center" 
-             [ngStyle]="{'background-color': getStatusColor(order?.statusId! - 1)}">
-          <span class="fw-bold text-white">
-            {{ order.orderType?.nameAr }} رقم  – {{ order.id }}  
-          </span>
-          <i class="bi bi-box-seam text-white fs-5"></i>
+<div class="min-h-screen bg-gray-50 py-8">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <!-- Header Section -->
+    <div class="mb-8">
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h1 class="text-3xl font-bold text-gray-900 mb-2">{{ 'ORDER_MANAGEMENT.MY_PENDING_ORDERS' | translate }}</h1>
+          <div class="w-24 h-1 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full"></div>
         </div>
-
-        <!-- Card Body -->
-        <div class="card-body">
-          <h6 class="card-title mb-1">
-            <i class="bi bi-calendar-date me-1 text-muted ms-2"></i>
-            {{ order.orderDate | date: 'yyyy-MM-dd' }}
-          </h6>
-
-          <p class="mb-1">
-            <i class="bi bi-cash-coin me-1 text-muted ms-2"></i>
-            <strong>{{ order.totalAmount | number:'1.2-2' }}</strong>
-          </p>
-
-          <!-- Items (first product preview) -->
-          <div *ngIf="order.items?.length! > 0" class="mt-2 d-flex align-items-center">
-            <div class="fw-semibold">عدد المواد في الطلب : {{ order.items?.length }}</div>
-            <!-- <img [src]="resourcesUrl + order.items[0].product?.imagePath"
-                 class="rounded me-2 ms-2"
-                 style="width: 50px; height: 50px; object-fit: cover;"
-                 alt="product image" />
-            <div>
-              <div class="fw-semibold">{{ order.items[0].product?.nameAr || order.items[0].product?.nameEn }}</div>
-              <small class="text-muted">
-                الكمية: {{ order.items[0].quantity }} × {{ order.items[0].product?.unit?.nameAr }}
-              </small>
-            </div> -->
-          </div>
-        </div>
-
-        <!-- Card Footer -->
-        <div class="card-footer d-flex justify-content-between align-items-center bg-light">
-          <span class="badge text-white" 
-                [ngStyle]="{'background-color': getStatusColor(order?.statusId! - 1)}">
-            {{ order.status?.nameAr }}
-          </span>
-
-          <!-- Open in Cart button -->
-          <button class="btn btn-sm btn-outline-primary" (click)="openInCart(order)">
-            <i class="bi bi-cart-plus"></i> فتح
+        <div class="flex flex-wrap gap-3">
+          <button class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors" 
+                  (click)="toggleFilterPanel()">
+            <i class="bi mr-2" [ngClass]="isFilterExpanded ? 'bi-funnel-fill' : 'bi-funnel'"></i>
+            {{ isFilterExpanded ? ('ORDER_MANAGEMENT.HIDE_FILTERS' | translate) : ('ORDER_MANAGEMENT.SHOW_FILTERS' | translate) }}
+          </button>
+          <button class="inline-flex items-center px-4 py-2 border border-amber-300 rounded-lg text-amber-700 bg-white hover:bg-amber-50 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 transition-colors" 
+                  (click)="clearFilters()">
+            <i class="bi bi-arrow-clockwise mr-2"></i>
+            {{ 'ORDER_MANAGEMENT.CLEAR_FILTERS' | translate }}
           </button>
         </div>
       </div>
     </div>
-  </div>
 
-  <!-- Pagination -->
-    <nav aria-label="Page navigation" class="mt-4 d-flex justify-content-center">
-      <ul class="pagination">
-        <li class="page-item" [class.disabled]="+PageIndex.value === 1">
-          <button class="page-link btn" (click)="changePage(+PageIndex.value - 1)">«</button>
+    <!-- Search and Filter Section -->
+    <div class="mb-8" [formGroup]="filterForm">
+      <!-- Search Bar -->
+      <div class="mb-6">
+        <div class="flex gap-2">
+          <div class="flex-1 relative">
+            <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+              <i class="bi bi-search text-gray-400"></i>
+            </div>
+            <input 
+              type="text" 
+              class="w-full pl-4 pr-10 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200" 
+              formControlName="searchTerm"
+              placeholder="{{ 'ORDER_MANAGEMENT.SEARCH_PLACEHOLDER' | translate }}"
+              (keyup.enter)="onSearch()"
+            />
+          </div>
+          <button class="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors" 
+                  type="button" (click)="onSearch()">
+            <i class="bi bi-search mr-2"></i>
+            {{ 'ORDER_MANAGEMENT.SEARCH' | translate }}
+          </button>
+        </div>
+      </div>
+
+      <!-- Advanced Filters -->
+      <div *ngIf="isFilterExpanded" class="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
+        <div class="px-6 py-4 bg-gradient-to-r from-gray-50 to-gray-100 border-b border-gray-200">
+          <h3 class="text-lg font-semibold text-gray-900">فلاتر متقدمة</h3>
+        </div>
+        <div class="p-6">
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <!-- Date Range -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">من تاريخ</label>
+              <input type="date" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
+                     formControlName="dateFrom" (change)="onFilterChange()" />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">إلى تاريخ</label>
+              <input type="date" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
+                     formControlName="dateTo" (change)="onFilterChange()" />
+            </div>
+
+            <!-- Amount Range -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">الحد الأدنى للمبلغ</label>
+              <input type="number" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
+                     formControlName="minAmount" (change)="onFilterChange()" />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">الحد الأقصى للمبلغ</label>
+              <input type="number" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
+                     formControlName="maxAmount" (change)="onFilterChange()" />
+            </div>
+
+            <!-- Order Type -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">نوع الطلب</label>
+              <select class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
+                      formControlName="orderTypeId" (change)="onFilterChange()">
+                <option value="">جميع الأنواع</option>
+                <option *ngFor="let type of orderTypes" [value]="type.id">
+                  {{ type.nameAr }}
+                </option>
+              </select>
+            </div>
+
+            <!-- Status -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">الحالة</label>
+              <select class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
+                      formControlName="statusId" (change)="onFilterChange()">
+                <option value="">جميع الحالات</option>
+                <option *ngFor="let status of statuses" [value]="status.id">
+                  {{ status.nameAr }}
+                </option>
+              </select>
+            </div>
+
+            <!-- Customer -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">العميل</label>
+              <select class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
+                      formControlName="customerId" (change)="onFilterChange()">
+                <option value="">جميع العملاء</option>
+                <option *ngFor="let customer of customers" [value]="customer.id">
+                  {{ customer.nameAr }}
+                </option>
+              </select>
+            </div>
+
+            <!-- Supplier -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">المورد</label>
+              <select class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
+                      formControlName="supplierId" (change)="onFilterChange()">
+                <option value="">جميع الموردين</option>
+                <option *ngFor="let supplier of suppliers" [value]="supplier.id">
+                  {{ supplier.name }}
+                </option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Loading Indicator -->
+    <div *ngIf="isLoading" class="text-center py-12">
+      <div class="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+      <p class="text-lg text-gray-600">جاري تحميل الطلبات...</p>
+    </div>
+
+    <!-- Orders Grid -->
+    <div *ngIf="!isLoading && (orders$ | async) as data">
+      <!-- Empty State -->
+      <div *ngIf="data.orders.length === 0" class="text-center py-12">
+        <div class="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+          <i class="bi bi-inbox text-gray-400 text-4xl"></i>
+        </div>
+        <h3 class="text-xl font-semibold text-gray-900 mb-2">لا توجد طلبات</h3>
+        <p class="text-gray-500 mb-4">لم يتم العثور على أي طلبات تطابق المعايير المحددة</p>
+        <button class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors" 
+                (click)="clearFilters()">
+          <i class="bi bi-arrow-clockwise mr-2"></i>
+          مسح الفلاتر
+        </button>
+      </div>
+
+      <!-- Order Cards -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" *ngIf="data.orders.length > 0">
+        <div *ngFor="let order of data.orders" class="group">
+          <div class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:scale-105">
+            <!-- Card Header -->
+            <div class="px-6 py-4" 
+                 [ngStyle]="getHeaderStyle(order)">
+              <div class="flex justify-between items-center">
+                <div>
+                  <h3 class="text-lg font-bold text-white">{{ (order.orderType?.nameAr || 'طلب') }} رقم {{ order.id }}</h3>
+                  <p class="text-sm text-white opacity-90">{{ order.status?.nameAr || 'بدون حالة' }}</p>
+                </div>
+                <i class="bi bi-box-seam text-2xl text-white opacity-80"></i>
+              </div>
+            </div>
+
+            <!-- Card Body -->
+            <div class="p-6">
+              <!-- Date -->
+              <div class="flex items-center mb-3">
+                <i class="bi bi-calendar-date text-gray-500 mr-3"></i>
+                <span class="text-gray-700 font-medium">{{ order.orderDate | date: 'yyyy-MM-dd' }}</span>
+              </div>
+
+              <!-- Amount -->
+              <div class="flex items-center mb-3">
+                <i class="bi bi-cash-coin text-green-600 mr-3"></i>
+                <span class="text-xl font-bold text-green-600">{{ order.totalAmount | number:'1.2-2' }} د.أ</span>
+              </div>
+
+              <!-- Customer/Supplier Info - Always show for consistent height -->
+              <div class="mb-3 customer-supplier-section">
+                <div class="flex items-center" *ngIf="order.customer">
+                  <i class="bi bi-person text-blue-600 mr-3"></i>
+                  <span class="text-gray-700">{{ order.customer.nameAr }}</span>
+                </div>
+                <div class="flex items-center" *ngIf="order.supplier">
+                  <i class="bi bi-truck text-purple-600 mr-3"></i>
+                  <span class="text-gray-700">{{ order.supplier.name }}</span>
+                </div>
+                <div class="flex items-center" *ngIf="!order.customer && !order.supplier">
+                  <i class="bi bi-dash-circle text-gray-400 mr-3"></i>
+                  <span class="text-gray-400 text-sm">لا يوجد عميل أو مورد</span>
+                </div>
+              </div>
+
+              <!-- Items Count - Always show for consistent height -->
+              <div class="mb-4 items-count-section">
+                <div class="flex items-center justify-between bg-gray-50 rounded-lg p-3">
+                  <span class="text-sm font-medium text-gray-600">عدد المواد</span>
+                  <span class="bg-blue-100 text-blue-800 text-sm font-semibold px-3 py-1 rounded-full">
+                    {{ order.items?.length || 0 }}
+                  </span>
+                </div>
+              </div>
+
+              <!-- Action Button -->
+              <button class="w-full bg-blue-600 text-white py-2 px-4 rounded-lg font-semibold hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors" 
+                      (click)="openInCart(order)">
+                <i class="bi bi-cart-plus mr-2"></i>
+                فتح في السلة
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pagination -->
+    <nav aria-label="Page navigation" class="mt-8 flex justify-center">
+      <ul class="flex items-center space-x-1">
+        <li>
+          <button class="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-l-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed" 
+                  [disabled]="+PageIndex.value === 1" 
+                  (click)="changePage(+PageIndex.value - 1)">«</button>
         </li>
 
         <!-- First page -->
-        <li class="page-item" [class.active]="+PageIndex.value === 1">
-          <button class="page-link btn" (click)="changePage(1)">1</button>
+        <li>
+          <button class="px-3 py-2 text-sm font-medium border border-gray-300 hover:bg-gray-50"
+                  [class]="+PageIndex.value === 1 ? 'bg-blue-600 text-white border-blue-600' : 'text-gray-500 bg-white'"
+                  (click)="changePage(1)">1</button>
         </li>
 
         <!-- Left Ellipsis -->
-        <li class="page-item disabled" *ngIf="+PageIndex.value > 4">
-          <span class="page-link">...</span>
+        <li *ngIf="+PageIndex.value > 4">
+          <span class="px-3 py-2 text-sm text-gray-500 bg-white border border-gray-300">...</span>
         </li>
 
         <!-- Dynamic middle pages -->
-        <li class="page-item" *ngFor="let page of getPageRange()" [class.active]="page === +PageIndex.value">
-          <button class="page-link btn" (click)="changePage(page)">{{ page }}</button>
+        <li *ngFor="let page of getPageRange()">
+          <button class="px-3 py-2 text-sm font-medium border border-gray-300 hover:bg-gray-50"
+                  [class]="page === +PageIndex.value ? 'bg-blue-600 text-white border-blue-600' : 'text-gray-500 bg-white'"
+                  (click)="changePage(page)">{{ page }}</button>
         </li>
 
         <!-- Right Ellipsis -->
-        <li class="page-item disabled" *ngIf="+PageIndex.value < totalPages - 3">
-          <span class="page-link">...</span>
+        <li *ngIf="+PageIndex.value < totalPages - 3">
+          <span class="px-3 py-2 text-sm text-gray-500 bg-white border border-gray-300">...</span>
         </li>
 
         <!-- Last page -->
-        <li class="page-item" [class.active]="+PageIndex.value === totalPages" *ngIf="totalPages > 1">
-          <button class="page-link btn" (click)="changePage(totalPages)">{{ totalPages }}</button>
+        <li *ngIf="totalPages > 1">
+          <button class="px-3 py-2 text-sm font-medium border border-gray-300 hover:bg-gray-50"
+                  [class]="+PageIndex.value === totalPages ? 'bg-blue-600 text-white border-blue-600' : 'text-gray-500 bg-white'"
+                  (click)="changePage(totalPages)">{{ totalPages }}</button>
         </li>
 
-        <li class="page-item" [class.disabled]="+PageIndex.value === totalPages || totalPages === 0">
-          <button class="page-link btn" (click)="changePage(+PageIndex.value + 1)">»</button>
+        <li>
+          <button class="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-r-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed" 
+                  [disabled]="+PageIndex.value === totalPages || totalPages === 0" 
+                  (click)="changePage(+PageIndex.value + 1)">»</button>
         </li>
       </ul>
     </nav>
+  </div>
 </div>

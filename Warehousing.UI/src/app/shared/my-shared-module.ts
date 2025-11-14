@@ -1,5 +1,6 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RouterModule } from '@angular/router';
 import { Spinner } from './components/spinner/spinner';
 import { MatDialogModule } from '@angular/material/dialog';
 import { ImageUploader } from './components/image-uploader/image-uploader';
@@ -14,22 +15,28 @@ import { TranslateModule } from '@ngx-translate/core';
 import { CartComponent } from './components/cart/cart.component';
 import { BreadcrumbComponent } from './components/breadcrumb/breadcrumb.component';
 import { OrderPendingListComponent } from './components/order-pending-list/order-pending-list.component';
+import { CustomerFormPopupComponent } from './components/customer-form-popup/customer-form-popup.component';
+import { SupplierFormPopupComponent } from './components/supplier-form-popup/supplier-form-popup.component';
+import { SidebarComponent } from './components/sidebar/sidebar.component';
 
 
 
 @NgModule({
   declarations: [
     Spinner,
-    ImageUploader,
     ConfirmModalComponent,
     CompanyHeaderComponent,
     CompanyFooterComponent,
     CartComponent,
     BreadcrumbComponent,
-    OrderPendingListComponent
+    OrderPendingListComponent,
+    CustomerFormPopupComponent,
+    SupplierFormPopupComponent,
+    SidebarComponent
   ],
   imports: [
     CommonModule,
+    RouterModule,
     MatDialogModule,
     ReactiveFormsModule,
     FormsModule,
@@ -37,7 +44,8 @@ import { OrderPendingListComponent } from './components/order-pending-list/order
     MatLabel,
     MatListOption,
     MatOption,
-    TranslateModule
+    TranslateModule,
+    ImageUploader
   ],
   exports: [
     Spinner,
@@ -52,7 +60,10 @@ import { OrderPendingListComponent } from './components/order-pending-list/order
     CompanyHeaderComponent,
     CompanyFooterComponent,
     BreadcrumbComponent,
-    ReactiveFormsModule
+    SidebarComponent,
+    ReactiveFormsModule,
+    RouterModule,
+    TranslateModule
   ]
 })
 export class MySharedModule { }

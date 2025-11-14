@@ -13,6 +13,11 @@ namespace Warehousing.Repo.Dtos
         public string Email { get; set; }
         public string Website { get; set; }
         public string TaxNumber { get; set; }
+        public string Fax { get; set; }
+        public string RegistrationNumber { get; set; }
+        public decimal? Capital { get; set; }
+        public string SloganEn { get; set; }
+        public string SloganAr { get; set; }
         public string CurrencyCode { get; set; }
         public string FooterNoteEn { get; set; }
         public string FooterNoteAr { get; set; }

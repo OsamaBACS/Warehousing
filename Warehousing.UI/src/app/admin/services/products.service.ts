@@ -2,6 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { environment } from '../../../environments/environment';
 import { Product, ProductPagination } from '../models/product';
+import { Inventory } from '../models/Inventory';
 
 @Injectable({
   providedIn: 'root'
@@ -25,6 +26,31 @@ export class ProductsService {
     );
   }
 
+  SearchProducts(keyword: string) {
+    const encodedKeyword = encodeURIComponent(keyword);
+    return this.http.get<Product[]>(`${this.url}search/${encodedKeyword}`);
+  }
+
+  GetProductsByCategory(categoryId: number) {
+    return this.http.get<Product[]>(`${this.url}GetProductsByCategory?categoryId=${categoryId}`);
+  }
+
+  GetProductsBySubCategory(subCategoryId: number) {
+    return this.http.get<Product[]>(`${this.url}GetProductsBySubCategory?subCategoryId=${subCategoryId}`);
+  }
+
+  GetLowStockProducts() {
+    return this.http.get<Product[]>(`${this.url}GetLowStockProducts`);
+  }
+
+  GetProductInventory(productId: number) {
+    return this.http.get<Inventory[]>(`${this.url}GetProductInventory?productId=${productId}`);
+  }
+
+  ValidateStock(productId: number, storeId: number, quantity: number) {
+    return this.http.get<any>(`${this.url}ValidateStock?productId=${productId}&storeId=${storeId}&quantity=${quantity}`);
+  }
+
   SaveProduct(product: any) {
     return this.http.post<any>(`${this.url}SaveProduct`, product);
   }
@@ -43,5 +69,31 @@ export class ProductsService {
 
   GetTotalCount() {
     return this.http.get<number>(`${this.url}GetTotalCount`)
+  }
+
+  GetProductVariantsStock(productId: number, storeId: number) {
+    return this.http.get<any[]>(`${this.url}${productId}/variants-stock?storeId=${storeId}`);
+  }
+
+  DistributeStockToVariants(productId: number, request: any) {
+    return this.http.post<any>(`${this.url}${productId}/distribute-stock-to-variants`, request);
+  }
+
+  SetVariantStock(productId: number, request: any) {
+    return this.http.post<any>(`${this.url}${productId}/set-variant-stock`, request);
+  }
+
+  splitGeneralQuantityToVariants(body: {
+    productId: number;
+    storeId: number;
+    generalInventoryId: number;
+    generalQuantity: number;
+    allocations: { variantId: number; quantity: number }[];
+  }) {
+    return this.http.post(`${this.url}SplitGeneralToVariants`, body);
+  }
+
+  RecallStockFromVariant(productId: number, request: { storeId: number; variantId: number; quantity: number; notes?: string; }) {
+    return this.http.post<any>(`${this.url}${productId}/recall-stock-from-variant`, request);
   }
 }
