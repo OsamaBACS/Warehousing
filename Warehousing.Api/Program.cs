@@ -78,11 +78,28 @@ builder.Services.AddAuthorization();
 
 var app = builder.Build();
 
-// Seed data on startup
+// Apply migrations and seed data on startup
 using (var scope = app.Services.CreateScope())
 {
+    var context = scope.ServiceProvider.GetRequiredService<WarehousingContext>();
     var seedingService = scope.ServiceProvider.GetRequiredService<SeedingService>();
-    await seedingService.SeedDataAsync();
+    
+    try
+    {
+        // Apply pending migrations (creates database if it doesn't exist)
+        await context.Database.MigrateAsync();
+        Console.WriteLine("Database migrations applied successfully.");
+        
+        // Seed data
+        await seedingService.SeedDataAsync();
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Error during database initialization: {ex.Message}");
+        Console.WriteLine($"Stack trace: {ex.StackTrace}");
+        // Don't throw - allow application to start even if database setup fails
+        // This prevents IIS from crashing on startup
+    }
 }
 
 // Configure HTTP pipeline
