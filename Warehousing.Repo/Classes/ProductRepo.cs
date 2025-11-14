@@ -12,33 +12,47 @@ namespace Warehousing.Repo.Classes
 {
     public class ProductRepo : RepositoryBase<Product>, IProductRepo
     {
-        public ProductRepo(WarehousingContext context, ILogger<ProductRepo> logger, IConfiguration config) : base(context, logger, config) { }
+        private readonly IFileStorageService? _fileStorageService;
+
+        public ProductRepo(WarehousingContext context, ILogger<ProductRepo> logger, IConfiguration config, IFileStorageService? fileStorageService = null) 
+            : base(context, logger, config) 
+        {
+            _fileStorageService = fileStorageService;
+        }
 
         public async Task<Product> AddProduct(ProductDto dto)
         {
             try
             {
-                string path = Path.Combine(Directory.GetCurrentDirectory(), "Resources", "Images", "Product");
-                string imageUrl = "";
                 Product product = new Product();
                 if (dto.Image != null)
                 {
-                    if (!Directory.Exists(path))
-                    {
-                        Directory.CreateDirectory(path);
-                    }
-                    string fileNameWithPath = "";
-                    string fileName = "";
                     var guid = Guid.NewGuid().ToString();
-                    fileName = guid + "_" + dto.Image.FileName;
-                    imageUrl = Path.Combine(path, fileName);
-                    fileNameWithPath = imageUrl;
-                    using (var stream = new FileStream(fileNameWithPath, FileMode.Create))
+                    var fileName = $"{guid}_{dto.Image.FileName}";
+                    
+                    if (_fileStorageService != null)
                     {
-                        dto.Image.CopyTo(stream);
+                        // Use FileStorageService (Azure or Local)
+                        using (var stream = dto.Image.OpenReadStream())
+                        {
+                            product.ImagePath = await _fileStorageService.SaveFileAsync(stream, fileName, "Product");
+                        }
                     }
-                    // product.ImagePath = imageUrl.Substring(imageUrl.IndexOf("Resources")).Replace("\\", "/");
-                    product.ImagePath = Path.Combine("Resources", "Images", "Product", fileName).Replace("\\", "/");
+                    else
+                    {
+                        // Fallback to local storage (legacy code)
+                        string path = Path.Combine(Directory.GetCurrentDirectory(), "Resources", "Images", "Product");
+                        if (!Directory.Exists(path))
+                        {
+                            Directory.CreateDirectory(path);
+                        }
+                        string fileNameWithPath = Path.Combine(path, fileName);
+                        using (var stream = new FileStream(fileNameWithPath, FileMode.Create))
+                        {
+                            await dto.Image.CopyToAsync(stream);
+                        }
+                        product.ImagePath = Path.Combine("Resources", "Images", "Product", fileName).Replace("\\", "/");
+                    }
                 }
 
                 var lastProductId = GetAll().Select(p => p.Id).Max();
@@ -73,30 +87,51 @@ namespace Warehousing.Repo.Classes
                 {
                     if (dto.Image != null)
                     {
-                        string imagePath = Path.Combine(Directory.GetCurrentDirectory(), product.ImagePath ?? "");
-                        if (File.Exists(imagePath))
+                        // Delete old image
+                        if (!string.IsNullOrEmpty(product.ImagePath))
                         {
-                            File.Delete(imagePath);
-                        }
-                        string path = Path.Combine(Directory.GetCurrentDirectory(), "Resources", "Images", "Product");
-                        string imageUrl = "";
-                        if (!Directory.Exists(path))
-                        {
-                            Directory.CreateDirectory(path);
+                            if (_fileStorageService != null)
+                            {
+                                await _fileStorageService.DeleteFileAsync(product.ImagePath);
+                            }
+                            else
+                            {
+                                // Fallback to local delete
+                                string imagePath = Path.Combine(Directory.GetCurrentDirectory(), product.ImagePath);
+                                if (File.Exists(imagePath))
+                                {
+                                    File.Delete(imagePath);
+                                }
+                            }
                         }
 
-                        string fileNameWithPath = "";
-                        string fileName = "";
+                        // Upload new image
                         var guid = Guid.NewGuid().ToString();
-                        fileName = guid + "_" + dto.Image.FileName;
-                        imageUrl = Path.Combine(path, fileName);
-                        fileNameWithPath = imageUrl;
-                        using (var stream = new FileStream(fileNameWithPath, FileMode.Create))
+                        var fileName = $"{guid}_{dto.Image.FileName}";
+                        
+                        if (_fileStorageService != null)
                         {
-                            dto.Image.CopyTo(stream);
+                            // Use FileStorageService (Azure or Local)
+                            using (var stream = dto.Image.OpenReadStream())
+                            {
+                                product.ImagePath = await _fileStorageService.SaveFileAsync(stream, fileName, "Product");
+                            }
                         }
-                        // product.ImagePath = imageUrl.Substring(imageUrl.IndexOf("Resources")).Replace("\\", "/");
-                        product.ImagePath = Path.Combine("Resources", "Images", "Product", fileName).Replace("\\", "/");
+                        else
+                        {
+                            // Fallback to local storage (legacy code)
+                            string path = Path.Combine(Directory.GetCurrentDirectory(), "Resources", "Images", "Product");
+                            if (!Directory.Exists(path))
+                            {
+                                Directory.CreateDirectory(path);
+                            }
+                            string fileNameWithPath = Path.Combine(path, fileName);
+                            using (var stream = new FileStream(fileNameWithPath, FileMode.Create))
+                            {
+                                await dto.Image.CopyToAsync(stream);
+                            }
+                            product.ImagePath = Path.Combine("Resources", "Images", "Product", fileName).Replace("\\", "/");
+                        }
                     }
 
                     product.Code = dto.Code;

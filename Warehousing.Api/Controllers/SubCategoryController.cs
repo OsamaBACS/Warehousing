@@ -14,11 +14,13 @@ namespace Warehousing.Api.Controllers
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
+        private readonly Warehousing.Repo.Interfaces.IFileStorageService? _fileStorageService;
 
-        public SubCategoryController(IUnitOfWork unitOfWork, IMapper mapper)
+        public SubCategoryController(IUnitOfWork unitOfWork, IMapper mapper, Warehousing.Repo.Interfaces.IFileStorageService? fileStorageService = null)
         {
             _unitOfWork = unitOfWork;
             _mapper = mapper;
+            _fileStorageService = fileStorageService;
         }
 
         [HttpGet]
@@ -129,21 +131,31 @@ namespace Warehousing.Api.Controllers
                 // Handle image upload
                 if (dto.Image != null)
                 {
-                    string path = Path.Combine(Directory.GetCurrentDirectory(), "Resources", "Images", "SubCategory");
-                    if (!Directory.Exists(path))
-                    {
-                        Directory.CreateDirectory(path);
-                    }
-
-                    string fileName = Guid.NewGuid().ToString() + Path.GetExtension(dto.Image.FileName);
-                    string fullPath = Path.Combine(path, fileName);
+                    var fileName = Guid.NewGuid().ToString() + Path.GetExtension(dto.Image.FileName);
                     
-                    using (var stream = new FileStream(fullPath, FileMode.Create))
+                    if (_fileStorageService != null)
                     {
-                        await dto.Image.CopyToAsync(stream);
+                        // Use FileStorageService (Azure or Local)
+                        using (var stream = dto.Image.OpenReadStream())
+                        {
+                            dto.ImagePath = await _fileStorageService.SaveFileAsync(stream, fileName, "SubCategory");
+                        }
                     }
-                    
-                    dto.ImagePath = Path.Combine("Resources", "Images", "SubCategory", fileName);
+                    else
+                    {
+                        // Fallback to local storage (legacy code)
+                        string path = Path.Combine(Directory.GetCurrentDirectory(), "Resources", "Images", "SubCategory");
+                        if (!Directory.Exists(path))
+                        {
+                            Directory.CreateDirectory(path);
+                        }
+                        string fullPath = Path.Combine(path, fileName);
+                        using (var stream = new FileStream(fullPath, FileMode.Create))
+                        {
+                            await dto.Image.CopyToAsync(stream);
+                        }
+                        dto.ImagePath = Path.Combine("Resources", "Images", "SubCategory", fileName);
+                    }
                 }
 
                 if (dto.Id > 0)
@@ -154,10 +166,18 @@ namespace Warehousing.Api.Controllers
                         // If updating and new image is uploaded, delete old image
                         if (dto.Image != null && !string.IsNullOrEmpty(SubCategoryToUpdate.ImagePath))
                         {
-                            string oldImagePath = Path.Combine(Directory.GetCurrentDirectory(), SubCategoryToUpdate.ImagePath);
-                            if (System.IO.File.Exists(oldImagePath))
+                            if (_fileStorageService != null)
                             {
-                                System.IO.File.Delete(oldImagePath);
+                                await _fileStorageService.DeleteFileAsync(SubCategoryToUpdate.ImagePath);
+                            }
+                            else
+                            {
+                                // Fallback to local delete
+                                string oldImagePath = Path.Combine(Directory.GetCurrentDirectory(), SubCategoryToUpdate.ImagePath);
+                                if (System.IO.File.Exists(oldImagePath))
+                                {
+                                    System.IO.File.Delete(oldImagePath);
+                                }
                             }
                         }
                         

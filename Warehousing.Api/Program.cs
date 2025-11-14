@@ -49,7 +49,7 @@ builder.Services.AddScoped<SeedingService>();
 builder.Services.AddScoped<IActivityLoggingService, ActivityLoggingService>();
 builder.Services.AddScoped<Warehousing.Api.Services.EscPosService>();
 builder.Services.AddScoped<Warehousing.Api.Services.IAzureBlobStorageService, Warehousing.Api.Services.AzureBlobStorageService>();
-builder.Services.AddScoped<Warehousing.Api.Services.IFileStorageService, Warehousing.Api.Services.FileStorageService>();
+builder.Services.AddScoped<Warehousing.Repo.Interfaces.IFileStorageService, Warehousing.Api.Services.FileStorageService>();
 
 // Register new repositories
 builder.Services.AddScoped<IUserActivityLogRepo, UserActivityLogRepo>();

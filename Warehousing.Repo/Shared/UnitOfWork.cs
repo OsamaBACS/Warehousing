@@ -14,13 +14,15 @@ namespace Warehousing.Repo.Shared
         private readonly ILoggerFactory _loggerFactory;
         private readonly IConfiguration _config;
         private readonly IActivityLoggingService _activityLoggingService;
+        private readonly IFileStorageService? _fileStorageService;
 
-        public UnitOfWork(WarehousingContext context, ILoggerFactory loggerFactory, IConfiguration config, IActivityLoggingService activityLoggingService)
+        public UnitOfWork(WarehousingContext context, ILoggerFactory loggerFactory, IConfiguration config, IActivityLoggingService activityLoggingService, IFileStorageService? fileStorageService = null)
         {
             _context = context;
             _loggerFactory = loggerFactory;
             _config = config;
             _activityLoggingService = activityLoggingService;
+            _fileStorageService = fileStorageService;
         }
 
         public ICategoryRepo CategoryRepo => new CategoryRepo(_context, _loggerFactory.CreateLogger<CategoryRepo>(), _config);
@@ -31,7 +33,7 @@ namespace Warehousing.Repo.Shared
 
         public IPermissionRepo PermissionRepo => new PermissionRepo(_context, _loggerFactory.CreateLogger<PermissionRepo>(), _config);
 
-        public IProductRepo ProductRepo => new ProductRepo(_context, _loggerFactory.CreateLogger<ProductRepo>(), _config);
+        public IProductRepo ProductRepo => new ProductRepo(_context, _loggerFactory.CreateLogger<ProductRepo>(), _config, _fileStorageService);
 
         public IOrderRepo OrderRepo => new OrderRepo(_context, _loggerFactory.CreateLogger<OrderRepo>(), _config);
 
@@ -55,7 +57,7 @@ namespace Warehousing.Repo.Shared
 
         public ISupplierRepo SupplierRepo => new SupplierRepo(_context, _loggerFactory.CreateLogger<SupplierRepo>(), _config);
 
-        public ICompanyRepo CompanyRepo => new CompanyRepo(_context, _loggerFactory.CreateLogger<CompanyRepo>(), _config);
+        public ICompanyRepo CompanyRepo => new CompanyRepo(_context, _loggerFactory.CreateLogger<CompanyRepo>(), _config, _fileStorageService);
 
         public IStoreRepo StoreRepo => new StoreRepo(_context, _loggerFactory.CreateLogger<StoreRepo>(), _config);
 

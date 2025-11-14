@@ -1,17 +1,10 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Warehousing.Api.Services;
+using Warehousing.Repo.Interfaces;
 
 namespace Warehousing.Api.Services
 {
-    public interface IFileStorageService
-    {
-        Task<string> SaveFileAsync(Stream fileStream, string fileName, string folder);
-        Task<bool> DeleteFileAsync(string filePath);
-        string GetFileUrl(string filePath);
-        bool IsAzureStorageEnabled();
-    }
-
     /// <summary>
     /// Unified file storage service that supports both Azure Blob Storage and local file storage
     /// Automatically uses Azure if configured, otherwise falls back to local storage

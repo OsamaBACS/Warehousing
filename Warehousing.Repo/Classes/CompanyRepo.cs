@@ -10,34 +10,47 @@ namespace Warehousing.Repo.Classes
 {
     public class CompanyRepo : RepositoryBase<Company>, ICompanyRepo
     {
-        public CompanyRepo(WarehousingContext context, ILogger<CompanyRepo> logger, IConfiguration config) : base(context, logger, config) { }
+        private readonly IFileStorageService? _fileStorageService;
+
+        public CompanyRepo(WarehousingContext context, ILogger<CompanyRepo> logger, IConfiguration config, IFileStorageService? fileStorageService = null) 
+            : base(context, logger, config) 
+        {
+            _fileStorageService = fileStorageService;
+        }
 
         public async Task<Company> AddCompany(CompanyDto dto)
         {
             try
             {
-                string path = Path.Combine(Directory.GetCurrentDirectory(), "Resources", "Images", "Company");
-                string imageUrl = "";
-
                 Company company = new Company();
 
                 if (dto.Image != null)
                 {
-                    if (!Directory.Exists(path))
-                        Directory.CreateDirectory(path);
-
-                    string fileNameWithPath = "";
-                    string fileName = "";
                     var guid = Guid.NewGuid().ToString();
-                    fileName = guid + "_" + dto.Image.FileName;
-                    imageUrl = Path.Combine(path, fileName);
-                    fileNameWithPath = imageUrl;
-                    using (var stream = new FileStream(fileNameWithPath, FileMode.Create))
+                    var fileName = $"{guid}_{dto.Image.FileName}";
+                    
+                    if (_fileStorageService != null)
                     {
-                        dto.Image.CopyTo(stream);
+                        // Use FileStorageService (Azure or Local)
+                        using (var stream = dto.Image.OpenReadStream())
+                        {
+                            company.LogoUrl = await _fileStorageService.SaveFileAsync(stream, fileName, "Company");
+                        }
                     }
+                    else
+                    {
+                        // Fallback to local storage (legacy code)
+                        string path = Path.Combine(Directory.GetCurrentDirectory(), "Resources", "Images", "Company");
+                        if (!Directory.Exists(path))
+                            Directory.CreateDirectory(path);
 
-                    company.LogoUrl = Path.Combine("Resources", "Images", "Company", fileName).Replace("\\", "/");
+                        string fileNameWithPath = Path.Combine(path, fileName);
+                        using (var stream = new FileStream(fileNameWithPath, FileMode.Create))
+                        {
+                            await dto.Image.CopyToAsync(stream);
+                        }
+                        company.LogoUrl = Path.Combine("Resources", "Images", "Company", fileName).Replace("\\", "/");
+                    }
                 }
 
                 company.NameEn = dto.NameEn;
@@ -85,27 +98,48 @@ namespace Warehousing.Repo.Classes
 
                 if (dto.Image != null)
                 {
-                    string oldImagePath = Path.Combine(Directory.GetCurrentDirectory(), company.LogoUrl ?? "");
-                    if (File.Exists(oldImagePath))
-                        File.Delete(oldImagePath);
-
-                    string path = Path.Combine(Directory.GetCurrentDirectory(), "Resources", "Images", "Company");
-                    string imageUrl = "";
-                    if (!Directory.Exists(path))
-                        Directory.CreateDirectory(path);
-
-                    string fileNameWithPath = "";
-                    string fileName = "";
-                    var guid = Guid.NewGuid().ToString();
-                    fileName = guid + "_" + dto.Image.FileName;
-                    imageUrl = Path.Combine(path, fileName);
-                    fileNameWithPath = imageUrl;
-                    using (var stream = new FileStream(fileNameWithPath, FileMode.Create))
+                    // Delete old image
+                    if (!string.IsNullOrEmpty(company.LogoUrl))
                     {
-                        dto.Image.CopyTo(stream);
+                        if (_fileStorageService != null)
+                        {
+                            await _fileStorageService.DeleteFileAsync(company.LogoUrl);
+                        }
+                        else
+                        {
+                            // Fallback to local delete
+                            string oldImagePath = Path.Combine(Directory.GetCurrentDirectory(), company.LogoUrl);
+                            if (File.Exists(oldImagePath))
+                                File.Delete(oldImagePath);
+                        }
                     }
 
-                    company.LogoUrl = Path.Combine("Resources", "Images", "Company", fileName).Replace("\\", "/");
+                    // Upload new image
+                    var guid = Guid.NewGuid().ToString();
+                    var fileName = $"{guid}_{dto.Image.FileName}";
+                    
+                    if (_fileStorageService != null)
+                    {
+                        // Use FileStorageService (Azure or Local)
+                        using (var stream = dto.Image.OpenReadStream())
+                        {
+                            company.LogoUrl = await _fileStorageService.SaveFileAsync(stream, fileName, "Company");
+                        }
+                    }
+                    else
+                    {
+                        // Fallback to local storage (legacy code)
+                        string path = Path.Combine(Directory.GetCurrentDirectory(), "Resources", "Images", "Company");
+                        if (!Directory.Exists(path))
+                            Directory.CreateDirectory(path);
+
+                        string fileNameWithPath = Path.Combine(path, fileName);
+                        using (var stream = new FileStream(fileNameWithPath, FileMode.Create))
+                        {
+                            await dto.Image.CopyToAsync(stream);
+                        }
+                        company.LogoUrl = Path.Combine("Resources", "Images", "Company", fileName).Replace("\\", "/");
+                    }
                 }
 
                 company.NameEn = dto.NameEn;

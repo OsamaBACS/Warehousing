@@ -185,21 +185,22 @@
       <!-- Action Buttons -->
       <div class="mt-8" *ngIf="getCartItemFormGroups().length > 0">
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          <!-- Clear Cart Button - Always Visible -->
-          <button 
-            class="w-full bg-red-600 text-white py-3 px-6 rounded-xl font-semibold hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-all duration-200 transform hover:scale-105 flex items-center justify-center" 
-            (click)="clearCartWithConfirm()">
-            <i class="bi bi-trash mr-2"></i>
-            {{ 'CART_DETAILS.CLEAR_CART' | translate }}
-          </button>
-          <!-- Save Order -->
+          <!-- New Order / Draft Order Actions (statusId is null, empty, or '11') -->
           <ng-container
             *ngIf="
-                cartService.cartForm.get('statusId')?.value != '6'
-                && cartService.cartForm.get('statusId')?.value != '1'
-                && cartService.cartForm.get('statusId')?.value != '8'
+                cartService.cartForm.get('statusId')?.value == null 
+                || cartService.cartForm.get('statusId')?.value == '' 
+                || cartService.cartForm.get('statusId')?.value == '11'
               ">
+            <!-- Clear Cart Button - For new/draft orders -->
+            <button 
+              class="w-full bg-red-600 text-white py-3 px-6 rounded-xl font-semibold hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-all duration-200 transform hover:scale-105 flex items-center justify-center" 
+              (click)="clearCartWithConfirm()">
+              <i class="bi bi-trash mr-2"></i>
+              {{ 'CART_DETAILS.CLEAR_CART' | translate }}
+            </button>
     
+            <!-- Save Order Button -->
             <button *ngIf="cartService.cartForm.get('statusId')?.value != '11'"
                     class="w-full bg-gray-600 text-white py-3 px-6 rounded-xl font-semibold hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-all duration-200 transform hover:scale-105" 
                     (click)="onSave()">
@@ -207,6 +208,7 @@
               {{ 'CART_DETAILS.SAVE_ORDER' | translate }}
             </button>
             
+            <!-- Cancel Order Button -->
             <button *ngIf="hasAnyPermission(permissionsEnum.CANCEL_SALE_ORDER, permissionsEnum.CANCEL_PURCHASE_ORDER)"
                     class="w-full bg-red-600 text-white py-3 px-6 rounded-xl font-semibold hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-all duration-200 transform hover:scale-105" 
                     (click)="onCancel()">
@@ -214,6 +216,7 @@
               {{ 'MESSAGES.CANCEL' | translate }}
             </button>
             
+            <!-- Send Order Button -->
             <button class="w-full bg-blue-600 text-white py-3 px-6 rounded-xl font-semibold hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200 transform hover:scale-105" 
                     (click)="onSubmit()">
               <i class="bi bi-send mr-2"></i>
