@@ -1,117 +1,387 @@
-<div class="dialog-container p-3 p-md-4">
-  <!-- <h5 class="mb-4 text-center">{{ userForm.get('id')?.value > 0 ? 'Edit User' : 'Add User' }}</h5> -->
-  <h5 class="mb-4 text-center">إضافة / تعديل مستخدم</h5>
-
-  <form [formGroup]="userForm" (ngSubmit)="save()">
-    <div class="row g-3">
-      <!-- Name (EN) -->
-      <div class="col-12 col-md-6">
-        <div class="floating-label-input">
-          <input type="text" class="form-control" formControlName="nameEn" placeholder=" " />
-          <label>الاسم بالانجليزي</label>
-        </div>
-      </div>
-
-      <!-- Name (AR) -->
-      <div class="col-12 col-md-6">
-        <div class="floating-label-input">
-          <input type="text" class="form-control" formControlName="nameAr" placeholder=" " />
-          <label>الاسم بالعربي</label>
-        </div>
-      </div>
-
-      <!-- Phone -->
-      <div class="col-12 col-md-6">
-        <div class="floating-label-input">
-          <input type="text" class="form-control" formControlName="phone" placeholder=" " />
-          <label>الهاتف</label>
-        </div>
-      </div>
-
-      <!-- Email -->
-      <div class="col-12 col-md-6">
-        <div class="floating-label-input">
-          <input type="email" class="form-control" formControlName="email" placeholder=" " />
-          <label>الايميل</label>
-        </div>
-      </div>
-
-      <!-- Address -->
-      <div class="col-12">
-        <div class="floating-label-input">
-          <input type="text" class="form-control" formControlName="address" placeholder=" " />
-          <label>العنوان</label>
-        </div>
-      </div>
-
-      <!-- Username -->
-      <div class="col-12 col-md-6">
-        <div class="floating-label-input">
-          <input type="text" class="form-control" formControlName="username" placeholder=" " />
-          <label>اسم المستخدم</label>
-        </div>
-      </div>
-
-      <!-- Password -->
-      <div class="col-12 col-md-6" *ngIf="!isEditMode">
-        <div class="floating-label-input">
-          <input type="password" class="form-control" formControlName="passwordHash" placeholder=" " />
-          <label>كلمة المرور</label>
-        </div>
-      </div>
-    </div>
-
-    <!-- printHeader -->
-    <div class="col-12 col-md-6">
-      <div class="form-floating">
-        <textarea class="form-control" formControlName="printHeader" id="printHeader" placeholder="عنوان الطباعه"
-          style="height: 100px"></textarea>
-        <label for="printHeader">عنوان الطباعه</label>
-      </div>
-    </div>
-
-    <!-- printFooter -->
-    <div class="col-12 col-md-6">
-      <div class="form-floating">
-        <textarea class="form-control" formControlName="printFooter" id="printFooter" placeholder="تذييل الطباعه"
-          style="height: 100px"></textarea>
-        <label for="printFooter">تذييل الطباعه</label>
-      </div>
-    </div>
-
-    <!-- Is Active -->
-    <div class="col-12 col-md-6 d-flex align-items-center">
-      <div class="form-check form-switch">
-        <input class="form-check-input" type="checkbox" formControlName="isActive" />
-        <label class="form-check-label">الحالة</label>
-      </div>
-    </div>
-
-    <!-- Roles Section -->
-    <div class="mb-4">
-      <label class="form-label fw-bold">تعيين صلاحية</label>
-      <div class="row g-2">
-        <div class="col-12 col-sm-6 col-md-4" *ngFor="let role of roles">
-          <div class="form-check">
-            <input class="form-check-input" type="checkbox" id="role_{{ role.id }}" [value]="role.id"
-              [checked]="userForm.get('roles')?.value.includes(role.id)" (change)="onRoleChange(role.id, $event)" />
-            <label class="form-check-label" [for]="'role_' + role.id">
-              <!-- {{ lang.currentLang === 'ar' ? role.nameAr : role.nameEn }} -->
-              {{ role.nameAr }}
-            </label>
+<div class="min-h-screen bg-gray-50 py-8" dir="rtl">
+  <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+    <!-- Header -->
+    <div class="bg-white rounded-2xl shadow-lg p-6 mb-8">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center">
+          <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center mr-4">
+            <i class="bi bi-person-plus text-white text-xl"></i>
+          </div>
+          <div>
+            <h1 class="text-3xl font-bold text-gray-900">
+              {{ userForm.get('id')?.value > 0 ? 'تعديل المستخدم' : 'إضافة مستخدم جديد' }}
+            </h1>
+            <p class="text-gray-600 mt-1">املأ البيانات المطلوبة لإدارة المستخدم</p>
           </div>
         </div>
+        <button class="w-10 h-10 bg-gray-100 hover:bg-gray-200 rounded-full flex items-center justify-center transition-colors" 
+                (click)="cancel()">
+          <i class="bi bi-x-lg text-gray-600"></i>
+        </button>
       </div>
     </div>
 
-    <!-- Actions -->
-    <div class="d-flex gap-2 flex-wrap mt-4">
-      <button type="submit" class="btn btn-primary flex-fill" [disabled]="!userForm.valid">
-        <!-- {{ userForm.get('id')?.value > 0 ? 'Update' : 'Save' }} --> حفظ
-      </button>
-      <button type="button" class="btn btn-secondary flex-fill" (click)="cancel()">
-        إلغاء
-      </button>
+    <!-- Form -->
+    <div class="bg-white rounded-2xl shadow-xl p-8">
+      <form [formGroup]="userForm" (ngSubmit)="save()" class="space-y-8">
+        <!-- Basic Information Section -->
+        <div class="border-b border-gray-200 pb-8">
+          <h2 class="text-xl font-bold text-gray-900 mb-6 flex items-center">
+            <i class="bi bi-person-lines-fill text-blue-600 mr-3"></i>
+            المعلومات الأساسية
+          </h2>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Name (Arabic) -->
+            <div class="space-y-2">
+              <label class="block text-sm font-semibold text-gray-700">
+                <i class="bi bi-person mr-2 text-blue-600"></i>
+                الاسم بالعربية <span class="text-red-500">*</span>
+              </label>
+              <input type="text" 
+                     formControlName="nameAr"
+                     class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-gray-50 focus:bg-white"
+                     placeholder="أدخل الاسم بالعربية">
+            </div>
+
+            <!-- Name (English) -->
+            <div class="space-y-2">
+              <label class="block text-sm font-semibold text-gray-700">
+                <i class="bi bi-person mr-2 text-blue-600"></i>
+                الاسم بالإنجليزية
+              </label>
+              <input type="text" 
+                     formControlName="nameEn"
+                     class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-gray-50 focus:bg-white"
+                     placeholder="Enter name in English">
+            </div>
+
+            <!-- Phone -->
+            <div class="space-y-2">
+              <label class="block text-sm font-semibold text-gray-700">
+                <i class="bi bi-telephone mr-2 text-green-600"></i>
+                رقم الهاتف
+              </label>
+              <input type="tel" 
+                     formControlName="phone"
+                     class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 bg-gray-50 focus:bg-white"
+                     placeholder="أدخل رقم الهاتف">
+            </div>
+
+            <!-- Email -->
+            <div class="space-y-2">
+              <label class="block text-sm font-semibold text-gray-700">
+                <i class="bi bi-envelope mr-2 text-purple-600"></i>
+                البريد الإلكتروني
+              </label>
+              <input type="email" 
+                     formControlName="email"
+                     class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all duration-200 bg-gray-50 focus:bg-white"
+                     placeholder="أدخل البريد الإلكتروني">
+            </div>
+          </div>
+
+          <!-- Address -->
+          <div class="mt-6 space-y-2">
+            <label class="block text-sm font-semibold text-gray-700">
+              <i class="bi bi-geo-alt mr-2 text-amber-600"></i>
+              العنوان
+            </label>
+            <input type="text" 
+                   formControlName="address"
+                   class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-200 bg-gray-50 focus:bg-white"
+                   placeholder="أدخل العنوان الكامل">
+          </div>
+        </div>
+
+        <!-- Account Information Section -->
+        <div class="border-b border-gray-200 pb-8">
+          <h2 class="text-xl font-bold text-gray-900 mb-6 flex items-center">
+            <i class="bi bi-shield-lock text-indigo-600 mr-3"></i>
+            معلومات الحساب
+          </h2>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Username -->
+            <div class="space-y-2">
+              <label class="block text-sm font-semibold text-gray-700">
+                <i class="bi bi-person-circle mr-2 text-indigo-600"></i>
+                اسم المستخدم <span class="text-red-500">*</span>
+              </label>
+              <input type="text" 
+                     formControlName="username"
+                     class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 bg-gray-50 focus:bg-white"
+                     placeholder="أدخل اسم المستخدم">
+            </div>
+
+            <!-- Password -->
+            <div class="space-y-2" *ngIf="!isEditMode">
+              <label class="block text-sm font-semibold text-gray-700">
+                <i class="bi bi-key mr-2 text-red-600"></i>
+                كلمة المرور <span class="text-red-500">*</span>
+              </label>
+              <input type="password" 
+                     formControlName="passwordHash"
+                     class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all duration-200 bg-gray-50 focus:bg-white"
+                     placeholder="أدخل كلمة المرور">
+            </div>
+          </div>
+        </div>
+
+        <!-- Print Settings Section -->
+        <div class="border-b border-gray-200 pb-8">
+          <div class="flex items-center justify-between mb-6">
+            <h2 class="text-xl font-bold text-gray-900 flex items-center">
+              <i class="bi bi-printer text-gray-600 mr-3"></i>
+              إعدادات الطباعة
+            </h2>
+            <button type="button"
+                    (click)="togglePrintSettingsExpanded()"
+                    class="text-sm text-blue-600 hover:text-blue-700 flex items-center">
+              <i [class]="printSettingsExpanded ? 'bi bi-chevron-up' : 'bi bi-chevron-down'"></i>
+              <span class="mr-1">{{ printSettingsExpanded ? 'إخفاء التفاصيل' : 'إظهار التفاصيل' }}</span>
+            </button>
+          </div>
+
+          <!-- Simple Mode: Text Areas (for backward compatibility) -->
+          <div *ngIf="!printSettingsExpanded" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="space-y-2">
+              <label class="block text-sm font-semibold text-gray-700">
+                <i class="bi bi-file-text mr-2 text-gray-600"></i>
+                عنوان الطباعة (نص بسيط)
+              </label>
+              <textarea formControlName="printHeader" 
+                        rows="4"
+                        class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-gray-500 transition-all duration-200 bg-gray-50 focus:bg-white resize-none"
+                        placeholder="أدخل عنوان الطباعة"></textarea>
+            </div>
+            <div class="space-y-2">
+              <label class="block text-sm font-semibold text-gray-700">
+                <i class="bi bi-file-text mr-2 text-gray-600"></i>
+                تذييل الطباعة (نص بسيط)
+              </label>
+              <textarea formControlName="printFooter" 
+                        rows="4"
+                        class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-gray-500 transition-all duration-200 bg-gray-50 focus:bg-white resize-none"
+                        placeholder="أدخل تذييل الطباعة"></textarea>
+            </div>
+          </div>
+
+          <!-- Advanced Mode: Structured Settings with Visibility Toggles -->
+          <div *ngIf="printSettingsExpanded" class="space-y-6">
+            <!-- Print Header Settings -->
+            <div class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 border-2 border-blue-200">
+              <h3 class="text-lg font-bold text-gray-900 mb-4 flex items-center">
+                <i class="bi bi-heading text-blue-600 mr-2"></i>
+                إعدادات رأس المستند
+              </h3>
+              
+              <!-- Custom Header Text -->
+              <div class="mb-6">
+                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                  <i class="bi bi-file-text mr-2 text-blue-600"></i>
+                  نص مخصص في الرأس (HTML/نص عادي)
+                </label>
+                <textarea formControlName="printHeaderCustomText" 
+                          rows="3"
+                          class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white resize-none"
+                          placeholder="أدخل نص مخصص للرأس (اختياري)"></textarea>
+              </div>
+
+              <!-- Visibility Toggles -->
+              <div class="bg-white rounded-lg p-4">
+                <h4 class="text-md font-semibold text-gray-800 mb-4">إظهار/إخفاء العناصر</h4>
+                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                  <label class="flex items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer">
+                    <input type="checkbox" formControlName="showCompanyName" class="w-4 h-4 text-blue-600 rounded">
+                    <span class="mr-2 text-sm text-gray-700">اسم الشركة</span>
+                  </label>
+                  <label class="flex items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer">
+                    <input type="checkbox" formControlName="showCompanyLogo" class="w-4 h-4 text-blue-600 rounded">
+                    <span class="mr-2 text-sm text-gray-700">شعار الشركة</span>
+                  </label>
+                  <label class="flex items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer">
+                    <input type="checkbox" formControlName="showCompanyAddress" class="w-4 h-4 text-blue-600 rounded">
+                    <span class="mr-2 text-sm text-gray-700">عنوان الشركة</span>
+                  </label>
+                  <label class="flex items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer">
+                    <input type="checkbox" formControlName="showCompanyPhone" class="w-4 h-4 text-blue-600 rounded">
+                    <span class="mr-2 text-sm text-gray-700">هاتف الشركة</span>
+                  </label>
+                  <label class="flex items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer">
+                    <input type="checkbox" formControlName="showCompanyFax" class="w-4 h-4 text-blue-600 rounded">
+                    <span class="mr-2 text-sm text-gray-700">فاكس الشركة</span>
+                  </label>
+                  <label class="flex items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer">
+                    <input type="checkbox" formControlName="showCompanyEmail" class="w-4 h-4 text-blue-600 rounded">
+                    <span class="mr-2 text-sm text-gray-700">بريد الشركة</span>
+                  </label>
+                  <label class="flex items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer">
+                    <input type="checkbox" formControlName="showRegistrationNumber" class="w-4 h-4 text-blue-600 rounded">
+                    <span class="mr-2 text-sm text-gray-700">رقم التسجيل</span>
+                  </label>
+                  <label class="flex items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer">
+                    <input type="checkbox" formControlName="showCapital" class="w-4 h-4 text-blue-600 rounded">
+                    <span class="mr-2 text-sm text-gray-700">رأس المال</span>
+                  </label>
+                  <label class="flex items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer">
+                    <input type="checkbox" formControlName="showTaxNumber" class="w-4 h-4 text-blue-600 rounded">
+                    <span class="mr-2 text-sm text-gray-700">الرقم الضريبي</span>
+                  </label>
+                  <label class="flex items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer">
+                    <input type="checkbox" formControlName="showSlogan" class="w-4 h-4 text-blue-600 rounded">
+                    <span class="mr-2 text-sm text-gray-700">الشعار</span>
+                  </label>
+                  <label class="flex items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer">
+                    <input type="checkbox" formControlName="showDocumentTitle" class="w-4 h-4 text-blue-600 rounded">
+                    <span class="mr-2 text-sm text-gray-700">عنوان المستند</span>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <!-- Print Footer Settings -->
+            <div class="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-6 border-2 border-green-200">
+              <h3 class="text-lg font-bold text-gray-900 mb-4 flex items-center">
+                <i class="bi bi-file-earmark-text text-green-600 mr-2"></i>
+                إعدادات تذييل المستند
+              </h3>
+              
+              <!-- Custom Footer Text -->
+              <div class="mb-4">
+                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                  <i class="bi bi-file-text mr-2 text-green-600"></i>
+                  نص مخصص في التذييل (HTML/نص عادي)
+                </label>
+                <textarea formControlName="printFooterCustomText" 
+                          rows="3"
+                          class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 bg-white resize-none"
+                          placeholder="أدخل نص مخصص للتذييل (اختياري)"></textarea>
+              </div>
+
+              <!-- Custom Terms -->
+              <div class="mb-4">
+                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                  <i class="bi bi-file-earmark-check mr-2 text-green-600"></i>
+                  شروط وأحكام مخصصة (تتجاوز شروط الشركة)
+                </label>
+                <textarea formControlName="printFooterCustomTerms" 
+                          rows="4"
+                          class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 bg-white resize-none"
+                          placeholder="أدخل شروط وأحكام مخصصة (اختياري)"></textarea>
+              </div>
+
+              <!-- Custom Notes -->
+              <div class="mb-6">
+                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                  <i class="bi bi-sticky mr-2 text-green-600"></i>
+                  ملاحظات مخصصة
+                </label>
+                <textarea formControlName="printFooterCustomNotes" 
+                          rows="3"
+                          class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 bg-white resize-none"
+                          placeholder="أدخل ملاحظات مخصصة (اختياري)"></textarea>
+              </div>
+
+              <!-- Visibility Toggles -->
+              <div class="bg-white rounded-lg p-4">
+                <h4 class="text-md font-semibold text-gray-800 mb-4">إظهار/إخفاء العناصر</h4>
+                <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  <label class="flex items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer">
+                    <input type="checkbox" formControlName="showTerms" class="w-4 h-4 text-green-600 rounded">
+                    <span class="mr-2 text-sm text-gray-700">الشروط والأحكام</span>
+                  </label>
+                  <label class="flex items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer">
+                    <input type="checkbox" formControlName="showNotes" class="w-4 h-4 text-green-600 rounded">
+                    <span class="mr-2 text-sm text-gray-700">الملاحظات</span>
+                  </label>
+                  <label class="flex items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer">
+                    <input type="checkbox" formControlName="showCustomerSignature" class="w-4 h-4 text-green-600 rounded">
+                    <span class="mr-2 text-sm text-gray-700">توقيع العميل</span>
+                  </label>
+                  <label class="flex items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer">
+                    <input type="checkbox" formControlName="showAuthorizedSignature" class="w-4 h-4 text-green-600 rounded">
+                    <span class="mr-2 text-sm text-gray-700">التوقيع المعتمد</span>
+                  </label>
+                  <label class="flex items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer">
+                    <input type="checkbox" formControlName="showCompanyFooterNote" class="w-4 h-4 text-green-600 rounded">
+                    <span class="mr-2 text-sm text-gray-700">ملاحظة الشركة</span>
+                  </label>
+                  <label class="flex items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer">
+                    <input type="checkbox" formControlName="showDocumentGenerationDate" class="w-4 h-4 text-green-600 rounded">
+                    <span class="mr-2 text-sm text-gray-700">تاريخ الإنشاء</span>
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Status Section -->
+        <div class="border-b border-gray-200 pb-8">
+          <h2 class="text-xl font-bold text-gray-900 mb-6 flex items-center">
+            <i class="bi bi-toggle-on text-green-600 mr-3"></i>
+            حالة المستخدم
+          </h2>
+          
+          <div class="flex items-center space-x-4 space-x-reverse">
+            <div class="flex items-center">
+              <input type="checkbox" 
+                     formControlName="isActive"
+                     id="isActive"
+                     class="w-5 h-5 text-green-600 bg-gray-100 border-gray-300 rounded focus:ring-green-500 focus:ring-2">
+              <label for="isActive" class="mr-3 text-sm font-medium text-gray-700">
+                المستخدم نشط
+              </label>
+            </div>
+            <div class="text-sm text-gray-500">
+              <i class="bi bi-info-circle mr-1"></i>
+              المستخدم النشط يمكنه تسجيل الدخول واستخدام النظام
+            </div>
+          </div>
+        </div>
+
+        <!-- Roles Section -->
+        <div class="pb-8">
+          <h2 class="text-xl font-bold text-gray-900 mb-6 flex items-center">
+            <i class="bi bi-shield-check text-amber-600 mr-3"></i>
+            تعيين الصلاحيات
+          </h2>
+          
+          <div class="bg-gray-50 rounded-xl p-6">
+            <p class="text-sm text-gray-600 mb-4">اختر الصلاحيات المناسبة للمستخدم:</p>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div *ngFor="let role of roles" class="flex items-center p-3 bg-white rounded-lg border border-gray-200 hover:border-amber-300 transition-colors">
+                <input type="checkbox" 
+                       id="role_{{ role.id }}" 
+                       [value]="role.id"
+                       [checked]="userForm.get('roles')?.value.includes(role.id)" 
+                       (change)="onRoleChange(role.id, $event)"
+                       class="w-4 h-4 text-amber-600 bg-gray-100 border-gray-300 rounded focus:ring-amber-500 focus:ring-2">
+                <label for="role_{{ role.id }}" class="mr-3 text-sm font-medium text-gray-700 cursor-pointer flex-1">
+                  {{ role.nameAr }}
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="flex justify-end space-x-4 space-x-reverse pt-8 border-t border-gray-200">
+          <button type="button" 
+                  (click)="cancel()"
+                  class="px-8 py-3 bg-gray-100 text-gray-700 rounded-xl font-semibold hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-offset-2 transition-all duration-200 border border-gray-300">
+            <i class="bi bi-x-lg mr-2"></i>
+            إلغاء
+          </button>
+          <button type="submit" 
+                  [disabled]="!userForm.valid"
+                  class="px-8 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-semibold hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg transform hover:scale-105">
+            <i class="bi bi-check-lg mr-2"></i>
+            {{ userForm.get('id')?.value > 0 ? 'تحديث المستخدم' : 'حفظ المستخدم' }}
+          </button>
+        </div>
+      </form>
     </div>
-  </form>
+  </div>
 </div>

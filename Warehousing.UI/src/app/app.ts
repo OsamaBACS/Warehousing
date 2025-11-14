@@ -1,9 +1,10 @@
 import { Component, OnInit, Renderer2 } from '@angular/core';
-import { Router } from '@angular/router';
+import { Router, NavigationEnd } from '@angular/router';
 import { AuthService } from './core/services/auth.service';
 import { ThemeService } from './shared/services/theme.service';
 import { LanguageService } from './core/services/language.service';
 import { CartService } from './shared/services/cart.service';
+import { filter } from 'rxjs/operators';
 
 @Component({
   selector: 'app-root',
@@ -16,13 +17,14 @@ export class App implements OnInit {
   isDarkMode = false;
   cartCount = 3;
   username = '';
+  inModule = false;
 
   constructor(
     private router: Router,
     private renderer: Renderer2,
     public authService: AuthService,
     public theme: ThemeService,
-    private languageService: LanguageService,
+    public languageService: LanguageService,
     public cartService: CartService
   ) { }
 
@@ -41,6 +43,16 @@ export class App implements OnInit {
     this.authService.username$.subscribe(un => {
       this.username = un;
     });
+
+    // Track route changes to update module detection
+    this.router.events
+      .pipe(filter((event): event is NavigationEnd => event instanceof NavigationEnd))
+      .subscribe((event: NavigationEnd) => {
+        this.inModule = event.urlAfterRedirects.startsWith('/admin/') || event.urlAfterRedirects.startsWith('/order/');
+      });
+    
+    // Set initial state
+    this.inModule = this.router.url.startsWith('/admin/') || this.router.url.startsWith('/order/');
   }
 
   get currentLang() {
@@ -56,6 +68,30 @@ export class App implements OnInit {
     this.languageService.setLanguage(this.currentLang === 'en' ? 'ar' : 'en');
   }
 
+  getLanguageTooltip(): string {
+    if (this.currentLang === 'ar') {
+      return 'تبديل اللغة: الإنجليزية';
+    } else {
+      return 'Toggle Language: Arabic';
+    }
+  }
+
+  getUserDisplayName(): string {
+    if (this.currentLang === 'ar' && this.authService.nameAr) {
+      // Check if the Arabic name is properly encoded
+      const nameAr = this.authService.nameAr;
+      if (nameAr.includes('Ø') || nameAr.includes('Ù')) {
+        // If it's garbled, fallback to username
+        return this.username;
+      }
+      return nameAr;
+    } else if (this.authService.nameEn) {
+      return this.authService.nameEn;
+    } else {
+      return this.username;
+    }
+  }
+
   toggleDarkMode(): void {
     this.theme.toggle();
   }
@@ -68,5 +104,18 @@ export class App implements OnInit {
     localStorage.clear();
     this.cartService.clearCart();
     this.router.navigate(['/login']);
+  }
+
+  goToHome() {
+    if (this.authService.isAdmin) {
+      this.router.navigate(['/admin/dashboard']);
+    } else {
+      this.router.navigate(['/order/2/categories']);
+    }
+  }
+
+  isInModule(): boolean {
+    const url = this.router.url;
+    return url.startsWith('/admin/') || url.startsWith('/order/');
   }
 }

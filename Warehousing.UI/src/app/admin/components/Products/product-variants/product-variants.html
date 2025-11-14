@@ -1,0 +1,261 @@
+<div class="bg-white rounded-2xl shadow-lg overflow-hidden">
+  <!-- Header -->
+  <div class="bg-gradient-to-r from-blue-500 to-indigo-600 px-6 py-4">
+    <div class="flex items-center justify-between">
+      <h3 class="text-xl font-bold text-white flex items-center">
+        <i class="bi bi-tags mr-3"></i>
+        متغيرات المنتج
+      </h3>
+      <button class="px-4 py-2 bg-white bg-opacity-20 text-white rounded-lg hover:bg-opacity-30 transition-colors" 
+        (click)="resetForm()" *ngIf="!isEditing">
+        <i class="bi bi-plus-lg mr-2"></i>
+        إضافة متغير
+      </button>
+    </div>
+  </div>
+
+  <!-- Variant Form -->
+  <div class="p-6" *ngIf="isEditing || variants.length === 0 || showAddForm">
+    <form [formGroup]="variantForm" (ngSubmit)="onSubmit()" class="space-y-6">
+      <!-- Basic Information -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="space-y-2">
+          <label class="block text-sm font-semibold text-gray-700">
+            <i class="bi bi-tag mr-2 text-blue-600"></i>
+            اسم المتغير *
+          </label>
+          <input type="text" formControlName="name" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors" 
+            placeholder="مثال: كبير، أحمر، مميز" />
+          <div *ngIf="variantForm.get('name')?.invalid && variantForm.get('name')?.touched" class="text-red-500 text-sm flex items-center">
+            <i class="bi bi-exclamation-circle mr-1"></i>
+            اسم المتغير مطلوب
+          </div>
+        </div>
+
+        <div class="space-y-2">
+          <label class="block text-sm font-semibold text-gray-700">
+            <i class="bi bi-hash mr-2 text-blue-600"></i>
+            كود المتغير
+          </label>
+          <input type="text" formControlName="code" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors" 
+            placeholder="مثال: LARGE, RED, PREM" />
+        </div>
+      </div>
+
+      <!-- Description -->
+      <div class="space-y-2">
+        <label class="block text-sm font-semibold text-gray-700">
+          <i class="bi bi-file-text mr-2 text-blue-600"></i>
+          الوصف
+        </label>
+        <textarea formControlName="description" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors resize-none" 
+          rows="3" placeholder="وصف اختياري للمتغير"></textarea>
+      </div>
+
+      <!-- Pricing and Adjustments -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div class="space-y-2">
+          <label class="block text-sm font-semibold text-gray-700">
+            <i class="bi bi-currency-dollar mr-2 text-green-600"></i>
+            تعديل السعر
+          </label>
+          <div class="relative">
+            <input type="number" formControlName="priceAdjustment" step="0.01" class="w-full px-4 py-3 pl-10 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors" 
+              placeholder="0.00" />
+            <span class="absolute left-3 top-3 text-gray-500">د.أ</span>
+          </div>
+        </div>
+
+        <div class="space-y-2">
+          <label class="block text-sm font-semibold text-gray-700">
+            <i class="bi bi-cart-dash mr-2 text-green-600"></i>
+            تعديل التكلفة
+          </label>
+          <div class="relative">
+            <input type="number" formControlName="costAdjustment" step="0.01" class="w-full px-4 py-3 pl-10 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors" 
+              placeholder="0.00" />
+            <span class="absolute left-3 top-3 text-gray-500">د.أ</span>
+          </div>
+        </div>
+
+        <div class="space-y-2">
+          <label class="block text-sm font-semibold text-gray-700">
+            <i class="bi bi-exclamation-triangle mr-2 text-orange-600"></i>
+            مستوى إعادة الطلب
+          </label>
+          <input type="number" formControlName="reorderLevel" step="0.01" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors" 
+            placeholder="0.00" />
+        </div>
+
+        <div class="space-y-2">
+          <label class="block text-sm font-semibold text-gray-700">
+            <i class="bi bi-box mr-2 text-orange-600"></i>
+            كمية المخزون
+          </label>
+          <input type="number" formControlName="stockQuantity" step="0.01" min="0" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors" 
+            placeholder="0.00" />
+        </div>
+      </div>
+
+      <!-- Store Selection -->
+      <div class="space-y-2">
+        <label class="block text-sm font-semibold text-gray-700">
+          <i class="bi bi-building mr-2 text-purple-600"></i>
+          المستودع *
+        </label>
+        <select formControlName="storeId" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors">
+          <option value="">اختر المستودع</option>
+          <option *ngFor="let store of stores" [value]="store.id">
+            {{ store.nameAr }}
+          </option>
+        </select>
+        <div *ngIf="variantForm.get('storeId')?.invalid && variantForm.get('storeId')?.touched" class="text-red-500 text-sm flex items-center">
+          <i class="bi bi-exclamation-circle mr-1"></i>
+          المستودع مطلوب
+        </div>
+      </div>
+
+      <!-- Stock Information Alert -->
+      <div class="bg-blue-50 border border-blue-200 rounded-xl p-4">
+        <div class="flex items-start">
+          <i class="bi bi-info-circle text-blue-600 text-xl mr-3 mt-1"></i>
+          <div>
+            <h4 class="text-blue-900 font-semibold mb-1">إدارة المخزون</h4>
+            <p class="text-blue-700 text-sm">
+              كل متغير له كمية مخزون خاصة به يتم إدارتها من خلال جدول المخزون. 
+              يتم تتبع المخزون لكل متغير في كل مستودع للتحكم الدقيق.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Display Order and Status -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="space-y-2">
+          <label class="block text-sm font-semibold text-gray-700">
+            <i class="bi bi-sort-numeric-down mr-2 text-indigo-600"></i>
+            ترتيب العرض
+          </label>
+          <input type="number" formControlName="displayOrder" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors" 
+            placeholder="0" />
+        </div>
+
+        <div class="space-y-2">
+          <label class="block text-sm font-semibold text-gray-700">
+            <i class="bi bi-toggle-on mr-2 text-indigo-600"></i>
+            الحالة
+          </label>
+          <div class="flex items-center space-x-3 p-3 bg-gray-50 rounded-xl">
+            <input type="checkbox" formControlName="isActive" class="h-5 w-5 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded" />
+            <span class="text-sm text-gray-700">نشط</span>
+          </div>
+        </div>
+
+        <div class="space-y-2">
+          <label class="block text-sm font-semibold text-gray-700">
+            <i class="bi bi-star mr-2 text-indigo-600"></i>
+            افتراضي
+          </label>
+          <div class="flex items-center space-x-3 p-3 bg-gray-50 rounded-xl">
+            <input type="checkbox" formControlName="isDefault" class="h-5 w-5 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded" />
+            <span class="text-sm text-gray-700">متغير افتراضي</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Form Actions -->
+      <div class="flex flex-col sm:flex-row justify-end gap-4 pt-6 border-t border-gray-200">
+        <button type="button" class="w-full sm:w-auto px-6 py-3 bg-gray-500 text-white rounded-xl hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-all duration-200 font-semibold" 
+          (click)="cancelEdit()">
+          <i class="bi bi-x-circle mr-2"></i>
+          إلغاء
+        </button>
+        <button type="submit" class="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 font-semibold shadow-lg" 
+          [disabled]="variantForm.invalid">
+          <i class="bi bi-check-circle mr-2"></i>
+          {{ isEditing ? 'تحديث المتغير' : 'إنشاء المتغير' }}
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Variants List -->
+  <div class="p-6" *ngIf="variants.length > 0">
+    <div class="overflow-x-auto">
+      <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gradient-to-r from-blue-500 to-indigo-600">
+          <tr>
+            <th class="px-6 py-4 text-right text-xs font-medium text-white uppercase tracking-wider">الاسم</th>
+            <th class="px-6 py-4 text-right text-xs font-medium text-white uppercase tracking-wider">الكود</th>
+            <th class="px-6 py-4 text-right text-xs font-medium text-white uppercase tracking-wider">تعديل السعر</th>
+            <th class="px-6 py-4 text-right text-xs font-medium text-white uppercase tracking-wider">معلومات المخزون</th>
+            <th class="px-6 py-4 text-right text-xs font-medium text-white uppercase tracking-wider">الحالة</th>
+            <th class="px-6 py-4 text-right text-xs font-medium text-white uppercase tracking-wider">افتراضي</th>
+            <th class="px-6 py-4 text-right text-xs font-medium text-white uppercase tracking-wider">الإجراءات</th>
+          </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-200">
+          <tr *ngFor="let variant of variants" class="hover:bg-gray-50 transition-colors">
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ variant.name }}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ variant.code || '-' }}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ variant.priceAdjustment || 0 | currency:'JOD':'symbol':'1.2-2':'ar' }}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+              <div class="flex flex-col">
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                  {{ getTotalVariantStock(variant.id!) }} {{ getUnitName() }}
+                </span>
+                <small class="text-gray-500 mt-1">إجمالي المخزون</small>
+              </div>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+              <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium" 
+                [class]="variant.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'">
+                {{ variant.isActive ? 'نشط' : 'غير نشط' }}
+              </span>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+              <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800" 
+                *ngIf="variant.isDefault">افتراضي</span>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+              <div class="flex space-x-2">
+                <button class="px-3 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors" 
+                  (click)="editVariant(variant)" title="تعديل">
+                  <i class="bi bi-pencil-fill"></i>
+                </button>
+                <button class="px-3 py-1 bg-red-600 text-white rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors" 
+                  (click)="deleteVariant(variant)" title="حذف">
+                  <i class="bi bi-trash-fill"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div class="p-6 text-center" *ngIf="loading">
+    <div class="inline-flex items-center px-4 py-2 bg-blue-50 rounded-lg">
+      <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mr-3"></div>
+      <span class="text-blue-600 font-medium">جاري التحميل...</span>
+    </div>
+  </div>
+
+  <!-- Empty State -->
+  <div class="p-12 text-center" *ngIf="!loading && variants.length === 0 && !isEditing">
+    <div class="flex flex-col items-center">
+      <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+        <i class="bi bi-box text-gray-400 text-2xl"></i>
+      </div>
+      <h4 class="text-lg font-semibold text-gray-900 mb-2">لا توجد متغيرات</h4>
+      <p class="text-gray-500 mb-4">هذا المنتج لا يحتوي على أي متغيرات بعد. اضغط على "إضافة متغير" لإنشاء الأول.</p>
+      <button class="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200 font-semibold" 
+        (click)="resetForm()">
+        <i class="bi bi-plus-lg mr-2"></i>
+        إضافة متغير
+      </button>
+    </div>
+  </div>
+</div>

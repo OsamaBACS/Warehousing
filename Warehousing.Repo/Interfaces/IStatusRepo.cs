@@ -5,6 +5,6 @@ namespace Warehousing.Repo.Interfaces
 {
     public interface IStatusRepo: IRepositoryBase<Status>
     {
-        
+        Task<Status?> GetByCodeAsync(string code);
     }
 }

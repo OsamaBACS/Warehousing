@@ -15,6 +15,13 @@ namespace Warehousing.Data.Entities
         public string Website { get; set; } = string.Empty;
 
         public string TaxNumber { get; set; } = string.Empty;
+        
+        // Additional company information for print templates
+        public string Fax { get; set; } = string.Empty;
+        public string RegistrationNumber { get; set; } = string.Empty;
+        public decimal? Capital { get; set; } // Capital amount
+        public string SloganEn { get; set; } = string.Empty;
+        public string SloganAr { get; set; } = string.Empty;
 
         public string CurrencyCode { get; set; } = "JOD"; // Default currency
         public string FooterNoteEn { get; set; } = string.Empty;

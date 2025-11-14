@@ -6,6 +6,7 @@ using Warehousing.Repo.Shared;
 using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Warehousing.Repo.Interfaces;
 
 namespace Warehousing.Api.Controllers
 {
@@ -15,11 +16,68 @@ namespace Warehousing.Api.Controllers
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
+        private readonly IWorkingHoursRepo _workingHoursRepo;
+        private readonly ILogger<OrderController> _logger;
 
-        public OrderController(IUnitOfWork unitOfWork, IMapper mapper)
+        public OrderController(IUnitOfWork unitOfWork, IMapper mapper, IWorkingHoursRepo workingHoursRepo, ILogger<OrderController> logger)
         {
             _unitOfWork = unitOfWork;
             _mapper = mapper;
+            _workingHoursRepo = workingHoursRepo;
+            _logger = logger;
+        }
+
+        /// <summary>
+        /// Checks if the current user can perform actions outside working hours.
+        /// Returns true if allowed, false if blocked.
+        /// Sets response and returns false if access should be denied.
+        /// </summary>
+        private async Task<bool> CheckWorkingHoursPermissionAsync()
+        {
+            var username = User?.FindFirst(ClaimTypes.Name)?.Value;
+            
+            // Check if user is admin (admins can access anytime)
+            var isAdmin = username == "admin" || 
+                         User?.HasClaim("IsAdmin", "true") == true ||
+                         User?.FindFirst("IsAdmin")?.Value == "true";
+            
+            if (isAdmin)
+            {
+                _logger.LogInformation("Admin user {Username} bypassing working hours check", username);
+                return true;
+            }
+            
+            // Check if user has permission to work outside working hours
+            var permissionClaim = User?.FindFirst("Permission")?.Value ?? string.Empty;
+            
+            // Split permissions and check more carefully
+            var permissionList = string.IsNullOrEmpty(permissionClaim) 
+                ? new List<string>() 
+                : permissionClaim.Split(',', StringSplitOptions.RemoveEmptyEntries)
+                    .Select(p => p.Trim())
+                    .ToList();
+            
+            // Check if WORK_OUTSIDE_WORKING_HOURS is in the permission list
+            var hasWorkOutsidePermission = permissionList.Any(p => 
+                string.Equals(p, "WORK_OUTSIDE_WORKING_HOURS", StringComparison.OrdinalIgnoreCase));
+            
+            if (hasWorkOutsidePermission)
+            {
+                _logger.LogInformation("User {Username} has WORK_OUTSIDE_WORKING_HOURS permission, allowing action", username);
+                return true;
+            }
+            
+            // Check working hours for users without the permission
+            var withinHours = await _workingHoursRepo.IsWithinWorkingHoursAsync(DateTime.Now);
+            
+            if (!withinHours)
+            {
+                _logger.LogWarning("Blocked action for user {Username} outside working hours. Permission claim: '{PermissionClaim}'", 
+                    username, permissionClaim);
+                return false; // Access denied
+            }
+            
+            return true; // Within working hours, allow access
         }
 
         [HttpGet]
@@ -168,16 +226,54 @@ namespace Warehousing.Api.Controllers
 
                 var result = (IQueryable<Order>)order;
 
+                // Filter by user: Admin can see all orders, regular users can only see their own orders
                 if (!isAdmin)
                 {
-                    result = result.Where(o => o.UserId == UserId);
+                    // For non-admin users, only show orders they created
+                    result = result.Where(o => o.CreatedBy == user.Username);
                 }
 
+                // Search functionality
+                if (!string.IsNullOrEmpty(filter.SearchTerm))
+                {
+                    var searchTerm = filter.SearchTerm.ToLower();
+                    result = result.Where(o => 
+                        o.Id.ToString().Contains(searchTerm) ||
+                        (o.Customer != null && o.Customer.NameAr.ToLower().Contains(searchTerm)) ||
+                        (o.Supplier != null && o.Supplier.Name.ToLower().Contains(searchTerm)) ||
+                        (o.Items.Any(i => i.Product.NameAr.ToLower().Contains(searchTerm))) ||
+                        o.TotalAmount.ToString().Contains(searchTerm)
+                    );
+                }
+
+                // Date filtering
                 if (filter.OrderDate != null)
                 {
-                    result = result.Where(o => o.OrderDate == filter.OrderDate);
+                    result = result.Where(o => o.OrderDate.Date == filter.OrderDate.Value.Date);
                 }
 
+                if (filter.DateFrom != null)
+                {
+                    result = result.Where(o => o.OrderDate >= filter.DateFrom.Value);
+                }
+
+                if (filter.DateTo != null)
+                {
+                    result = result.Where(o => o.OrderDate <= filter.DateTo.Value);
+                }
+
+                // Amount filtering
+                if (filter.MinAmount != null)
+                {
+                    result = result.Where(o => o.TotalAmount >= filter.MinAmount.Value);
+                }
+
+                if (filter.MaxAmount != null)
+                {
+                    result = result.Where(o => o.TotalAmount <= filter.MaxAmount.Value);
+                }
+
+                // Other filters
                 if (filter.OrderTypeId != null)
                 {
                     result = result.Where(o => o.OrderTypeId == filter.OrderTypeId);
@@ -224,6 +320,16 @@ namespace Warehousing.Api.Controllers
         {
             try
             {
+                // Check working hours permission
+                if (!await CheckWorkingHoursPermissionAsync())
+                {
+                    return StatusCode(403, new 
+                    { 
+                        errorMessage = "Actions are restricted outside working hours. Please try during working hours. Note: If you were just assigned the 'Work Outside Working Hours' permission, please log out and log back in to refresh your session.",
+                        message = "Actions are restricted outside working hours. Please try during working hours. Note: If you were just assigned the 'Work Outside Working Hours' permission, please log out and log back in to refresh your session."
+                    });
+                }
+
                 if (dto == null)
                 {
                     return BadRequest("Order Order Model is null!");
@@ -255,22 +361,24 @@ namespace Warehousing.Api.Controllers
                             var item = order.Items.First(i => i.Id == itemDto.Id);
                             item.StoreId = itemDto.StoreId;
                             item.ProductId = itemDto.ProductId;
+                            item.VariantId = itemDto.VariantId; // Add variant support
                             item.Quantity = itemDto.Quantity;
-                            item.CostPrice = itemDto.CostPrice;
-                            item.SellingPrice = item.SellingPrice;
+                            item.UnitCost = itemDto.UnitCost;
+                            item.UnitPrice = itemDto.UnitPrice;
                         }
                         else
                         {
-                            // Add new item
-                            order.Items.Add(new OrderItem
-                            {
-                                StoreId = itemDto.StoreId,
-                                ProductId = itemDto.ProductId,
-                                Quantity = itemDto.Quantity,
-                                CostPrice = itemDto.CostPrice,
-                                SellingPrice = itemDto.SellingPrice,
-                                OrderId = dto.Id
-                            });
+                        // Add new item
+                        order.Items.Add(new OrderItem
+                        {
+                            StoreId = itemDto.StoreId,
+                            ProductId = itemDto.ProductId,
+                            VariantId = itemDto.VariantId, // Add variant support
+                            Quantity = itemDto.Quantity,
+                            UnitCost = itemDto.UnitCost,
+                            UnitPrice = itemDto.UnitPrice,
+                            OrderId = dto.Id ?? 0
+                        });
                         }
                     }
 
@@ -279,6 +387,7 @@ namespace Warehousing.Api.Controllers
                 }
                 else
                 {
+                    // Create order first without items
                     var entity = new Order
                     {
                         OrderDate = dto.OrderDate,
@@ -287,17 +396,36 @@ namespace Warehousing.Api.Controllers
                         CustomerId = dto.CustomerId,
                         SupplierId = dto.SupplierId,
                         StatusId = dto.StatusId,
-                        Items = dto.Items.Select(i => new OrderItem
-                        {
-                            StoreId = i.StoreId,
-                            ProductId = i.ProductId,
-                            Quantity = i.Quantity,
-                            CostPrice = i.CostPrice,
-                            SellingPrice = i.SellingPrice
-                        }).ToList()
+                        Items = new List<OrderItem>() // Start with empty items
                     };
 
                     var result = await _unitOfWork.OrderRepo.CreateAsync(entity);
+                    
+                    // Now add items with the correct OrderId
+                    foreach (var itemDto in dto.Items)
+                    {
+                        var orderItem = new OrderItem
+                        {
+                            OrderId = result.Id,
+                            StoreId = itemDto.StoreId,
+                            ProductId = itemDto.ProductId,
+                            VariantId = itemDto.VariantId, // Add variant support
+                            Quantity = itemDto.Quantity,
+                            UnitCost = itemDto.UnitCost,
+                            UnitPrice = itemDto.UnitPrice,
+                            Discount = itemDto.Discount,
+                            Notes = itemDto.Notes
+                        };
+                        
+                        await _unitOfWork.OrderItemRepo.CreateAsync(orderItem);
+                        
+                        // Handle modifiers if any
+                        if (itemDto.SelectedModifiers != null && itemDto.SelectedModifiers.Count > 0)
+                        {
+                            await ProcessOrderItemModifiers(orderItem.Id, itemDto.SelectedModifiers);
+                        }
+                    }
+                    
                     return Ok(result);
                 }
             }
@@ -307,12 +435,44 @@ namespace Warehousing.Api.Controllers
             }
         }
 
+        private async Task ProcessOrderItemModifiers(int orderItemId, Dictionary<string, object> selectedModifiers)
+        {
+            foreach (var modifierEntry in selectedModifiers)
+            {
+                var modifierId = int.Parse(modifierEntry.Key);
+                var optionIds = (List<int>)modifierEntry.Value;
+                
+                foreach (var optionId in optionIds)
+                {
+                    var orderItemModifier = new OrderItemModifier
+                    {
+                        OrderItemId = orderItemId,
+                        ModifierOptionId = optionId,
+                        Quantity = 1,
+                        PriceAdjustment = 0,
+                        CostAdjustment = 0
+                    };
+                    
+                    await _unitOfWork.OrderItemModifierRepo.CreateAsync(orderItemModifier);
+                }
+            }
+        }
+
         [HttpPost]
         [Route("UpdateOrderStatusToPending/{id}")]
         public async Task<IActionResult> UpdateOrderStatusToPending(int id)
         {
             try
             {
+                // Check working hours permission
+                if (!await CheckWorkingHoursPermissionAsync())
+                {
+                    return StatusCode(403, new 
+                    { 
+                        errorMessage = "Actions are restricted outside working hours. Please try during working hours. Note: If you were just assigned the 'Work Outside Working Hours' permission, please log out and log back in to refresh your session.",
+                        message = "Actions are restricted outside working hours. Please try during working hours. Note: If you were just assigned the 'Work Outside Working Hours' permission, please log out and log back in to refresh your session."
+                    });
+                }
                 var order = await _unitOfWork.OrderRepo
                             .GetAll()
                             .Include(o => o.Items)
@@ -369,6 +529,16 @@ namespace Warehousing.Api.Controllers
         {
             try
             {
+                // Check working hours permission
+                if (!await CheckWorkingHoursPermissionAsync())
+                {
+                    return StatusCode(403, new 
+                    { 
+                        errorMessage = "Actions are restricted outside working hours. Please try during working hours. Note: If you were just assigned the 'Work Outside Working Hours' permission, please log out and log back in to refresh your session.",
+                        message = "Actions are restricted outside working hours. Please try during working hours. Note: If you were just assigned the 'Work Outside Working Hours' permission, please log out and log back in to refresh your session."
+                    });
+                }
+
                 // Use EF Core execution strategy to handle retries correctly
                 var strategy = _unitOfWork.GetExecutionStrategy();
 
@@ -382,7 +552,6 @@ namespace Warehousing.Api.Controllers
                         var order = await _unitOfWork.OrderRepo
                             .GetAll()
                             .Include(o => o.Items)
-                                .ThenInclude(i => i.Product)
                             .FirstOrDefaultAsync(o => o.Id == id);
 
                         if (order == null)
@@ -424,34 +593,120 @@ namespace Warehousing.Api.Controllers
                         // Save updated order via repository
                         await _unitOfWork.OrderRepo.UpdateAsync(order);
 
+                        // STEP 1: Validate stock availability first
+                        var insufficientItems = new List<string>();
+
                         foreach (var item in order.Items)
                         {
-                            if (item.Product == null)
+                            // Load product separately to avoid tracking conflicts
+                            var product = await _unitOfWork.ProductRepo
+                                .GetByCondition(p => p.Id == item.ProductId)
+                                .FirstOrDefaultAsync();
+                            
+                            if (product == null)
                                 return BadRequest(new { success = false, message = $"Product not found for order item {item.Id}" });
 
-                            if (item.Product != null)
+                            // Only validate for sales (OrderTypeId != 1)
+                            var inventory = await _unitOfWork.InventoryRepo
+                                .GetByCondition(i => i.ProductId == item.ProductId && 
+                                                   i.StoreId == item.StoreId && 
+                                                   i.VariantId == item.VariantId)
+                                .FirstOrDefaultAsync();
+                            
+                            if (order.OrderTypeId != 1 && inventory != null && inventory.Quantity < item.Quantity)
                             {
-                                //Purchase
-                                if (order.OrderTypeId == 1)
+                                var variantInfo = item.VariantId.HasValue ? $" (Variant ID: {item.VariantId})" : "";
+                                insufficientItems.Add($"{product.NameAr}{variantInfo} (Available: {inventory.Quantity}, Requested: {item.Quantity})");
+                            }
+                        }
+
+                        // If any insufficient items found → cancel before making changes
+                        if (insufficientItems.Any())
+                        {
+                            await transaction.RollbackAsync();
+                            return BadRequest(new
+                            {
+                                success = false,
+                                message = "Order cannot be completed due to insufficient stock for the following items:",
+                                insufficientItems
+                            });
+                        }
+
+                        foreach (var item in order.Items)
+                        {
+                            // Load inventory separately to avoid tracking conflicts
+                            var inventory = await _unitOfWork.InventoryRepo
+                                .GetByCondition(i => i.ProductId == item.ProductId && 
+                                                   i.StoreId == item.StoreId && 
+                                                   i.VariantId == item.VariantId)
+                                .FirstOrDefaultAsync();
+                            
+                            // Store quantities before change
+                            var quantityBefore = 0m;
+                            var quantityAfter = 0m;
+
+                            if (inventory == null)
+                            {
+                                // For purchases, create inventory if it doesn't exist
+                                if (order.OrderTypeId == 1) // Purchase → Create inventory
                                 {
-                                    item.Product.QuantityInStock += item.Quantity;
+                                    var newInventory = new Inventory
+                                    {
+                                        ProductId = item.ProductId,
+                                        StoreId = item.StoreId,
+                                        VariantId = item.VariantId,
+                                        Quantity = item.Quantity,
+                                        CreatedAt = DateTime.UtcNow,
+                                        CreatedBy = "System", // You might want to get this from user context
+                                        UpdatedAt = DateTime.UtcNow,
+                                        UpdatedBy = "System"
+                                    };
+
+                                    await _unitOfWork.InventoryRepo.CreateAsync(newInventory);
+                                    
+                                    quantityBefore = 0; // Starting from 0
+                                    quantityAfter = item.Quantity; // Added the purchased quantity
                                 }
-                                else
+                                else // Sale → Inventory must exist
                                 {
-                                    item.Product.QuantityInStock -= item.Quantity;
+                                    var variantInfo = item.VariantId.HasValue ? $" (Variant ID: {item.VariantId})" : "";
+                                    return BadRequest(new { success = false, message = $"Inventory not found for product {item.Product.NameAr}{variantInfo} in store {item.StoreId}. Cannot sell from non-existent inventory." });
                                 }
-                                await _unitOfWork.ProductRepo.UpdateAsync(item.Product);
+                            }
+                            else
+                            {
+                                // Inventory exists, update it
+                                quantityBefore = inventory.Quantity;
+                                quantityAfter = quantityBefore;
+
+                                if (order.OrderTypeId == 1) // Purchase → Stock In
+                                {
+                                    quantityAfter = quantityBefore + item.Quantity;
+                                    inventory.Quantity = quantityAfter;
+                                }
+                                else // Sale → Stock Out (already validated)
+                                {
+                                    quantityAfter = quantityBefore - item.Quantity;
+                                    inventory.Quantity = quantityAfter;
+                                }
+
+                                // Update the inventory entity directly
+                                await _unitOfWork.InventoryRepo.UpdateAsync(inventory);
                             }
 
-                            // Create InventoryTransaction for stock in
                             var transactionEntity = new InventoryTransaction
                             {
                                 ProductId = item.ProductId,
-                                QuantityChanged = item.Quantity,
+                                StoreId = item.StoreId,
+                                OrderId = order.Id,
+                                OrderItemId = item.Id,
+                                QuantityChanged = order.OrderTypeId == 1 ? item.Quantity : -item.Quantity,
+                                QuantityBefore = quantityBefore,
+                                QuantityAfter = quantityAfter,
+                                UnitCost = item.UnitCost,
                                 TransactionDate = DateTime.UtcNow,
                                 Notes = $"{transactionTypeCode} order #{order.Id} completed.",
-                                TransactionTypeId = transactionType.Id,
-                                OrderId = order.Id
+                                TransactionTypeId = transactionType.Id
                             };
 
                             await _unitOfWork.InventoryTransactionRepo.CreateAsync(transactionEntity);
@@ -491,5 +746,439 @@ namespace Warehousing.Api.Controllers
                 });
             }
         }
+
+        [HttpPost]
+        [Route("UpdateApprovedOrder/{id}")]
+        public async Task<IActionResult> UpdateApprovedOrder(int id, [FromBody] Order updatedOrder)
+        {
+            try
+            {
+                // Check working hours permission
+                if (!await CheckWorkingHoursPermissionAsync())
+                {
+                    return StatusCode(403, new 
+                    { 
+                        errorMessage = "Actions are restricted outside working hours. Please try during working hours. Note: If you were just assigned the 'Work Outside Working Hours' permission, please log out and log back in to refresh your session.",
+                        message = "Actions are restricted outside working hours. Please try during working hours. Note: If you were just assigned the 'Work Outside Working Hours' permission, please log out and log back in to refresh your session."
+                    });
+                }
+
+                var strategy = _unitOfWork.GetExecutionStrategy();
+
+                return await strategy.ExecuteAsync(async () =>
+                {
+                    await using var transaction = await _unitOfWork.BeginTransactionAsync();
+
+                    try
+                    {
+                        // Load existing order with items + products
+                        var existingOrder = await _unitOfWork.OrderRepo
+                            .GetAll()
+                            .Include(o => o.Items)
+                                .ThenInclude(i => i.Product)
+                            .FirstOrDefaultAsync(o => o.Id == id);
+
+                        if (existingOrder == null)
+                            return NotFound(new { success = false, message = "Order not found." });
+
+                        // Check if order is already completed
+                        var status = await _unitOfWork.StatusRepo.GetAll()
+                            .FirstOrDefaultAsync(s => s.Id == existingOrder.StatusId);
+
+                        if (status == null || status.Code != "COMPLETED")
+                            return BadRequest(new { success = false, message = "Only COMPLETED orders can be updated." });
+
+                        // Prepare stock validation
+                        var insufficientItems = new List<string>();
+
+                        // Map existing items by productId
+                        var existingItemsMap = existingOrder.Items.ToDictionary(i => i.ProductId, i => i);
+
+                        foreach (var updatedItem in updatedOrder.Items)
+                        {
+                            var inventory = updatedItem.Product.Inventories.Where(s => s.StoreId == updatedItem.StoreId).FirstOrDefault(); 
+                            if (!existingItemsMap.TryGetValue(updatedItem.ProductId, out var oldItem))
+                            {
+                                // New item added to invoice
+                                if (existingOrder.OrderTypeId != 1 && updatedItem.Quantity > inventory.Quantity)
+                                {
+                                    insufficientItems.Add($"{updatedItem.Product?.NameAr ?? "Unknown"} (Available: {inventory?.Quantity}, Requested: {updatedItem.Quantity})");
+                                }
+                            }
+                            else
+                            {
+                                decimal diff = updatedItem.Quantity - oldItem.Quantity;
+
+                                if (existingOrder.OrderTypeId != 1 && diff > 0) // Sales: more qty requested
+                                {
+                                    if (inventory.Quantity < diff)
+                                    {
+                                        insufficientItems.Add($"{oldItem.Product?.NameAr ?? "Unknown"} (Available: {inventory?.Quantity}, Extra Requested: {diff})");
+                                    }
+                                }
+                            }
+                        }
+
+                        if (insufficientItems.Any())
+                        {
+                            await transaction.RollbackAsync();
+                            return BadRequest(new
+                            {
+                                success = false,
+                                message = "Update failed due to insufficient stock for the following items:",
+                                insufficientItems
+                            });
+                        }
+
+                        // Apply changes
+                        foreach (var updatedItem in updatedOrder.Items)
+                        {
+                            var inventory = updatedItem.Product.Inventories.Where(s => s.StoreId == updatedItem.StoreId).FirstOrDefault();
+                            
+                            if (!existingItemsMap.TryGetValue(updatedItem.ProductId, out var oldItem))
+                            {
+                                // New item added
+                                if (existingOrder.OrderTypeId == 1) // Purchase
+                                {
+                                    inventory.Quantity += updatedItem.Quantity;
+                                }
+                                else // Sales
+                                {
+                                    inventory.Quantity -= updatedItem.Quantity;
+                                }
+
+                                // Update the inventory entity directly
+                                await _unitOfWork.InventoryRepo.UpdateAsync(inventory);
+
+                                var newTransaction = new InventoryTransaction
+                                {
+                                    ProductId = updatedItem.ProductId,
+                                    QuantityChanged = existingOrder.OrderTypeId == 1 ? updatedItem.Quantity : -updatedItem.Quantity,
+                                    TransactionDate = DateTime.UtcNow,
+                                    Notes = $"Invoice #{existingOrder.Id} updated (new item).",
+                                    TransactionTypeId = existingOrder.OrderTypeId == 1 ? 1 : 2, // example lookup
+                                    OrderId = existingOrder.Id
+                                };
+                                await _unitOfWork.InventoryTransactionRepo.CreateAsync(newTransaction);
+                            }
+                            else
+                            {
+                                // Existing item modified
+                                decimal diff = updatedItem.Quantity - oldItem.Quantity;
+                                var inventoryOld = oldItem.Product.Inventories.Where(s => s.StoreId == updatedItem.StoreId).FirstOrDefault();
+
+                                if (diff != 0)
+                                {
+                                    if (existingOrder.OrderTypeId == 1) // Purchase
+                                    {
+                                        inventoryOld.Quantity += diff;
+                                    }
+                                    else // Sales
+                                    {
+                                        inventoryOld.Quantity -= diff;
+                                    }
+
+                                    // Update the inventory entity directly
+                                    await _unitOfWork.InventoryRepo.UpdateAsync(inventoryOld);
+
+                                    var updateTransaction = new InventoryTransaction
+                                    {
+                                        ProductId = oldItem.ProductId,
+                                        QuantityChanged = existingOrder.OrderTypeId == 1 ? diff : -diff,
+                                        TransactionDate = DateTime.UtcNow,
+                                        Notes = $"Invoice #{existingOrder.Id} updated (qty changed).",
+                                        TransactionTypeId = existingOrder.OrderTypeId == 1 ? 1 : 2, // example lookup
+                                        OrderId = existingOrder.Id
+                                    };
+                                    await _unitOfWork.InventoryTransactionRepo.CreateAsync(updateTransaction);
+
+                                    oldItem.Quantity = updatedItem.Quantity; // update order item quantity
+                                }
+                            }
+                        }
+
+                        // Save updated order and items
+                        existingOrder.Items = updatedOrder.Items;
+                        await _unitOfWork.OrderRepo.UpdateAsync(existingOrder);
+
+                        await _unitOfWork.SaveAsync();
+                        await transaction.CommitAsync();
+
+                        return Ok(new
+                        {
+                            success = true,
+                            message = $"Invoice #{existingOrder.Id} updated successfully.",
+                            result = existingOrder
+                        });
+                    }
+                    catch (Exception ex)
+                    {
+                        await transaction.RollbackAsync();
+                        return StatusCode(500, new
+                        {
+                            success = false,
+                            message = $"Error updating approved order: {ex.Message}"
+                        });
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    message = $"Error: {ex.Message}"
+                });
+            }
+        }
+
+        [HttpPost]
+        [Route("CancelApprovedOrder/{id}")]
+        public async Task<IActionResult> CancelApprovedOrder(int id)
+        {
+            try
+            {
+                // Check working hours permission
+                if (!await CheckWorkingHoursPermissionAsync())
+                {
+                    return StatusCode(403, new 
+                    { 
+                        errorMessage = "Actions are restricted outside working hours. Please try during working hours. Note: If you were just assigned the 'Work Outside Working Hours' permission, please log out and log back in to refresh your session.",
+                        message = "Actions are restricted outside working hours. Please try during working hours. Note: If you were just assigned the 'Work Outside Working Hours' permission, please log out and log back in to refresh your session."
+                    });
+                }
+
+                var strategy = _unitOfWork.GetExecutionStrategy();
+
+                return await strategy.ExecuteAsync(async () =>
+                {
+                    await using var transaction = await _unitOfWork.BeginTransactionAsync();
+
+                    try
+                    {
+                        // Load order with items + products
+                        var order = await _unitOfWork.OrderRepo
+                            .GetAll()
+                            .Include(o => o.Items)
+                                .ThenInclude(i => i.Product)
+                            .FirstOrDefaultAsync(o => o.Id == id);
+
+                        if (order == null)
+                            return NotFound(new { success = false, message = "Order not found." });
+
+                        // Ensure it's already completed
+                        var status = await _unitOfWork.StatusRepo.GetAll()
+                            .FirstOrDefaultAsync(s => s.Id == order.StatusId);
+
+                        if (status == null || status.Code != "COMPLETED")
+                            return BadRequest(new { success = false, message = "Only COMPLETED orders can be cancelled." });
+
+                        // Get Cancel status
+                        var cancelStatus = await _unitOfWork.StatusRepo
+                            .GetByCondition(s => s.Code == "CANCELLED")
+                            .FirstOrDefaultAsync();
+
+                        if (cancelStatus == null)
+                            return BadRequest(new { success = false, message = "Cancel status not configured." });
+
+                        // Reverse stock changes
+                        foreach (var item in order.Items)
+                        {
+                            var inventory = item.Product.Inventories.Where(s => s.StoreId == item.StoreId).FirstOrDefault();
+                            if (order.OrderTypeId == 1) // Purchase (reverse = subtract stock)
+                            {
+                                if (inventory.Quantity < item.Quantity)
+                                {
+                                    await transaction.RollbackAsync();
+                                    return BadRequest(new
+                                    {
+                                        success = false,
+                                        message = $"Cannot cancel. Product {item.Product.NameAr} stock would go negative.",
+                                        product = item.Product.NameAr,
+                                        available = inventory.Quantity,
+                                        toRemove = item.Quantity
+                                    });
+                                }
+
+                                inventory.Quantity -= item.Quantity;
+                            }
+                            else // Sale (reverse = add stock back)
+                            {
+                                inventory.Quantity += item.Quantity;
+                            }
+
+                            // Update the inventory entity directly
+                            await _unitOfWork.InventoryRepo.UpdateAsync(inventory);
+
+                            // Log reversal transaction
+                            var reversalTransaction = new InventoryTransaction
+                            {
+                                ProductId = item.ProductId,
+                                QuantityChanged = order.OrderTypeId == 1 ? -item.Quantity : item.Quantity,
+                                TransactionDate = DateTime.UtcNow,
+                                Notes = $"Order #{order.Id} cancelled (reversal).",
+                                TransactionTypeId = order.OrderTypeId == 1 ? 1 : 2, // adjust lookup accordingly
+                                OrderId = order.Id
+                            };
+                            await _unitOfWork.InventoryTransactionRepo.CreateAsync(reversalTransaction);
+                        }
+
+                        // Mark order as cancelled
+                        order.StatusId = cancelStatus.Id;
+                        await _unitOfWork.OrderRepo.UpdateAsync(order);
+
+                        await _unitOfWork.SaveAsync();
+                        await transaction.CommitAsync();
+
+                        return Ok(new
+                        {
+                            success = true,
+                            message = $"Order #{order.Id} has been cancelled and stock changes reverted.",
+                            result = order
+                        });
+                    }
+                    catch (Exception ex)
+                    {
+                        await transaction.RollbackAsync();
+                        return StatusCode(500, new
+                        {
+                            success = false,
+                            message = $"Error cancelling order: {ex.Message}"
+                        });
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    message = $"Error: {ex.Message}"
+                });
+            }
+        }
+
+        // New endpoints for variants and modifiers support
+
+        [HttpGet]
+        [Route("GetProductVariants/{productId}")]
+        public async Task<IActionResult> GetProductVariants(int productId)
+        {
+            try
+            {
+                var variants = await _unitOfWork.ProductVariantRepo
+                    .GetByCondition(v => v.ProductId == productId && v.IsActive)
+                    .OrderBy(v => v.DisplayOrder)
+                    .ToListAsync();
+
+                return Ok(variants);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = ex.Message });
+            }
+        }
+
+        [HttpGet]
+        [Route("GetProductModifiers/{productId}")]
+        public async Task<IActionResult> GetProductModifiers(int productId)
+        {
+            try
+            {
+                var modifierGroups = await _unitOfWork.ProductModifierGroupRepo
+                    .GetByCondition(mg => mg.ProductId == productId && mg.IsActive)
+                    .Include(mg => mg.Modifier)
+                        .ThenInclude(m => m.Options)
+                    .OrderBy(mg => mg.DisplayOrder)
+                    .ToListAsync();
+
+                return Ok(modifierGroups);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = ex.Message });
+            }
+        }
+
+        [HttpPost]
+        [Route("SaveOrderWithVariantsAndModifiers")]
+        public async Task<IActionResult> SaveOrderWithVariantsAndModifiers([FromBody] OrderWithVariantsAndModifiersDto orderDto)
+        {
+            try
+            {
+                // Check working hours permission
+                if (!await CheckWorkingHoursPermissionAsync())
+                {
+                    return StatusCode(403, new 
+                    { 
+                        errorMessage = "Actions are restricted outside working hours. Please try during working hours. Note: If you were just assigned the 'Work Outside Working Hours' permission, please log out and log back in to refresh your session.",
+                        message = "Actions are restricted outside working hours. Please try during working hours. Note: If you were just assigned the 'Work Outside Working Hours' permission, please log out and log back in to refresh your session."
+                    });
+                }
+
+                using var transaction = await _unitOfWork.BeginTransactionAsync();
+
+                try
+                {
+                    // Create the order
+                    var order = _mapper.Map<Order>(orderDto);
+                    order.CreatedAt = DateTime.UtcNow;
+                    order.UpdatedAt = DateTime.UtcNow;
+
+                    await _unitOfWork.OrderRepo.CreateAsync(order);
+                    await _unitOfWork.SaveAsync();
+
+                    // Create order items with variants and modifiers
+                    foreach (var itemDto in orderDto.Items)
+                    {
+                        var orderItem = _mapper.Map<OrderItem>(itemDto);
+                        orderItem.OrderId = order.Id;
+                        orderItem.CreatedAt = DateTime.UtcNow;
+                        orderItem.UpdatedAt = DateTime.UtcNow;
+
+                        await _unitOfWork.OrderItemRepo.CreateAsync(orderItem);
+                        await _unitOfWork.SaveAsync();
+
+                        // Create order item modifiers if any
+                        if (itemDto.Modifiers != null && itemDto.Modifiers.Any())
+                        {
+                            foreach (var modifierDto in itemDto.Modifiers)
+                            {
+                                var orderItemModifier = _mapper.Map<OrderItemModifier>(modifierDto);
+                                orderItemModifier.OrderItemId = orderItem.Id;
+                                orderItemModifier.CreatedAt = DateTime.UtcNow;
+                                orderItemModifier.UpdatedAt = DateTime.UtcNow;
+
+                                await _unitOfWork.OrderItemModifierRepo.CreateAsync(orderItemModifier);
+                            }
+                        }
+                    }
+
+                    await _unitOfWork.SaveAsync();
+                    await transaction.CommitAsync();
+
+                    return Ok(new
+                    {
+                        success = true,
+                        message = "Order saved successfully with variants and modifiers.",
+                        orderId = order.Id
+                    });
+                }
+                catch (Exception ex)
+                {
+                    await transaction.RollbackAsync();
+                    throw;
+                }
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    message = $"Error saving order: {ex.Message}"
+                });
+            }
+        }
+
     }
 }

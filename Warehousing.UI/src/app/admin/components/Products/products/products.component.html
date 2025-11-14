@@ -1,40 +1,42 @@
-<div class="container-fluid">
-  <div class="d-flex flex-wrap justify-content-between">
+<div class="w-full">
+  <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-2 sm:gap-0">
     <div class="p-2">
-      <h4 class="fw-bold dark-mode-text">المنتجات</h4>
+      <h4 class="font-bold text-gray-900 text-lg sm:text-xl">{{ 'PRODUCTS.TITLE' | translate }}</h4>
     </div>
     <div class="p-2">
-      <button *ngIf="hasAnyPermission(permissionsEnum.ADD_PRODUCT)" class="btn btn-primary d-flex align-items-center"
+      <button *ngIf="hasAnyPermission(permissionsEnum.ADD_PRODUCT)" 
+        class="inline-flex items-center px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors text-sm sm:text-base"
         (click)="openForm(null)">
-        <i class="bi bi-plus-lg me-1"></i>
+        <i class="bi bi-plus-lg mr-1"></i>
+        <span class="hidden sm:inline">Add Product</span>
       </button>
     </div>
   </div>
 
-  <!-- <h4 class="fw-bold dark-mode-text">{{ 'PRODUCTS.TITLE' | translate }}</h4> -->
-  <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap">
+  <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-4 gap-4">
 
-    <div class="p-2">
-      <div class="d-flex flex-wrap justify-content-between" [formGroup]="searchForm">
-        <div class="p-2">
-          <input type="text" class="form-control" [formControlName]="'keyword'"
-            placeholder="{{ 'SHARED.SEARCH' | translate }}" aria-label="Search products" autocomplete="off">
+    <div class="p-2 w-full lg:w-auto">
+      <div class="flex flex-col sm:flex-row gap-2" [formGroup]="searchForm">
+        <div class="flex-1 min-w-48 sm:min-w-64">
+          <input type="text" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base" 
+            [formControlName]="'keyword'" placeholder="{{ 'SHARED.SEARCH' | translate }}" aria-label="Search products" autocomplete="off">
         </div>
-        <div class="p-2">
-          <button class="btn btn-outline-secondary" type="button" (click)="loadProducts('SEARCH')">
+        <div class="flex gap-2">
+          <button class="px-3 py-2 border border-gray-300 text-gray-700 bg-white rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors text-sm sm:text-base" 
+            type="button" (click)="loadProducts('SEARCH')">
             <i class="bi bi-search"></i>
           </button>
-        </div>
-        <div class="p-2">
-          <button class="btn btn-outline-secondary" type="button" (click)="loadProducts(storeId > 0 ? 'SEARCH' : 'GET')">
+          <button class="px-3 py-2 border border-gray-300 text-gray-700 bg-white rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors text-sm sm:text-base" 
+            type="button" (click)="loadProducts(storeId > 0 ? 'SEARCH' : 'GET')">
             <i class="bi bi-x-circle"></i>
           </button>
         </div>
       </div>
     </div>
-    <div class="p-2">
-      <select class="form-select" [(ngModel)]="storeId" (change)="loadProducts(storeId > 0 ? 'SEARCH' : 'GET')">
-        <option [ngValue]="0">جميع الفروع</option>
+    <div class="p-2 w-full lg:w-auto">
+      <select class="w-full lg:w-auto px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base" 
+        [(ngModel)]="storeId" (change)="loadProducts(storeId > 0 ? 'SEARCH' : 'GET')">
+        <option [ngValue]="0">{{ 'FORMS.ALL_BRANCHES' | translate }}</option>
         <option *ngFor="let store of stores" [ngValue]="store.id">
           {{ lang.currentLang === 'ar' ? store.nameAr : store.nameEn }}
         </option>
@@ -42,117 +44,147 @@
     </div>
   </div>
 
-  <div *ngIf="(products$ | async) as products">
-    <div class="row g-4">
-      <div class="col-sm-6 col-md-4 col-lg-3" *ngFor="let product of products.products">
-        <div class="card h-100 border-0 shadow-sm rounded dark-mode-bg">
+  <!-- Products Grid -->
+  <div *ngIf="(products$ | async) as products" class="mb-8">
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4 lg:gap-6">
+      <div class="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 overflow-hidden border border-gray-100 group" *ngFor="let product of products.products">
 
-          <!-- Product Image -->
-          <div class="card-img-top bg-light d-flex justify-content-center align-items-center p-3">
-            <app-image-uploader [initialImageUrl]="serverUrl + product.imagePath" [readonly]="true">
-            </app-image-uploader>
+        <!-- Product Image -->
+        <div class="relative w-full h-40 sm:h-48 lg:h-56 bg-gradient-to-br from-gray-50 to-gray-100 overflow-hidden">
+          <app-image-uploader [initialImageUrl]="serverUrl + product.imagePath" [readonly]="true">
+          </app-image-uploader>
+          
+          <!-- Category Badge -->
+          <div class="absolute top-3 right-3">
+            <span class="bg-white bg-opacity-90 backdrop-blur-sm text-gray-700 text-xs px-3 py-1 rounded-full font-medium shadow-sm">
+              {{ product?.subCategory?.nameAr }}
+            </span>
+          </div>
+          
+          <!-- Edit Button -->
+          <div class="absolute top-3 left-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+            <button class="w-10 h-10 bg-white bg-opacity-90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg hover:bg-opacity-100 transition-all duration-200" 
+              (click)="openForm(product.id)"
+              title="تعديل المنتج">
+              <i class="bi bi-pencil-fill text-gray-700 text-sm"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Card Content -->
+        <div class="p-3 sm:p-4 lg:p-5">
+          <!-- Product Name -->
+          <h3 class="font-bold text-gray-900 text-sm sm:text-base lg:text-lg mb-2 line-clamp-2 group-hover:text-blue-600 transition-colors">
+            {{ product.nameAr }}
+          </h3>
+
+          <!-- Price -->
+          <div class="flex items-center justify-between mb-3 sm:mb-4">
+            <div class="flex items-center space-x-1 sm:space-x-2">
+              <span class="text-lg sm:text-xl lg:text-2xl font-bold text-green-600">{{ product.sellingPrice | currency:'د.أ':'symbol':'1.2-2' }}</span>
+            </div>
+            
+            <!-- Stock Status -->
+            <div class="flex items-center space-x-1 sm:space-x-2">
+              <div class="w-2 h-2 sm:w-3 sm:h-3 rounded-full" 
+                   [class]="getTotalStock(product) > 0 ? 'bg-green-500' : 'bg-red-500'"></div>
+              <span class="text-xs sm:text-sm font-medium" 
+                    [class]="getTotalStock(product) > 0 ? 'text-green-600' : 'text-red-600'">
+                {{ getTotalStock(product) > 0 ? getTotalStock(product) : 'نفد' }}
+              </span>
+            </div>
           </div>
 
-          <!-- Card Body -->
-          <div class="card-body d-flex flex-column">
-            <!-- Name and Category Badge -->
-            <h6 class="card-title fw-bold text-primary mb-1">
-              <!-- {{ lang.currentLang === 'ar' ? product.nameAr : product.nameEn }} -->
-                {{ product.nameAr }}
-            </h6>
-            <span class="badge bg-secondary bg-opacity-25 text-secondary mb-2 align-self-start">
-              <!-- {{ lang.currentLang === 'ar' ? product?.category?.nameAr : product?.category?.nameEn }} -->
-                {{ product?.subCategory?.nameAr }}
-            </span>
-
-            <!-- Description -->
-            <p class="card-text text-muted small mb-2" [title]="product.description">
-              {{ product.description | slice:0:50 }}{{ product.description.length > 50 ? '...' : '' }}
-            </p>
-
-            <!-- Price -->
-            <div class="d-flex justify-content-between align-items-center mt-auto">
-              <span class="fw-semibold text-success fs-5">{{ product.sellingPrice | currency
-                }}</span>
-
-              <!-- Edit Button -->
-              <button class="btn btn-sm btn-outline-secondary" (click)="openForm(product.id)">
-                <i class="bi bi-pencil-fill"></i>
-              </button>
+          <!-- Product Info -->
+          <div class="space-y-2 text-sm">
+            <div class="flex justify-between items-center">
+              <span class="text-gray-500">الكود:</span>
+              <span class="font-medium text-gray-900">{{ product?.code }}</span>
             </div>
-
-            <!-- Unit & Stock Info -->
-            <div class="mt-3 pt-3 border-top small">
-              <div class="d-flex justify-content-between">
-                <!-- <span class="text-muted">{{ 'PRODUCTS.CODE' | translate }}</span> -->
-                <span class="text-muted">الكود</span>
-                <strong>{{ product?.code }}</strong>
-              </div>
-              <div class="d-flex justify-content-between">
-                <span class="text-muted">{{ 'UNIT.TITLE' | translate }}</span>
-                <strong>
-                  <!-- {{ lang.currentLang === 'ar' ? product?.unit?.nameAr : product?.unit?.nameEn }} -->
-                    {{ product?.unit?.nameAr }}
-                </strong>
-              </div>
-              <div *ngIf="product" class="d-flex justify-content-between mt-1">
-                <span class="text-muted">
-                  <!-- {{ 'PRODUCTS.QUANTITYINSTOCK' | translate }} -->
-                    الكمية في المستودع
-                </span>
-                <div class="d-flex justify-content-between mt-1">
-                  <strong [class.text-danger]="product.quantityInStock <= product.reorderLevel!">
-                    {{ product.quantityInStock }}
-                    <small class="text-muted ms-1">
-                      <!-- {{ lang.currentLang === 'ar' ? product?.unit?.nameAr : product?.unit?.nameEn }} -->
-                        {{ product?.unit?.nameAr }}
-                    </small>
-                  </strong>
-                </div>
+            
+            <div class="flex justify-between items-center">
+              <span class="text-gray-500">الوحدة:</span>
+              <span class="font-medium text-gray-900">{{ product?.unit?.nameAr }}</span>
+            </div>
+            
+            <!-- Total Stock Display -->
+            <div class="flex justify-between items-center pt-2 border-t border-gray-100">
+              <span class="text-gray-500">إجمالي المخزون:</span>
+              <div class="flex items-center space-x-1">
+                <i class="bi bi-boxes text-blue-500"></i>
+                <span class="font-bold text-blue-600">{{ getTotalStock(product) }} {{ product?.unit?.nameAr }}</span>
               </div>
             </div>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="mt-4 flex space-x-2">
+            <button *ngIf="hasAnyPermission(permissionsEnum.EDIT_PRODUCT)" 
+                    class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors text-sm font-medium" 
+                    (click)="openForm(product.id)">
+              <i class="bi bi-pencil-fill mr-2"></i>
+              تعديل
+            </button>
+            
+            <button *ngIf="hasAnyPermission(permissionsEnum.VIEW_INVENTORY_MANAGEMENT)" 
+                    class="px-4 py-2 border border-gray-300 text-gray-700 bg-white rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors" 
+                    (click)="manageInventory(product.id)"
+                    title="إدارة المخزون">
+              <i class="bi bi-boxes"></i>
+            </button>
           </div>
         </div>
       </div>
     </div>
+  </div>
 
-    <!-- Pagination -->
-    <nav aria-label="Page navigation" class="mt-4 d-flex justify-content-center">
-      <ul class="pagination">
-        <li class="page-item" [class.disabled]="pageIndex === 1">
-          <button class="page-link btn" (click)="changePage(pageIndex - 1)">«</button>
-        </li>
+  <!-- Pagination - Proper spacing -->
+  <div *ngIf="(products$ | async) as products" class="w-full mt-12">
+    <div class="flex justify-center pt-8 border-t border-gray-200">
+      <nav aria-label="Page navigation">
+        <ul class="flex items-center space-x-1">
+          <li>
+            <button class="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-l-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed" 
+              [disabled]="pageIndex === 1" (click)="changePage(pageIndex - 1)">«</button>
+          </li>
 
-        <!-- First page -->
-        <li class="page-item" [class.active]="pageIndex === 1">
-          <button class="page-link btn" (click)="changePage(1)">1</button>
-        </li>
+          <!-- First page -->
+          <li>
+            <button class="px-3 py-2 text-sm font-medium border border-gray-300 hover:bg-gray-50" 
+              [class]="pageIndex === 1 ? 'bg-blue-600 text-white border-blue-600' : 'text-gray-500 bg-white'" 
+              (click)="changePage(1)">1</button>
+          </li>
 
-        <!-- Left Ellipsis -->
-        <li class="page-item disabled" *ngIf="pageIndex > 4">
-          <span class="page-link">...</span>
-        </li>
+          <!-- Left Ellipsis -->
+          <li *ngIf="pageIndex > 4">
+            <span class="px-3 py-2 text-sm text-gray-500 bg-white border border-gray-300">...</span>
+          </li>
 
-        <!-- Dynamic middle pages -->
-        <li class="page-item" *ngFor="let page of getPageRange()" [class.active]="page === pageIndex">
-          <button class="page-link btn" (click)="changePage(page)">{{ page }}</button>
-        </li>
+          <!-- Dynamic middle pages -->
+          <li *ngFor="let page of getPageRange()">
+            <button class="px-3 py-2 text-sm font-medium border border-gray-300 hover:bg-gray-50" 
+              [class]="page === pageIndex ? 'bg-blue-600 text-white border-blue-600' : 'text-gray-500 bg-white'" 
+              (click)="changePage(page)">{{ page }}</button>
+          </li>
 
-        <!-- Right Ellipsis -->
-        <li class="page-item disabled" *ngIf="pageIndex < totalPages - 3">
-          <span class="page-link">...</span>
-        </li>
+          <!-- Right Ellipsis -->
+          <li *ngIf="pageIndex < totalPages - 3">
+            <span class="px-3 py-2 text-sm text-gray-500 bg-white border border-gray-300">...</span>
+          </li>
 
-        <!-- Last page -->
-        <li class="page-item" [class.active]="pageIndex === totalPages" *ngIf="totalPages > 1">
-          <button class="page-link btn" (click)="changePage(totalPages)">{{ totalPages }}</button>
-        </li>
+          <!-- Last page -->
+          <li *ngIf="totalPages > 1">
+            <button class="px-3 py-2 text-sm font-medium border border-gray-300 hover:bg-gray-50" 
+              [class]="pageIndex === totalPages ? 'bg-blue-600 text-white border-blue-600' : 'text-gray-500 bg-white'" 
+              (click)="changePage(totalPages)">{{ totalPages }}</button>
+          </li>
 
-        <li class="page-item" [class.disabled]="pageIndex === totalPages || totalPages === 0">
-          <button class="page-link btn" (click)="changePage(pageIndex + 1)">»</button>
-        </li>
-      </ul>
-    </nav>
-
+          <li>
+            <button class="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-r-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed" 
+              [disabled]="pageIndex === totalPages || totalPages === 0" (click)="changePage(pageIndex + 1)">»</button>
+          </li>
+        </ul>
+      </nav>
+    </div>
   </div>
 </div>

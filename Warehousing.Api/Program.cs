@@ -1,7 +1,11 @@
 using System.Text;
 using Warehousing.Api.middlewares;
 using Warehousing.Data.Context;
+using Warehousing.Data.Services;
 using Warehousing.Repo.Shared;
+using Warehousing.Repo.Services;
+using Warehousing.Repo.Interfaces;
+using Warehousing.Repo.Classes;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
@@ -41,6 +45,15 @@ builder.Services.AddDbContext<WarehousingContext>(options =>
 
 builder.Services.AddAutoMapper(typeof(AutoMapperProfile).Assembly);
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+builder.Services.AddScoped<SeedingService>();
+builder.Services.AddScoped<IActivityLoggingService, ActivityLoggingService>();
+builder.Services.AddScoped<Warehousing.Api.Services.EscPosService>();
+builder.Services.AddScoped<Warehousing.Api.Services.IAzureBlobStorageService, Warehousing.Api.Services.AzureBlobStorageService>();
+builder.Services.AddScoped<Warehousing.Repo.Interfaces.IFileStorageService, Warehousing.Api.Services.FileStorageService>();
+
+// Register new repositories
+builder.Services.AddScoped<IUserActivityLogRepo, UserActivityLogRepo>();
+builder.Services.AddScoped<IWorkingHoursRepo, WorkingHoursRepo>();
 
 builder.Services.AddAuthentication(opt =>
 {
@@ -64,6 +77,13 @@ builder.Services.AddAuthentication(opt =>
 builder.Services.AddAuthorization();
 
 var app = builder.Build();
+
+// Seed data on startup
+using (var scope = app.Services.CreateScope())
+{
+    var seedingService = scope.ServiceProvider.GetRequiredService<SeedingService>();
+    await seedingService.SeedDataAsync();
+}
 
 // Configure HTTP pipeline
 if (app.Environment.IsDevelopment())
@@ -95,6 +115,7 @@ app.UseCors("myCORS");
 app.UseAuthentication();
 app.UseMiddleware<ValidateUserClaimsMiddleware>();
 app.UseAuthorization();
+app.UseMiddleware<Warehousing.Api.Middlewares.WorkingHoursMiddleware>();
 
 app.MapControllers();
 app.MapFallbackToFile("index.html");
@@ -110,4 +131,6 @@ app.Use(async (context, next) =>
     }
 });
 
+// Force port 5036 for consistency
+app.Urls.Add("http://localhost:5036");
 app.Run();

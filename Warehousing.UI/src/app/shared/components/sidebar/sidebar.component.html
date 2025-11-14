@@ -1,0 +1,218 @@
+<aside 
+  class="fixed inset-y-0 z-50 w-64 bg-gradient-to-b from-white to-gray-50 shadow-2xl transform transition-transform duration-300 ease-in-out lg:translate-x-0 border-r border-gray-200 flex flex-col"
+  [ngClass]="{
+    'right-0': isRTL,
+    'left-0': !isRTL,
+    'translate-x-0': sidebarOpenValue && isRTL,
+    'translate-x-full': !sidebarOpenValue && isRTL,
+    '-translate-x-0': sidebarOpenValue && !isRTL,
+    '-translate-x-full': !sidebarOpenValue && !isRTL
+  }">
+  
+  <!-- Sidebar Header -->
+  <div class="flex-shrink-0 flex items-center justify-between h-20 px-6 border-b border-gray-200 shadow-lg" 
+       [ngStyle]="{'background': config.headerGradient}">
+    <div class="flex items-center gap-3">
+      <div class="w-10 h-10 bg-white bg-opacity-20 rounded-xl flex items-center justify-center backdrop-blur-sm">
+        <i [class]="config.titleIcon + ' text-white text-xl'"></i>
+      </div>
+      <h2 class="text-xl font-bold text-white drop-shadow-sm">{{ config.title | translate }}</h2>
+    </div>
+    <button 
+      (click)="sidebarOpenValue = !sidebarOpenValue"
+      class="lg:hidden text-white hover:text-gray-200 transition-colors p-1 rounded-lg hover:bg-white hover:bg-opacity-20">
+      <i class="bi bi-x-lg text-xl"></i>
+    </button>
+  </div>
+
+  <!-- Sidebar Navigation -->
+  <nav class="flex-1 overflow-y-auto py-6 px-3 min-h-0">
+    <!-- Main Menu Groups -->
+    <div class="space-y-6">
+      <ng-container *ngFor="let group of config.menuGroups">
+        <div class="space-y-1">
+          <!-- Group Title -->
+          <div class="px-4 mb-2" *ngIf="group.title">
+            <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wider">
+              {{ group.title | translate }}
+            </h3>
+          </div>
+          
+          <!-- Group Items -->
+          <div class="space-y-0.5">
+            <div 
+              *ngFor="let item of group.items"
+              class="relative">
+              <div *ngIf="hasMenuItemPermission(item)">
+                <a
+                  *ngIf="item.route"
+                  [routerLink]="item.route"
+                  (click)="sidebarOpenValue = false"
+                  class="group flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200 relative overflow-hidden"
+                  [ngClass]="{
+                    'text-white shadow-lg': isActiveRoute(item.route),
+                    'text-gray-700 hover:bg-gray-100 hover:text-gray-900': !isActiveRoute(item.route)
+                  }"
+                  [ngStyle]="isActiveRoute(item.route) ? {'background': config.activeGradient} : {}">
+                  <!-- Icon Background -->
+                  <div class="relative z-10 flex items-center justify-center w-8 h-8 rounded-lg transition-all duration-200"
+                       [ngClass]="{
+                         'bg-white bg-opacity-20': isActiveRoute(item.route),
+                         'bg-gray-100 group-hover:bg-gray-200': !isActiveRoute(item.route)
+                       }">
+                    <i [class]="item.icon + ' transition-all duration-200'"
+                       [ngClass]="{
+                         'text-white text-base': isActiveRoute(item.route),
+                         'text-gray-600 group-hover:text-current text-base': !isActiveRoute(item.route)
+                       }"></i>
+                  </div>
+                  
+                  <!-- Label -->
+                  <span class="flex-1 relative z-10 font-medium">{{ item.label | translate }}</span>
+                  
+                  <!-- Badge -->
+                  <ng-container *ngIf="item.badge">
+                    <ng-container *ngIf="item.badge() as badgeCount">
+                      <span 
+                        *ngIf="badgeCount !== null && badgeCount > 0"
+                        class="inline-flex items-center justify-center min-w-[1.25rem] h-5 px-1.5 text-xs font-bold text-white bg-gradient-to-r from-red-500 to-pink-600 rounded-full shadow-lg relative z-10">
+                        {{ badgeCount > 99 ? '99+' : badgeCount }}
+                      </span>
+                    </ng-container>
+                  </ng-container>
+                  
+                  <!-- Active Indicator -->
+                  <div *ngIf="isActiveRoute(item.route)" 
+                       class="absolute inset-0 opacity-10 rounded-xl"
+                       [ngStyle]="{'background': config.activeGradient}"></div>
+                  
+                  <!-- Hover Effect -->
+                  <div class="absolute inset-0 opacity-0 group-hover:opacity-5 rounded-xl transition-opacity duration-200"
+                       *ngIf="!isActiveRoute(item.route)"
+                       [ngStyle]="{'background': config.activeGradient}"></div>
+                </a>
+                
+                <button
+                  *ngIf="!item.route"
+                  (click)="executeAction(item); sidebarOpenValue = false"
+                  class="w-full group flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200 relative overflow-hidden text-gray-700 hover:bg-gray-100 hover:text-gray-900">
+                  <div class="relative z-10 flex items-center justify-center w-8 h-8 rounded-lg transition-all duration-200 bg-gray-100 group-hover:bg-gray-200">
+                    <i [class]="item.icon + ' transition-all duration-200 text-gray-600 group-hover:text-current text-base'"></i>
+                  </div>
+                  <span class="flex-1 relative z-10 font-medium">{{ item.label | translate }}</span>
+                  <div class="absolute inset-0 opacity-0 group-hover:opacity-5 rounded-xl transition-opacity duration-200"
+                       [ngStyle]="{'background': config.activeGradient}"></div>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </ng-container>
+
+      <!-- Quick Actions -->
+      <div *ngIf="config.quickActions && config.quickActions.length > 0" class="pt-4 border-t border-gray-200 space-y-1">
+        <div *ngFor="let action of config.quickActions" class="relative">
+          <div *ngIf="hasMenuItemPermission(action)">
+            <button
+              (click)="executeAction(action); sidebarOpenValue = false"
+              class="w-full group flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200 relative overflow-hidden"
+              [ngClass]="{
+                'text-gray-700 hover:bg-gray-100 hover:text-gray-900': action.route,
+                'text-red-600 hover:bg-red-50 hover:text-red-700': !action.route
+              }">
+              <div class="relative z-10 flex items-center justify-center w-8 h-8 rounded-lg transition-all duration-200"
+                   [ngClass]="{
+                     'bg-gray-100 group-hover:bg-gray-200': action.route,
+                     'bg-red-100 group-hover:bg-red-200': !action.route
+                   }">
+                <i [class]="action.icon + ' transition-all duration-200'"
+                   [ngClass]="{
+                     'text-gray-600 group-hover:text-current text-base': action.route,
+                     'text-red-600 text-base': !action.route
+                   }"></i>
+              </div>
+              <span class="flex-1 text-right relative z-10 font-medium">{{ action.label | translate }}</span>
+              <div class="absolute inset-0 opacity-0 group-hover:opacity-5 rounded-xl transition-opacity duration-200"
+                   *ngIf="action.route"
+                   [ngStyle]="{'background': config.activeGradient}"></div>
+              <div class="absolute inset-0 opacity-0 group-hover:opacity-5 rounded-xl transition-opacity duration-200"
+                   *ngIf="!action.route"
+                   [ngStyle]="{'background': 'linear-gradient(135deg, #ef4444 0%, #ec4899 100%)'}"></div>
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </nav>
+
+  <!-- Global Actions (Cart, Language, Logout) - Fixed at bottom -->
+  <div class="flex-shrink-0 border-t border-gray-200 px-3 py-4 bg-white space-y-1">
+    <!-- Cart -->
+    <ng-container *ngIf="config.showCart">
+      <ng-container *ngIf="cartService.cartCount$ | async as count">
+        <a
+          routerLink="/cart"
+          (click)="sidebarOpenValue = false"
+          class="group flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200 relative overflow-hidden text-gray-700 hover:bg-gray-100 hover:text-gray-900">
+          <div class="relative z-10 flex items-center justify-center w-8 h-8 rounded-lg transition-all duration-200 bg-gray-100 group-hover:bg-gray-200">
+            <i class="bi bi-cart-dash transition-all duration-200 text-gray-600 group-hover:text-emerald-600 text-base"></i>
+          </div>
+          <span class="flex-1 relative z-10 font-medium">{{ 'ORDER.CART' | translate }}</span>
+          <span 
+            *ngIf="count > 0"
+            class="inline-flex items-center justify-center min-w-[1.25rem] h-5 px-1.5 text-xs font-bold text-white bg-gradient-to-r from-red-500 to-pink-600 rounded-full shadow-lg relative z-10">
+            {{ count > 99 ? '99+' : count }}
+          </span>
+          <div class="absolute inset-0 opacity-0 group-hover:opacity-5 rounded-xl transition-opacity duration-200"
+               [ngStyle]="{'background': config.activeGradient}"></div>
+        </a>
+      </ng-container>
+    </ng-container>
+
+    <!-- Language Toggle -->
+    <button
+      *ngIf="config.showLanguageToggle !== false"
+      (click)="toggleLanguage()"
+      class="w-full group flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200 relative overflow-hidden text-gray-700 hover:bg-gray-100 hover:text-gray-900">
+      <div class="relative z-10 flex items-center justify-center w-8 h-8 rounded-lg transition-all duration-200 bg-gray-100 group-hover:bg-gray-200">
+        <i class="bi bi-translate transition-all duration-200 text-gray-600 group-hover:text-current text-base"></i>
+      </div>
+      <span class="flex-1 relative z-10 font-medium">
+        {{ (isRTL ? 'English' : 'العربية') }}
+      </span>
+      <div class="absolute inset-0 opacity-0 group-hover:opacity-5 rounded-xl transition-opacity duration-200"
+           [ngStyle]="{'background': config.activeGradient}"></div>
+    </button>
+
+    <!-- Logout Button -->
+    <button
+      *ngIf="config.showLogout !== false"
+      (click)="logout(); sidebarOpenValue = false"
+      class="w-full group flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200 relative overflow-hidden text-red-600 hover:bg-red-50 hover:text-red-700">
+      <div class="relative z-10 flex items-center justify-center w-8 h-8 rounded-lg transition-all duration-200 bg-red-100 group-hover:bg-red-200">
+        <i class="bi bi-box-arrow-right transition-all duration-200 text-red-600 text-base"></i>
+      </div>
+      <span class="flex-1 relative z-10 font-medium">{{ 'AUTH.LOGOUT' | translate }}</span>
+      <div class="absolute inset-0 opacity-0 group-hover:opacity-5 rounded-xl transition-opacity duration-200"
+           [ngStyle]="{'background': 'linear-gradient(135deg, #ef4444 0%, #ec4899 100%)'}"></div>
+    </button>
+  </div>
+
+  <!-- Sidebar Footer -->
+  <div class="flex-shrink-0 border-t border-gray-200 p-4 bg-white">
+    <div class="flex items-center gap-3 px-2" [ngClass]="{ 'flex-row-reverse': isRTL }">
+      <div class="w-10 h-10 rounded-xl flex items-center justify-center shadow-lg"
+           [ngStyle]="{'background': config.activeGradient}">
+        <i class="bi bi-person-circle text-white text-xl"></i>
+      </div>
+      <div class="flex-1 min-w-0">
+        <p class="text-sm font-semibold text-gray-900 truncate">
+          {{ getUserDisplayName() }}
+        </p>
+        <p class="text-xs text-gray-500 truncate">{{ config.title | translate }}</p>
+      </div>
+    </div>
+  </div>
+</aside>
+

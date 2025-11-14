@@ -1,36 +1,66 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
+import { FormBuilder, FormControl, FormGroup, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
+import { CommonModule } from '@angular/common';
+import { TranslateModule } from '@ngx-translate/core';
 import { ProductsService } from '../../../services/products.service';
 import { CategoriesService } from '../../../services/categories.service';
 import { UnitsService } from '../../../services/units.service';
 import { NotificationService } from '../../../../core/services/notification.service';
 import { ActivatedRoute, Router } from '@angular/router';
-import { Category } from '../../../models/category';
 import { Unit } from '../../../models/unit';
 import { environment } from '../../../../../environments/environment';
 import { Product } from '../../../models/product';
 import { Store } from '../../../models/store';
 import { SubCategory } from '../../../models/SubCategory';
+import { ProductVariant } from '../../../models/ProductVariant';
+import { ProductModifierGroup } from '../../../models/ProductModifier';
+import { ProductVariantsComponent } from '../product-variants/product-variants';
+import { ProductModifiersComponent } from '../product-modifiers/product-modifiers';
+import { ImageUploader } from '../../../../shared/components/image-uploader/image-uploader';
+import { AuthService } from '../../../../core/services/auth.service';
+import { Inventory } from '../../../models/Inventory';
+import { InventoryService } from '../../../services/inventory.service';
 
 @Component({
   selector: 'app-product-form',
-  standalone: false,
+  standalone: true,
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, TranslateModule, ProductVariantsComponent, ProductModifiersComponent, ImageUploader],
   templateUrl: './product-form.component.html',
   styleUrl: './product-form.component.scss'
 })
 export class ProductFormComponent implements OnInit {
 
+  generalQuantity: number = 0;
+  variantQuantities: { id: number, name: string, quantity: number }[] = [];
+  allocation = { variantId: 0, amount: 1 };
+  allocationMsg = '';
+  allocationSuccess = false;
+  isAdmin = false;
+  inventoryData: Inventory[] = [];
+  // Totals
+  variantsTotal: number = 0;
+  overallTotal: number = 0;
+  // Recall state per variant
+  recallAmountByVariant: { [variantId: number]: number } = {};
+  // Per-store breakdown for beautiful display
+  storeInventoryRows: { storeId: number; storeName: string; generalQuantity: number; variants: { id: number; name: string; quantity: number }[] }[] = [];
+  // Store variants list for dropdown (updated when variants change)
+  productVariantsList: ProductVariant[] = [];
+
   constructor(
     private fb: FormBuilder,
     private productService: ProductsService,
+    private inventoryService: InventoryService,
     private categoriesService: CategoriesService,
     private unitsService: UnitsService,
     private notification: NotificationService,
     private router: Router,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private authService: AuthService
   ) {
     this.stores = this.route.snapshot.data['StoresResolver'];
     this.subCategories = this.route.snapshot.data['subCategoriesResolver'];
+    this.isAdmin = this.authService.isAdmin;
   }
 
   ngOnInit(): void {
@@ -38,15 +68,15 @@ export class ProductFormComponent implements OnInit {
     this.route.queryParams.subscribe(params => {
       const productId = +params['productId'];
       if (productId) {
-        this.productService.GetProductById(productId)
-          .subscribe({
-            next: (res) => {
-              this.initializingForm(res)
-            },
-            error: (err) => {
-              console.log(err.error);
-            }
-          });
+        this.productService.GetProductById(productId).subscribe({
+          next: (res) => {
+            this.initializingForm(res);
+            this.loadInventory(res.id);
+          },
+          error: (err) => {
+            console.log(err.error);
+          }
+        });
       }
     });
     this.unitsService.GetUnits().subscribe({
@@ -57,6 +87,155 @@ export class ProductFormComponent implements OnInit {
         console.log(err.error);
       }
     });
+  }
+
+  loadInventory(productId: number) {
+    const storeId = this.stores && this.stores.length > 0 ? this.stores[0].id : 1;
+    this.inventoryService.GetInventoryByProduct(productId).subscribe((data: any[]) => {
+      // Normalize casing from backend (PascalCase) to camelCase expected by UI
+      const normalized = (data || []).map(d => ({
+        id: d.id ?? d.Id,
+        productId: d.productId ?? d.ProductId,
+        storeId: d.storeId ?? d.StoreId,
+        quantity: d.quantity ?? d.Quantity,
+        variantId: d.variantId ?? d.VariantId,
+        store: d.store ?? d.Store,
+        variant: d.variant ?? d.Variant,
+      }));
+      this.inventoryData = normalized as any;
+
+      // General quantity = sum across all stores where no variant
+      const generalEntries = normalized.filter(i => i.variantId == null || i.variantId === 0);
+      this.generalQuantity = generalEntries.reduce((sum, i) => sum + (i.quantity || 0), 0);
+
+      // Build per-store breakdown
+      const byStore: { [storeId: number]: { storeId: number; storeName: string; generalQuantity: number; variants: { [vid: number]: number } } } = {};
+      normalized.forEach(i => {
+        const sId = i.storeId;
+        const sName = i.store?.nameAr ?? i.store?.NameAr ?? `Store ${sId}`;
+        if (!byStore[sId]) {
+          byStore[sId] = { storeId: sId, storeName: sName, generalQuantity: 0, variants: {} };
+        }
+        if (i.variantId == null || i.variantId === 0) {
+          byStore[sId].generalQuantity += i.quantity || 0;
+        } else {
+          const vid = i.variantId as number;
+          byStore[sId].variants[vid] = (byStore[sId].variants[vid] || 0) + (i.quantity || 0);
+        }
+      });
+      // Use stored variants list (updated when variants change) or fallback to form value
+      const productVariants: { id: number; name: string }[] = (this.productVariantsList.length > 0 
+        ? this.productVariantsList 
+        : (this.productForm.value?.variants || [])).map((v: any) => ({ id: v.id, name: v.name }));
+      this.storeInventoryRows = Object.values(byStore).map(row => {
+        const variantsArr: { id: number; name: string; quantity: number }[] = Object.keys(row.variants).map(k => {
+          const vid = +k;
+          const pv = productVariants.find(x => x.id === vid);
+          return { id: vid, name: pv?.name || ('Variant #' + vid), quantity: row.variants[vid] };
+        });
+        return { storeId: row.storeId, storeName: row.storeName, generalQuantity: row.generalQuantity, variants: variantsArr };
+      }).sort((a, b) => a.storeId - b.storeId);
+
+      // Build variant quantities aggregated across stores
+      this.variantQuantities = [];
+      // Use stored variants list (updated when variants change) or fallback to form value
+      const variants = this.productVariantsList.length > 0 ? this.productVariantsList : (this.productForm.value?.variants || []);
+      if (variants.length === 0) {
+        const variantGroups = normalized.filter(i => i.variantId != null && i.variantId > 0);
+        const sums: { [id: number]: number } = {};
+        variantGroups.forEach(i => {
+          const vid = i.variantId as number;
+          sums[vid] = (sums[vid] || 0) + (i.quantity || 0);
+        });
+        Object.keys(sums).forEach(k => {
+          const vid = +k;
+          this.variantQuantities.push({ id: vid, name: 'Variant #' + vid, quantity: sums[vid] });
+          this.recallAmountByVariant[vid] = this.recallAmountByVariant[vid] || 1;
+        });
+      } else {
+        variants.forEach((v: any) => {
+          const sumQty = normalized
+            .filter(i => i.variantId == v.id)
+            .reduce((sum, i) => sum + (i.quantity || 0), 0);
+          this.variantQuantities.push({ id: v.id || 0, name: v.name, quantity: sumQty });
+          this.recallAmountByVariant[v.id] = this.recallAmountByVariant[v.id] || 1;
+        })
+      }
+
+      // compute totals
+      this.variantsTotal = this.variantQuantities.reduce((sum, v) => sum + (v.quantity || 0), 0);
+      this.overallTotal = this.generalQuantity + this.variantsTotal;
+    });
+  }
+
+  allocateToVariant() {
+    if (!this.allocation.variantId || this.allocation.amount < 1 || this.allocation.amount > this.generalQuantity) {
+      this.allocationMsg = 'الرجاء إدخال كمية صحيحة ومتغير صحيح';
+      this.allocationSuccess = false;
+      return;
+    }
+    const productId = this.productForm.get('id')?.value;
+    // Try to identify the general inventoryId (for API)
+    const generalInventory = this.inventoryData.find(i => !i.variantId || i.variantId == 0);
+    if (!generalInventory) {
+      this.allocationMsg = 'لا يوجد كمية عامة متاحة للتوزيع';
+      this.allocationSuccess = false;
+      return;
+    }
+    const body = {
+      productId,
+      storeId: generalInventory.storeId,
+      generalInventoryId: generalInventory.id,
+      generalQuantity: generalInventory.quantity,
+      allocations: [
+        {
+          variantId: this.allocation.variantId,
+          quantity: this.allocation.amount,
+        },
+      ],
+    };
+    this.productService.splitGeneralQuantityToVariants(body).subscribe({
+      next: () => {
+        this.allocationMsg = 'تم توزيع الكمية بنجاح';
+        this.allocationSuccess = true;
+        this.notification.success('تم توزيع الكمية بنجاح');
+        this.loadInventory(productId);
+        this.allocation.amount = 1;
+        this.allocation.variantId = 0;
+      },
+      error: (err) => {
+        this.allocationMsg = err.error?.message || 'حدث خطأ أثناء توزيع الكمية';
+        this.allocationSuccess = false;
+        this.notification.error(this.allocationMsg);
+      }
+    });
+  }
+
+  recallFromVariant(variantId: number) {
+    const amount = this.recallAmountByVariant[variantId] || 0;
+    if (amount < 1) {
+      this.notification.error('الرجاء إدخال كمية صحيحة');
+      return;
+    }
+    const productId = this.productForm.get('id')?.value;
+    const generalInventory = this.inventoryData.find(i => !i.variantId || i.variantId == 0);
+    if (!generalInventory) {
+      this.notification.error('لا يوجد مخزون عام لاستقبال الكمية');
+      return;
+    }
+    this.productService.RecallStockFromVariant(productId, {
+      storeId: generalInventory.storeId,
+      variantId: variantId,
+      quantity: amount,
+    }).subscribe({
+      next: () => {
+        this.notification.success('تم الاسترجاع للكمية العامة');
+        this.loadInventory(productId);
+      },
+      error: (err) => {
+        this.notification.error(err.error || 'فشل استرجاع الكمية');
+      }
+    })
   }
 
   productForm!: FormGroup;
@@ -74,16 +253,13 @@ export class ProductFormComponent implements OnInit {
       nameEn: [product?.nameEn || ''],
       nameAr: [product?.nameAr || '', Validators.required],
       description: [product?.description || ''],
-      openingBalance: [product?.openingBalance, Validators.required],
-      reorderLevel: [product?.reorderLevel, Validators.required],
-      quantityInStock: [product?.quantityInStock, Validators.required],
+      reorderLevel: [product?.reorderLevel || 0],
       costPrice: [product?.costPrice, Validators.required],
       sellingPrice: [product?.sellingPrice, Validators.required],
       image: [null],
       isActive: [product?.isActive ?? true],
       subCategoryId: [product?.subCategoryId || null, Validators.required],
       unitId: [product?.unitId || null, Validators.required],
-      storeId: [product?.storeId || null, Validators.required],
     });
     if(product) {
       this.initialImageUrl = this.url + product.imagePath;
@@ -127,12 +303,9 @@ export class ProductFormComponent implements OnInit {
       formData.append('nameAr', this.nameAr.value);
       formData.append('nameEn', this.nameEn.value);
       formData.append('description', this.description.value);
-      formData.append('openingBalance', this.openingBalance.value);
       formData.append('reorderLevel', this.reorderLevel.value);
-      formData.append('quantityInStock', this.quantityInStock.value);
       formData.append('costPrice', this.costPrice.value);
       formData.append('sellingPrice', this.sellingPrice.value);
-      formData.append('storeId', this.storeId.value);
 
       const file = this.image.value;
 
@@ -184,14 +357,8 @@ export class ProductFormComponent implements OnInit {
   get description(): FormControl {
     return this.productForm.get('description') as FormControl;
   }
-  get openingBalance(): FormControl {
-    return this.productForm.get('openingBalance') as FormControl;
-  }
   get reorderLevel(): FormControl {
     return this.productForm.get('reorderLevel') as FormControl;
-  }
-  get quantityInStock(): FormControl {
-    return this.productForm.get('quantityInStock') as FormControl;
   }
   get costPrice(): FormControl {
     return this.productForm.get('costPrice') as FormControl;
@@ -211,7 +378,22 @@ export class ProductFormComponent implements OnInit {
   get unitId(): FormControl {
     return this.productForm.get('unitId') as FormControl;
   }
-  get storeId(): FormControl {
-    return this.productForm.get('storeId') as FormControl;
+
+  // Handle variants and modifiers updates
+  onVariantsUpdated(variants: ProductVariant[]): void {
+    console.log('Variants updated:', variants);
+    // Store the updated variants list
+    this.productVariantsList = variants || [];
+    
+    // If product is loaded, reload inventory to refresh the dropdown
+    const productId = this.productForm.get('id')?.value;
+    if (productId && productId > 0) {
+      this.loadInventory(productId);
+    }
+  }
+
+  onModifiersUpdated(modifiers: ProductModifierGroup[]): void {
+    console.log('Modifiers updated:', modifiers);
+    // You can add additional logic here if needed
   }
 }

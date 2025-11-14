@@ -4,9 +4,10 @@ import { LanguageService } from '../../core/services/language.service';
 import { ActivatedRoute, ParamMap, Router } from '@angular/router';
 import { BreadcrumbService } from '../../shared/services/breadcrumb.service';
 import { AuthService } from '../../core/services/auth.service';
-import { Observable } from 'rxjs';
+import { Observable, map } from 'rxjs';
 import { SubCategory } from '../../admin/models/SubCategory';
 import { Category } from '../../admin/models/category';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-order-sub-categories',
@@ -37,8 +38,9 @@ export class OrderSubCategoriesComponent implements OnInit {
       this.categoryId = categoryIdParam !== null ? Number(categoryIdParam) : 1;
       const categoryName = this.getCategoryName(this.categoryId);
 
+      const homeRoute = this.authService.isAdmin ? '/admin/main' : `/order/${this.orderTypeId}/categories`;
       this.breadcrumbService.setFrom([
-        { label: 'الرئيسية', route: '/home' },
+        { label: 'الرئيسية', route: homeRoute },
         { label: 'التصنيفات', route: `/order/${this.orderTypeId}/categories` },
         { label: categoryName, route: null }
       ]);
@@ -52,10 +54,16 @@ export class OrderSubCategoriesComponent implements OnInit {
   orderTypeId: number = 1;
   categoryId: number = 1;
   categories!: Category[];
+  serverUrl: string = environment.resourcesUrl;
 
 
   loadSubCategories(categoryId: number) {
-    this.subCategories$ = this.subCategoryService.GetSubCategoryByCategoryId(categoryId);
+    this.subCategories$ = this.subCategoryService.GetSubCategoryByCategoryId(categoryId).pipe(
+      map(subCategories => {
+        // Filter sub-categories based on user permissions
+        return subCategories.filter(subCategory => this.authService.hasSubCategory(subCategory.id!));
+      })
+    );
   }
 
   getCategoryName(categoryId: number): string {

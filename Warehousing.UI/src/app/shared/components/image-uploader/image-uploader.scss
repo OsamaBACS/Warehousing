@@ -1,7 +1,36 @@
-.upload-box {
-  transition: border-color 0.3s ease;
+.upload-container {
+  position: relative;
+  min-height: 200px;
+  aspect-ratio: 1;
 }
-.upload-box.dragover {
-  border-color: #007bff;
-  background-color: #f0f8ff;
+
+.upload-interface {
+  transition: all 0.3s ease;
+}
+
+.upload-interface.dragover {
+  border-color: #3b82f6;
+  background-color: #eff6ff;
+}
+
+.image-display {
+  position: relative;
+  min-height: 200px;
+  aspect-ratio: 1;
+}
+
+.image-display img {
+  transition: transform 0.3s ease;
+}
+
+.image-display:hover img {
+  transform: scale(1.05);
+}
+
+/* Ensure consistent aspect ratio across all components */
+.upload-container,
+.image-display {
+  aspect-ratio: 1;
+  min-height: 150px;
+  max-height: 300px;
 }

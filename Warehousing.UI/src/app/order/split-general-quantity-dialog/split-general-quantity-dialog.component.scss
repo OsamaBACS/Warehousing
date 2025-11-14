@@ -1,0 +1,16 @@
+.dialog-container {
+  padding: 1.5rem;
+  border-radius: 1em;
+}
+input[type='number'] {
+  border: 1px solid #ddd;
+}
+input[type='number']:focus {
+  outline: none;
+  border-color: #059669;
+  box-shadow: 0 0 0 2px #bbf7d0;
+}
+button[type='submit']:not(:disabled) {
+  background: linear-gradient(to right, #059669, #34d399);
+}
+

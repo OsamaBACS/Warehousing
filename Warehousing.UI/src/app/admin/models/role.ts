@@ -1,6 +1,7 @@
 import { RoleCategory } from "./RoleCategory";
 import { RolePermission, RolePermissionDto } from "./rolePermission";
 import { RoleProduct } from "./RoleProduct";
+import { RoleSubCategory } from "./RoleSubCategory";
 
 export interface Role {
     id: number;
@@ -9,7 +10,8 @@ export interface Role {
     nameAr: string;
     rolePermissions: RolePermission[];
     roleCategories : RoleCategory[],
-    roleProducts : RoleProduct[]
+    roleProducts : RoleProduct[],
+    roleSubCategories : RoleSubCategory[]
 }
 export interface RoleDto {
     id: number;
@@ -18,7 +20,9 @@ export interface RoleDto {
     nameAr: string;
     permissions: RolePermissionDto[];
     categoryIds : number[],
-    productIds : number[]
+    productIds : number[],
+    subCategoryIds : number[],
+    printerConfigurationId?: number | null
 }
 
 export interface RoleDtoForAdd {
@@ -28,5 +32,7 @@ export interface RoleDtoForAdd {
     nameAr: string;
     rolePermissionIds: number[];
     categoryIds : number[],
-    productIds : number[]
+    productIds : number[],
+    subCategoryIds : number[],
+    printerConfigurationId?: number | null
 }

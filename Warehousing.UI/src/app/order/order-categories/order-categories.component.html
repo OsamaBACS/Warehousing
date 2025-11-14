@@ -1,12 +1,133 @@
-<div class="container my-5">
-  <div class="row g-3 justify-content-center" *ngIf="(categories$ | async) as categories">
-    <div class="col-6 col-sm-4 col-md-3 col-lg-2" *ngFor="let category of categories">
-      <div class="card square-card shadow-sm" (click)="onCardClick(category.id)">
-        <div class="card-body text-center">
-          <h5 class="card-title fw-bold">{{ category.nameAr }}</h5>
-          <p class="card-text text-muted small">{{ category.description }}</p>
+<div class="min-h-screen bg-gray-50 py-8">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <!-- Header -->
+    <div class="text-center mb-6 sm:mb-8 px-4">
+      <h1 class="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 mb-2 sm:mb-4">
+        {{ lang.currentLang === 'ar' ? 'اختر التصنيف' : 'Select a Category' }}
+      </h1>
+      <p class="text-sm sm:text-base lg:text-lg text-gray-600">
+        {{ lang.currentLang === 'ar' ? 'يمكنك البحث مباشرة عن المنتج أو تصفح التصنيفات' : 'Search directly for a product or browse the categories' }}
+      </p>
+    </div>
+
+    <!-- Product Search -->
+    <div class="max-w-3xl mx-auto mb-8 sm:mb-10 px-4">
+      <div class="relative">
+        <span class="pointer-events-none absolute inset-y-0 flex items-center text-gray-400"
+              [ngClass]="{ 'left-4': lang.currentLang !== 'ar', 'right-4': lang.currentLang === 'ar' }">
+          <i class="bi bi-search text-lg"></i>
+        </span>
+        <input
+          type="search"
+          [formControl]="searchControl"
+          class="w-full rounded-2xl border border-gray-200 bg-white py-3 pl-12 pr-12 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base"
+          [dir]="lang.currentLang === 'ar' ? 'rtl' : 'ltr'"
+          [placeholder]="lang.currentLang === 'ar' ? 'ابحث عن منتج بالاسم أو الكود...' : 'Search for a product by name or code...'"
+        />
+        <button
+          *ngIf="searchControl.value"
+          type="button"
+          (click)="clearSearch()"
+          class="absolute inset-y-0 flex items-center text-gray-400 hover:text-gray-600 transition-colors"
+          [ngClass]="{ 'right-4': lang.currentLang !== 'ar', 'left-4': lang.currentLang === 'ar' }"
+          aria-label="Clear search">
+          <i class="bi bi-x-circle-fill text-lg"></i>
+        </button>
+      </div>
+      <div class="mt-3 text-sm text-blue-500 flex items-center gap-2 justify-center sm:justify-between"
+           [ngClass]="{ 'flex-row-reverse': lang.currentLang === 'ar' }">
+        <div class="hidden sm:flex items-center gap-2">
+          <i class="bi bi-lightbulb"></i>
+          <span>
+            {{ lang.currentLang === 'ar' ? 'يمكنك كتابة جزء من الاسم أو كود المنتج للعثور عليه بسرعة' : 'Enter part of the name or product code to locate it quickly' }}
+          </span>
+        </div>
+        <div>
+          <span *ngIf="searchLoading" class="text-blue-600">
+            {{ lang.currentLang === 'ar' ? 'جاري البحث...' : 'Searching...' }}
+          </span>
+          <span *ngIf="!searchLoading && searchControl.value && !searchResults.length && !searchError" class="text-gray-500">
+            {{ lang.currentLang === 'ar' ? 'لا توجد نتائج مطابقة' : 'No matching products found' }}
+          </span>
+          <span *ngIf="searchError" class="text-red-600">
+            {{ searchError }}
+          </span>
         </div>
       </div>
+
+      <div *ngIf="searchResults.length" class="mt-4 bg-white rounded-2xl border border-gray-100 shadow-lg overflow-hidden">
+        <div class="px-5 py-3 border-b border-gray-100 bg-gray-50 font-semibold text-gray-700"
+             [ngClass]="{ 'text-right': lang.currentLang === 'ar', 'text-left': lang.currentLang !== 'ar' }">
+          {{ lang.currentLang === 'ar' ? 'نتائج البحث' : 'Search Results' }}
+        </div>
+        <ul class="max-h-80 overflow-y-auto divide-y divide-gray-100">
+          <li *ngFor="let product of searchResults">
+            <button
+              type="button"
+              (click)="onSelectProduct(product)"
+              class="w-full px-5 py-4 transition-all duration-200 hover:bg-blue-50 focus:bg-blue-100 focus:outline-none flex flex-col gap-1"
+              [ngClass]="{ 'items-end text-right': lang.currentLang === 'ar', 'items-start text-left': lang.currentLang !== 'ar' }">
+              <span class="text-sm sm:text-base font-semibold text-gray-900">
+                {{ product.nameAr || product.nameEn }}
+              </span>
+              <span class="text-xs sm:text-sm text-gray-500 flex items-center gap-1"
+                    [ngClass]="{ 'flex-row-reverse': lang.currentLang === 'ar' }">
+                <i class="bi bi-arrow-right-circle"></i>
+                <span>
+                  {{ (product.subCategory?.category?.nameAr || product.subCategory?.category?.nameEn) || (lang.currentLang === 'ar' ? 'تصنيف غير محدد' : 'Uncategorized') }}
+                  <span class="mx-1 text-gray-400">›</span>
+                  {{ product.subCategory?.nameAr || product.subCategory?.nameEn || (lang.currentLang === 'ar' ? 'فرع غير محدد' : 'Subcategory not set') }}
+                </span>
+              </span>
+              <span *ngIf="product.code" class="text-xs text-gray-400">
+                {{ lang.currentLang === 'ar' ? 'كود المنتج:' : 'Product Code:' }} {{ product.code }}
+              </span>
+            </button>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Categories Grid -->
+    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-3 sm:gap-4 lg:gap-6 px-4" *ngIf="(categories$ | async) as categories">
+      <div *ngFor="let category of categories" class="group h-full">
+        <div class="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 cursor-pointer overflow-hidden border border-gray-100 h-full flex flex-col" 
+             (click)="onCardClick(category.id)">
+          
+          <!-- Category Image -->
+          <div class="aspect-square bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-6 flex-shrink-0">
+            <img *ngIf="category.imagePath" 
+                 [src]="serverUrl + category.imagePath" 
+                 [alt]="category.nameAr"
+                 class="w-full h-full object-cover rounded-xl">
+            <div *ngIf="!category.imagePath" 
+                 class="w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center">
+              <i class="bi bi-grid-3x3-gap text-white text-2xl"></i>
+            </div>
+          </div>
+
+          <!-- Category Info -->
+          <div class="p-2 sm:p-3 lg:p-4 text-center flex flex-col flex-grow">
+            <h3 class="font-bold text-gray-900 text-xs sm:text-sm mb-1 group-hover:text-blue-600 transition-colors">
+              {{ category.nameAr }}
+            </h3>
+            <div class="flex-grow flex items-center justify-center">
+              <p class="text-gray-500 text-xs leading-relaxed" *ngIf="category.description">
+                {{ category.description | slice:0:30 }}{{ (category.description && category.description.length > 30) ? '...' : '' }}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Empty State -->
+    <div *ngIf="(categories$ | async)?.length === 0" class="text-center py-12">
+      <div class="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+        <i class="bi bi-grid-3x3-gap text-gray-400 text-3xl"></i>
+      </div>
+      <h3 class="text-lg font-semibold text-gray-900 mb-2">لا توجد تصنيفات</h3>
+      <p class="text-gray-500">لم يتم العثور على أي تصنيفات متاحة</p>
     </div>
   </div>
 </div>

@@ -1,15 +1,19 @@
 import { Component, OnInit } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { ProductsService } from '../../admin/services/products.service';
 import { CartService } from '../../shared/services/cart.service';
-import { FormBuilder, FormGroup } from '@angular/forms';
+import { AbstractControl, FormBuilder, FormControl, FormGroup } from '@angular/forms';
 import { BreadcrumbService } from '../../shared/services/breadcrumb.service';
+import { OrderBreadcrumbService } from '../services/order-breadcrumb.service';
 import { Product } from '../../admin/models/product';
-import { Observable } from 'rxjs';
+import { Observable, map, tap } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { SubCategory } from '../../admin/models/SubCategory';
+import { StoreSimple } from '../../admin/models/StoreSimple';
 import { OrderDto } from '../../admin/models/OrderDto';
 import { OrderItemDto } from '../../admin/models/OrderItemDto';
+import { AuthService } from '../../core/services/auth.service';
+// Removed unnecessary imports since we navigate to detail page
 
 @Component({
   selector: 'app-order-products',
@@ -21,24 +25,28 @@ export class OrderProductsComponent implements OnInit {
 
   constructor(
     private route: ActivatedRoute,
+    private router: Router,
     private productsService: ProductsService,
-    private cartService: CartService,
+    public cartService: CartService,
     private fb: FormBuilder,
-    private breadcrumbService: BreadcrumbService
+    private breadcrumbService: BreadcrumbService,
+    private orderBreadcrumbService: OrderBreadcrumbService,
+    private authService: AuthService,
+    // Removed unnecessary services since we navigate to detail page
   ) {
     this.subCategories = this.route.snapshot.data['subCategoriesResolver'];
   }
 
   ngOnInit(): void {
+    this.serverUrl = this.productsService.url.substring(0, this.productsService.url.indexOf('api'));
+    
     this.route.parent?.paramMap.subscribe(params => {
       const orderTypeIdParam = params.get('orderTypeId');
       this.orderTypeId = orderTypeIdParam !== null ? Number(orderTypeIdParam) : 1; // default 1 if null
-      if (this.cartService.cartItems.length <= 0) {
-        this.cartService.orderTypeId = this.orderTypeId;
-        if (this.cartService.cartForm) {
-          this.cartService.cartForm.patchValue({ orderTypeId: this.orderTypeId });
-        }
-      }
+      
+      // Always update the cart service orderTypeId to match the current route
+      // This ensures the correct order type is used regardless of cart state
+      this.cartService.setOrderTypeId(this.orderTypeId);
     });
 
     this.route.paramMap.subscribe(params => {
@@ -46,15 +54,20 @@ export class OrderProductsComponent implements OnInit {
       const subCategoryIdParam = params.get('subCategoryId');
 
       this.categoryId = categoryIdParam !== null ? Number(categoryIdParam) : 1;
-      this.subCategoryId = categoryIdParam !== null ? Number(subCategoryIdParam) : 1;
+      this.subCategoryId = subCategoryIdParam !== null ? Number(subCategoryIdParam) : 1;
 
-      const categoryName = this.subCategories.find(c => c.id === this.subCategoryId)?.nameAr;
+      const subCategory = this.subCategories.find(sc => sc.id === this.subCategoryId);
+      const categoryName = subCategory?.category?.nameAr || 'التصنيف';
+      const subCategoryName = subCategory?.nameAr || 'المنتجات';
 
-      this.breadcrumbService.setFrom([
-        { label: 'الرئيسية', route: '/home' },
-        { label: 'التصنيفات', route: `/order/${this.orderTypeId}/categories` },
-        { label: categoryName || 'Products', route: null }
-      ]);
+      // Set breadcrumbs using the order breadcrumb service
+      this.orderBreadcrumbService.setOrderProductsBreadcrumbs(
+        this.orderTypeId, 
+        this.categoryId, 
+        categoryName, 
+        this.subCategoryId, 
+        subCategoryName
+      );
 
       this.loadProducts(this.subCategoryId);
     });
@@ -66,84 +79,159 @@ export class OrderProductsComponent implements OnInit {
   products$!: Observable<Product[]>;
   resourcesUrl = environment.resourcesUrl;
   subCategories!: SubCategory[];
+  selectedSubCategory!: SubCategory;
+  serverUrl = '';
+  
+  // Variant stock data for unified display
+  variantStockData: { [key: string]: number } = {};
+  // No longer needed since we navigate to detail page
 
   loadProducts(subCategoryId: number) {
-    this.products$ = this.productsService.GetProductsBySubCategoryId(subCategoryId);
+    this.products$ = this.productsService.GetProductsBySubCategoryId(subCategoryId).pipe(
+      tap(products => {
+        console.log('Products from API:', products);
+        console.log('User product permissions:', this.authService.getProductIds());
+        // Load variant stock data for all products
+        this.loadVariantStockData(products);
+      }),
+      map(products => {
+        // Filter products based on user permissions
+        const filteredProducts = products.filter(product => {
+          const hasPermission = this.authService.hasProduct(product.id!);
+          console.log(`Product ${product.id} (${product.nameEn}): hasPermission = ${hasPermission}`);
+          return hasPermission;
+        });
+        console.log('Filtered products:', filteredProducts);
+        return filteredProducts;
+      })
+    );
+    // Set the selected subcategory for display
+    this.selectedSubCategory = this.subCategories.find(sc => sc.id === subCategoryId)!;
   }
 
-  initializingForm(order: OrderDto | null) {
-    const formattedOrderDate = order?.orderDate ? this.formatDate(order.orderDate) : this.formatDate(new Date().toString());
-
-    this.cartService.cartForm = this.fb.group({
-      id: [order?.id || 0],
-      orderDate: [formattedOrderDate],
-      totalAmount: [order?.totalAmount || 0],
-      orderTypeId: [this.orderTypeId],
-      customerId: [order?.customerId || null],
-      supplierId: [order?.supplierId || null],
-      statusId: [order?.statusId || 1],
-      items: this.fb.array([])
+  loadVariantStockData(products: Product[]): void {
+    // Process the actual inventory data from the API response
+    console.log('🔍 Loading variant stock data for products:', products.length);
+    
+    products.forEach(product => {
+      console.log(`📦 Product ${product.id} (${product.nameAr}):`, {
+        inventories: product.inventories?.length || 0,
+        variants: product.variants?.length || 0
+      });
+      
+      if (product.inventories && product.inventories.length > 0) {
+        product.inventories.forEach(inventory => {
+          console.log(`📊 Inventory record:`, {
+            productId: inventory.productId,
+            storeId: inventory.storeId,
+            variantId: inventory.variantId,
+            quantity: inventory.quantity,
+            storeName: inventory.store?.nameAr
+          });
+          
+          // Check if this inventory record is for a variant (has variantId)
+          if (inventory.variantId) {
+            const key = `${product.id}-${inventory.variantId}-${inventory.storeId}`;
+            this.variantStockData[key] = inventory.quantity;
+            console.log(`✅ Added variant stock: ${key} = ${inventory.quantity}`);
+          }
+        });
+      }
     });
+    
+    console.log('📈 Final variant stock data:', this.variantStockData);
+  }
 
-    if (order?.id && order.id > 0) {
-      order.items?.forEach((item: any) => {
-        this.cartService.cartItems.push(this.createItemGroup(item));
+  getVariantStock(productId: number, variantId: number, storeId: number): number {
+    // This will be populated when we load variant stock data
+    return this.variantStockData[`${productId}-${variantId}-${storeId}`] || 0;
+  }
+
+  getVariantStockForStore(productId: number, variantId: number, storeId: number): number {
+    // Alias for getVariantStock to make template more readable
+    return this.getVariantStock(productId, variantId, storeId);
+  }
+
+  // Helper methods for unified display
+  hasVariantStock(product: Product): boolean {
+    if (!product.variants || product.variants.length === 0) return false;
+    
+    return product.variants.some(variant => {
+      // Check if this variant has stock in any store
+      return this.getStoresForVariant(product, variant.id!).length > 0;
+    });
+  }
+
+  getMainProductInventories(product: Product): any[] {
+    // Return only main product inventories (not variant-specific)
+    return product.inventories?.filter(inv => !inv.variantId) || [];
+  }
+
+  getTotalVariantsWithStock(product: Product): number {
+    if (!product.variants) return 0;
+    
+    return product.variants.filter(variant => {
+      return this.getStoresForVariant(product, variant.id!).length > 0;
+    }).length;
+  }
+
+  getStoresForVariant(product: Product, variantId: number): StoreSimple[] {
+    // Get stores that have stock for this specific variant
+    const stores: StoreSimple[] = [];
+    
+    console.log(`🔍 Getting stores for variant ${variantId} of product ${product.id}:`, {
+      productInventories: product.inventories?.length || 0,
+      productVariants: product.variants?.length || 0
+    });
+    
+    if (product && product.inventories) {
+      // Get stores that have stock for this variant
+      const variantInventories = product.inventories.filter(inv => 
+        inv.variantId === variantId && inv.quantity > 0
+      );
+      
+      console.log(`📊 Found ${variantInventories.length} inventory records for variant ${variantId}:`, variantInventories);
+      
+      variantInventories.forEach(inventory => {
+        console.log(`🏪 Processing inventory:`, {
+          storeId: inventory.storeId,
+          storeName: inventory.store?.nameAr,
+          quantity: inventory.quantity
+        });
+        
+        if (inventory.store) {
+          const storeSimple = {
+            id: inventory.store.id,
+            name: inventory.store.nameAr || `مستودع ${inventory.store.id}`,
+            code: inventory.store.code || `S${inventory.store.id}`,
+            isActive: true
+          };
+          stores.push(storeSimple);
+          console.log(`✅ Added store:`, storeSimple);
+        }
       });
     }
+    
+    console.log(`🎯 Final stores for variant ${variantId}:`, stores);
+    return stores;
   }
 
-  createItemGroup(item?: OrderItemDto): FormGroup {
-    const fg = this.fb.group({
-      id: [item?.id || null],
-      storeId: [item?.storeId || null],
-      productId: [item?.productId || null],
-      quantity: [item?.quantity || 0],
-      costPrice: [item?.costPrice || 0],
-      sellingPrice: [item?.sellingPrice || 0],
-    });
+  // Removed loadProductVariants and loadProductModifiers - now handled in detail page
 
-    return fg;
+  // Removed cart-related methods - now handled in detail page
+
+
+  // Removed cart-related methods - now handled in detail page
+
+  // Removed all cart-related methods - now handled in detail page
+
+  // Removed getTotalQuantity method - now using product.totalQuantity from API
+
+  // Removed all variant/modifier methods - now handled in detail page
+
+  // Navigation method
+  viewProductDetail(product: Product): void {
+    this.router.navigate(['/order', this.orderTypeId, 'product', product.id]);
   }
 
-  addToCart(product: Product): void {
-    if (this.cartService.hasActiveOrder(this.orderTypeId)) {
-      var message = this.cartService.orderTypeId == 1 ? 'يرجى إنهاء طلب الشراء اولا' : 'يرجى إنهاء طلب البيع اولا'
-      alert(message);
-      return;
-    }
-    this.cartService.addToCart(product, 1);
-  }
-
-  removeFromCart(product: Product): void {
-    if (this.cartService.hasActiveOrder(this.orderTypeId)) {
-      var message = this.cartService.orderTypeId == 1 ? 'يرجى إنهاء طلب الشراء اولا' : 'يرجى إنهاء طلب البيع اولا'
-      alert(message);
-      return;
-    }
-
-    if (this.getQuantity(product.id) <= 0) {
-      if (this.cartService.cartItems.length <= 0) {
-        this.cartService.clearCart();
-      }
-      return;
-    }
-
-    this.cartService.addToCart(product, -1);
-  }
-
-  getQuantity(productId: number): number {
-    const index = this.cartService.cartItems.controls.findIndex(
-      ctrl => ctrl.value.productId === productId
-    );
-
-    return index > -1 ? this.cartService.cartItems.at(index).get('quantity')?.value || 0 : 0;
-  }
-
-  private formatDate(dateString: string): string {
-    const date = new Date(dateString);
-    const year = date.getFullYear();
-    const month = ('0' + (date.getMonth() + 1)).slice(-2); // Months are zero-based
-    const day = ('0' + date.getDate()).slice(-2);
-    return `${year}-${month}-${day}`;
-  }
 }

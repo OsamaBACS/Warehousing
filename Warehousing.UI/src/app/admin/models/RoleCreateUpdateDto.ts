@@ -4,4 +4,7 @@ export interface RoleCreateUpdateDto {
     nameEn: string;
     nameAr: string;
     permissionCodes: string[];
+    categoryIds: number[];
+    productIds: number[];
+    subCategoryIds: number[];
 }

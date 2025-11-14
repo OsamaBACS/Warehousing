@@ -1,136 +1,350 @@
-<div class="dialog-container p-3 p-md-4">
-  <h5 class="mb-4 text-center">إضافة / تعديل منتج</h5>
-
-  <form [formGroup]="productForm">
-
-    <div class="row g-3">
-      <!-- Name (EN) -->
-      <div class="col-12 col-sm-6 col-md-3">
-        <div class="floating-label-input">
-          <input class="form-control" formControlName="nameEn" placeholder=" " />
-          <label>الاسم بالانجليزي</label>
-        </div>
-      </div>
-
-      <!-- Name (AR) -->
-      <div class="col-12 col-sm-6 col-md-3">
-        <div class="floating-label-input">
-          <input class="form-control" formControlName="nameAr" placeholder=" " />
-          <label>الاسم بالعربي</label>
-        </div>
-      </div>
-
-      <!-- Category -->
-      <div class="col-12 col-sm-6 col-md-3">
-        <div class="floating-label-select">
-          <select class="form-select" formControlName="subCategoryId">
-            <option [ngValue]="null">-- Select --</option>
-            <option *ngFor="let c of subCategories" [ngValue]="c.id">{{ c.nameAr }}</option>
-          </select>
-          <label>التصنيف</label>
-        </div>
-      </div>
-
-      <!-- Unit -->
-      <div class="col-12 col-sm-6 col-md-3">
-        <div class="floating-label-select">
-          <select class="form-select" formControlName="unitId">
-            <option [ngValue]="null">-- Select --</option>
-            <option *ngFor="let u of units" [ngValue]="u.id">{{ u.nameAr }}</option>
-          </select>
-          <label>وحدة القياس</label>
-        </div>
-      </div>
-
-      <!-- Code -->
-      <div class="col-12 col-sm-6 col-md-3">
-        <div class="floating-label-input">
-          <input class="form-control" formControlName="code" readonly placeholder=" " />
-          <label>الكود</label>
-        </div>
-      </div>
-
-      <!-- Quantity In Stock -->
-      <div class="col-12 col-sm-6 col-md-3">
-        <div class="floating-label-input">
-          <input type="number" class="form-control" formControlName="openingBalance" placeholder=" " />
-          <label>الرصيد الافتتاحي</label>
-        </div>
-      </div>
-
-      <!-- Reorder Level -->
-      <div class="col-12 col-sm-6 col-md-3">
-        <div class="floating-label-input">
-          <input type="number" class="form-control" formControlName="reorderLevel" placeholder=" " />
-          <label>مستوى إعادة الطلب</label>
-        </div>
-      </div>
-
-      <!-- quantityInStock -->
-      <div class="col-12 col-sm-6 col-md-3">
-        <div class="floating-label-input">
-          <input type="number" class="form-control" formControlName="quantityInStock" placeholder=" " />
-          <label>الكمية</label>
-        </div>
-      </div>
-
-      <!-- costPrice -->
-      <div class="col-12 col-sm-6 col-md-3">
-        <div class="floating-label-input">
-          <input type="number" class="form-control" formControlName="costPrice" placeholder=" " />
-          <label>سعر الشراء</label>
-        </div>
-      </div>
-
-      <!-- sellingPrice -->
-      <div class="col-12 col-sm-6 col-md-3">
-        <div class="floating-label-input">
-          <input type="number" class="form-control" formControlName="sellingPrice" placeholder=" " />
-          <label>سعر البيع</label>
-        </div>
-      </div>
-
-      <!-- Store -->
-      <div class="col-12 col-sm-6 col-md-3">
-        <div class="floating-label-select">
-          <select class="form-select" id="supplierId" formControlName="storeId">
-            <option value="">يرجى اختيار المستودع</option>
-            <option *ngFor="let store of stores" [value]="store.id">{{ store.nameAr }}</option>
-          </select>
-          <label>المستودع</label>
-        </div>
-      </div>
-
-      <!-- Is Active -->
-      <div class="col-12 col-sm-6 col-md-3">
-        <div class="form-check form-switch">
-          <input class="form-check-input" type="checkbox" formControlName="isActive" />
-          <label class="form-check-label">الفعالية</label>
+<div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4 md:p-6">
+  <div class="max-w-6xl mx-auto">
+    <!-- Header -->
+    <div class="bg-white rounded-2xl shadow-xl mb-8 overflow-hidden">
+      <div class="bg-gradient-to-r from-blue-600 to-indigo-700 px-6 py-8">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center space-x-4">
+            <div class="w-12 h-12 bg-white bg-opacity-20 rounded-xl flex items-center justify-center">
+              <i class="bi bi-box text-white text-2xl"></i>
+            </div>
+            <div>
+              <h1 class="text-2xl font-bold text-white">
+                إضافة / تعديل المنتجات
+              </h1>
+              <p class="text-blue-100 mt-1">إدارة معلومات المنتج والتفاصيل</p>
+            </div>
+          </div>
+          <button class="px-4 py-2 bg-white bg-opacity-20 text-white rounded-lg hover:bg-opacity-30 transition-colors" 
+            (click)="cancel()">
+            <i class="bi bi-arrow-right mr-2"></i>
+            العودة
+          </button>
         </div>
       </div>
     </div>
 
-    <div class="row g-3">
-      <!-- Description -->
-      <div class="col-12 col-md-6">
-        <div class="floating-label-textarea">
-          <textarea class="form-control" rows="11" formControlName="description" placeholder=" "></textarea>
-          <label>Description</label>
+    <form [formGroup]="productForm" class="space-y-8">
+      
+      <!-- Basic Information Section -->
+      <div class="bg-white rounded-2xl shadow-xl overflow-hidden">
+        <div class="bg-gradient-to-r from-green-500 to-emerald-600 px-6 py-4">
+          <h2 class="text-xl font-bold text-white flex items-center">
+            <i class="bi bi-info-circle mr-3"></i>
+            المعلومات الأساسية
+          </h2>
+        </div>
+        
+        <div class="p-6">
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Product Name (Arabic) -->
+            <div class="space-y-2">
+              <label class="block text-sm font-semibold text-gray-700">
+                <i class="bi bi-translate mr-2 text-green-600"></i>
+                اسم المنتج (عربي) *
+              </label>
+              <input class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors" 
+                formControlName="nameAr" placeholder="أدخل اسم المنتج باللغة العربية" />
+              <div *ngIf="nameAr.invalid && nameAr.touched" class="text-red-500 text-sm flex items-center">
+                <i class="bi bi-exclamation-circle mr-1"></i>
+                اسم المنتج مطلوب
+              </div>
+            </div>
+
+            <!-- Product Name (English) -->
+            <div class="space-y-2">
+              <label class="block text-sm font-semibold text-gray-700">
+                <i class="bi bi-translate mr-2 text-green-600"></i>
+                اسم المنتج (إنجليزي)
+              </label>
+              <input class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors" 
+                formControlName="nameEn" placeholder="Enter product name in English" />
+            </div>
+
+            <!-- Product Code -->
+            <div class="space-y-2">
+              <label class="block text-sm font-semibold text-gray-700">
+                <i class="bi bi-hash mr-2 text-green-600"></i>
+                كود المنتج
+              </label>
+              <input class="w-full px-4 py-3 border border-gray-300 rounded-xl bg-gray-100 text-gray-600 cursor-not-allowed" 
+                formControlName="code" readonly placeholder="سيتم إنشاؤه تلقائياً" />
+            </div>
+
+            <!-- Category -->
+            <div class="space-y-2">
+              <label class="block text-sm font-semibold text-gray-700">
+                <i class="bi bi-tags mr-2 text-green-600"></i>
+                التصنيف *
+              </label>
+              <select class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors" 
+                formControlName="subCategoryId">
+                <option [ngValue]="null">اختر التصنيف</option>
+                <option *ngFor="let c of subCategories" [ngValue]="c.id">{{ c.nameAr }}</option>
+              </select>
+              <div *ngIf="subCategoryId.invalid && subCategoryId.touched" class="text-red-500 text-sm flex items-center">
+                <i class="bi bi-exclamation-circle mr-1"></i>
+                التصنيف مطلوب
+              </div>
+            </div>
+
+            <!-- Unit -->
+            <div class="space-y-2">
+              <label class="block text-sm font-semibold text-gray-700">
+                <i class="bi bi-rulers mr-2 text-green-600"></i>
+                وحدة القياس *
+              </label>
+              <select class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors" 
+                formControlName="unitId">
+                <option [ngValue]="null">اختر الوحدة</option>
+                <option *ngFor="let u of units" [ngValue]="u.id">{{ u.nameAr }}</option>
+              </select>
+              <div *ngIf="unitId.invalid && unitId.touched" class="text-red-500 text-sm flex items-center">
+                <i class="bi bi-exclamation-circle mr-1"></i>
+                وحدة القياس مطلوبة
+              </div>
+            </div>
+
+            <!-- Status -->
+            <div class="space-y-2">
+              <label class="block text-sm font-semibold text-gray-700">
+                <i class="bi bi-toggle-on mr-2 text-green-600"></i>
+                حالة المنتج
+              </label>
+              <div class="flex items-center space-x-3 p-3 bg-gray-50 rounded-xl">
+                <input type="checkbox" class="h-5 w-5 text-green-600 focus:ring-green-500 border-gray-300 rounded" 
+                  formControlName="isActive" />
+                <span class="text-sm text-gray-700">منتج نشط</span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
-      <!-- Image Upload -->
-      <div class="col-12 col-md-6">
-        <app-image-uploader formControlName="image" [initialImageUrl]="initialImageUrl"
-          (imageSelected)="detectFiles($event)"></app-image-uploader>
+      <!-- Pricing Section -->
+      <div class="bg-white rounded-2xl shadow-xl overflow-hidden">
+        <div class="bg-gradient-to-r from-purple-500 to-pink-600 px-6 py-4">
+          <h2 class="text-xl font-bold text-white flex items-center">
+            <i class="bi bi-currency-dollar mr-3"></i>
+            التسعير والتكلفة
+          </h2>
+        </div>
+        
+        <div class="p-6">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Cost Price -->
+            <div class="space-y-2">
+              <label class="block text-sm font-semibold text-gray-700">
+                <i class="bi bi-cart-dash mr-2 text-purple-600"></i>
+                سعر الشراء *
+              </label>
+              <div class="relative">
+                <input type="number" step="0.01" class="w-full px-4 py-3 pl-10 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors" 
+                  formControlName="costPrice" placeholder="0.00" />
+                <span class="absolute left-3 top-3 text-gray-500">د.أ</span>
+              </div>
+              <div *ngIf="costPrice.invalid && costPrice.touched" class="text-red-500 text-sm flex items-center">
+                <i class="bi bi-exclamation-circle mr-1"></i>
+                سعر الشراء مطلوب
+              </div>
+            </div>
+
+            <!-- Selling Price -->
+            <div class="space-y-2">
+              <label class="block text-sm font-semibold text-gray-700">
+                <i class="bi bi-cart-plus mr-2 text-purple-600"></i>
+                سعر البيع *
+              </label>
+              <div class="relative">
+                <input type="number" step="0.01" class="w-full px-4 py-3 pl-10 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors" 
+                  formControlName="sellingPrice" placeholder="0.00" />
+                <span class="absolute left-3 top-3 text-gray-500">د.أ</span>
+              </div>
+              <div *ngIf="sellingPrice.invalid && sellingPrice.touched" class="text-red-500 text-sm flex items-center">
+                <i class="bi bi-exclamation-circle mr-1"></i>
+                سعر البيع مطلوب
+              </div>
+            </div>
+
+            <!-- Reorder Level -->
+            <div class="space-y-2">
+              <label class="block text-sm font-semibold text-gray-700">
+                <i class="bi bi-exclamation-triangle mr-2 text-purple-600"></i>
+                مستوى إعادة الطلب
+              </label>
+              <div class="relative">
+                <input type="number" step="0.01" class="w-full px-4 py-3 pl-10 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors" 
+                  formControlName="reorderLevel" placeholder="0.00" />
+                <span class="absolute left-3 top-3 text-gray-500">كمية</span>
+              </div>
+              <div class="text-sm text-gray-600">
+                <i class="bi bi-info-circle mr-1"></i>
+                الحد الأدنى للكمية قبل إعادة الطلب
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
-    </div>
 
-    <!-- Actions -->
-    <div class="col-12 mt-4 d-flex justify-content-end gap-2 flex-wrap">
-      <button class="btn btn-secondary flex-fill" (click)="cancel()">إلغاء</button>
-      <button class="btn btn-primary flex-fill" (click)="save()" [disabled]="productForm.invalid">حفظ</button>
-    </div>
+      <!-- Description and Image Section -->
+      <div class="bg-white rounded-2xl shadow-xl overflow-hidden">
+        <div class="bg-gradient-to-r from-orange-500 to-red-600 px-6 py-4">
+          <h2 class="text-xl font-bold text-white flex items-center">
+            <i class="bi bi-image mr-3"></i>
+            الوصف والصورة
+          </h2>
+        </div>
+        
+        <div class="p-6">
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <!-- Description -->
+            <div class="space-y-2">
+              <label class="block text-sm font-semibold text-gray-700">
+                <i class="bi bi-file-text mr-2 text-orange-600"></i>
+                وصف المنتج
+              </label>
+              <textarea class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors resize-none" 
+                rows="8" formControlName="description" placeholder="أدخل وصفاً مفصلاً للمنتج..."></textarea>
+            </div>
 
-  </form>
+            <!-- Image Upload -->
+            <div class="space-y-2">
+              <label class="block text-sm font-semibold text-gray-700">
+                <i class="bi bi-camera mr-2 text-orange-600"></i>
+                صورة المنتج
+              </label>
+              <div class="border-2 border-dashed border-gray-300 rounded-xl p-4 hover:border-orange-400 transition-colors">
+                <app-image-uploader formControlName="image" [initialImageUrl]="initialImageUrl"
+                  (imageSelected)="detectFiles($event)"></app-image-uploader>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Inventory/Allocation Section -->
+      <div *ngIf="productForm.get('id')?.value > 0 && isAdmin" class="bg-white rounded-2xl shadow-xl overflow-hidden mt-6">
+        <div class="bg-gradient-to-r from-yellow-500 to-orange-400 px-6 py-4">
+          <h2 class="text-xl font-bold text-white flex items-center">
+            <i class="bi bi-database mr-3"></i>
+            إدارة الجرد والكمية
+          </h2>
+        </div>
+        <div class="p-6">
+          <div class="mb-4 flex flex-col gap-4 md:flex-row md:gap-12">
+            <div>
+              <div class="font-semibold text-gray-700">كمية بدون متغير (عام):
+                <span class="text-lg text-blue-700 mx-2">{{ generalQuantity }}</span>
+              </div>
+            </div>
+            <div>
+              <div class="font-semibold text-gray-700">كميات المتغيرات:</div>
+              <ul class="text-blue-800 text-sm font-bold ml-4">
+                <li *ngFor="let v of variantQuantities" class="flex items-center gap-3 py-1">
+                  <span class="min-w-40">{{ v.name }}:</span>
+                  <span class="text-green-700">{{ v.quantity }}</span>
+                  <div class="flex items-center gap-2 ml-4">
+                    <input type="number" class="w-20 form-input border rounded p-1" min="1" [max]="v.quantity" [(ngModel)]="recallAmountByVariant[v.id]" name="recall_{{v.id}}">
+                    <button type="button" class="px-2 py-1 rounded bg-gray-600 text-white text-xs hover:bg-gray-700 disabled:opacity-40"
+                            [disabled]="!recallAmountByVariant[v.id] || recallAmountByVariant[v.id] < 1 || recallAmountByVariant[v.id] > v.quantity"
+                            (click)="recallFromVariant(v.id)">استرجاع للعام</button>
+                  </div>
+                </li>
+              </ul>
+            </div>
+            <div class="md:ml-auto">
+              <div class="font-semibold text-gray-700">إجمالي المتغيرات:
+                <span class="text-lg text-purple-700 mx-2">{{ variantsTotal }}</span>
+              </div>
+              <div class="font-semibold text-gray-700">الإجمالي الكلي:
+                <span class="text-lg text-emerald-700 mx-2">{{ overallTotal }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Allocation UI -->
+          <div class="border-t border-gray-200 pt-4 mt-4">
+            <div class="font-bold mb-2 text-gray-600">توزيع الكمية العامة على المتغيرات</div>
+            <form (ngSubmit)="allocateToVariant()" class="flex flex-col md:flex-row gap-3 md:items-end">
+              <div class="flex-1">
+                <label class="block text-sm text-gray-600">اختر المتغير</label>
+                <select [(ngModel)]="allocation.variantId" name="variant" required class="form-select w-full border rounded p-2">
+                  <option [ngValue]="null" disabled selected>اختر متغير</option>
+                  <option *ngFor="let v of variantQuantities" [ngValue]="v.id">{{ v.name }}</option>
+                </select>
+              </div>
+              <div class="flex-1">
+                <label class="block text-sm text-gray-600">الكمية</label>
+                <input type="number" min="1" [max]="generalQuantity" required [(ngModel)]="allocation.amount" name="amount"
+                  class="form-input w-full border rounded p-2" [disabled]="generalQuantity == 0">
+              </div>
+              <button type="submit" class="px-4 py-2 rounded bg-yellow-600 text-white font-bold hover:bg-yellow-700 disabled:opacity-40" 
+                    [disabled]="!allocation.variantId || allocation.amount < 1 || allocation.amount > generalQuantity">توزيع</button>
+            </form>
+            <div *ngIf="allocationMsg" class="text-sm mt-2 font-semibold" [class.text-green-700]="allocationSuccess" [class.text-red-700]="!allocationSuccess">{{ allocationMsg }}</div>
+          </div>
+        </div>
+      </div>
+      <!-- End Allocation Section -->
+
+      <!-- Variants and Modifiers Section -->
+      <div *ngIf="productForm.get('id')?.value > 0" class="bg-white rounded-2xl shadow-xl overflow-hidden">
+        <div class="bg-gradient-to-r from-indigo-500 to-purple-600 px-6 py-4">
+          <h2 class="text-xl font-bold text-white flex items-center">
+            <i class="bi bi-gear mr-3"></i>
+            إدارة المتغيرات والمكونات
+          </h2>
+        </div>
+        
+        <div class="p-6">
+          <!-- Product Variants -->
+          <div class="mb-8">
+            <div class="bg-blue-50 rounded-xl p-4 mb-4">
+              <h3 class="text-lg font-semibold text-blue-900 flex items-center">
+                <i class="bi bi-tags mr-2"></i>
+                متغيرات المنتج
+              </h3>
+              <p class="text-blue-700 text-sm mt-1">إدارة المتغيرات المختلفة للمنتج (الحجم، اللون، إلخ)</p>
+            </div>
+            <app-product-variants 
+              [productId]="productForm.get('id')?.value" 
+              (variantsUpdated)="onVariantsUpdated($event)">
+            </app-product-variants>
+          </div>
+
+          <!-- Product Modifiers -->
+          <div>
+            <div class="bg-purple-50 rounded-xl p-4 mb-4">
+              <h3 class="text-lg font-semibold text-purple-900 flex items-center">
+                <i class="bi bi-list-ul mr-2"></i>
+                مكونات المنتج
+              </h3>
+              <p class="text-purple-700 text-sm mt-1">إدارة المكونات الإضافية والخيارات للمنتج</p>
+            </div>
+            <app-product-modifiers 
+              [productId]="productForm.get('id')?.value" 
+              (modifiersUpdated)="onModifiersUpdated($event)">
+            </app-product-modifiers>
+          </div>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="bg-white rounded-2xl shadow-xl p-6">
+        <div class="flex flex-col sm:flex-row justify-end gap-4">
+          <button type="button" class="w-full sm:w-auto px-8 py-3 bg-gray-500 text-white rounded-xl hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-all duration-200 font-semibold" 
+            (click)="cancel()">
+            <i class="bi bi-x-circle mr-2"></i>
+            إلغاء
+          </button>
+          <button type="button" class="w-full sm:w-auto px-8 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 font-semibold shadow-lg" 
+            (click)="save()" [disabled]="productForm.invalid">
+            <i class="bi bi-check-circle mr-2"></i>
+            حفظ
+          </button>
+        </div>
+      </div>
+
+    </form>
+  </div>
 </div>

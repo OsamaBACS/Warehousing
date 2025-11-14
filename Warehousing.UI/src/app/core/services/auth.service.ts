@@ -16,25 +16,121 @@ export class AuthService {
   private permissions: string[] = [];
   private categoryIds: string[] = [];
   private productIds: string[] = [];
+  private subCategoryIds: string[] = [];
   public userId: string = '';
   public username: string = '';
+  public nameEn: string = '';
+  public nameAr: string = '';
+  public isAdmin: boolean = false;
   private usernameSubject = new BehaviorSubject<string>(this.getUsernameFromStorage());
   public username$ = this.usernameSubject.asObservable();
 
-  login(credentials: { username: string, password: string, fingerprint: string }) {
+  login(credentials: { username: string, password: string }) {
     return this.http.post<LoginResult>(`${this.url}login`, credentials).pipe(
       tap(res => {
-        if (res.token && res.status == null) {
+        console.log('AuthService response:', res);
+        if (res.success && res.token) {
           localStorage.setItem('jwt_token', res.token);
-          const payload = JSON.parse(atob(res.token.split('.')[1]));
+          
+          try {
+            // Debug: Log the token structure
+            console.log('=== JWT TOKEN DEBUG START ===');
+            console.log('JWT Token length:', res.token.length);
+            console.log('JWT Token preview:', res.token.substring(0, 100) + '...');
+            
+            const tokenParts = res.token.split('.');
+            console.log('Token parts count:', tokenParts.length);
+            console.log('Header:', tokenParts[0]);
+            console.log('Payload (base64):', tokenParts[1]);
+            console.log('Signature:', tokenParts[2]);
+            
+            if (tokenParts.length !== 3) {
+              console.error('Invalid JWT token format - expected 3 parts, got', tokenParts.length);
+              throw new Error('Invalid JWT token format - expected 3 parts, got ' + tokenParts.length);
+            }
+            
+            // Validate base64 encoding
+            const payloadBase64 = tokenParts[1];
+            console.log('Payload base64 length:', payloadBase64.length);
+            console.log('Payload base64 preview:', payloadBase64.substring(0, 100) + '...');
+            
+            // Check if it's valid base64
+            let decodedPayload;
+            try {
+              // Decode base64 URL-safe encoded string
+              // Handle padding if needed
+              let base64 = payloadBase64.replace(/-/g, '+').replace(/_/g, '/');
+              const padding = base64.length % 4;
+              if (padding) {
+                base64 += '='.repeat(4 - padding);
+              }
+              
+              // Decode base64 to binary string
+              const binaryString = atob(base64);
+              
+              // Convert binary string to UTF-8 string properly
+              const bytes = new Uint8Array(binaryString.length);
+              for (let i = 0; i < binaryString.length; i++) {
+                bytes[i] = binaryString.charCodeAt(i);
+              }
+              decodedPayload = new TextDecoder('utf-8').decode(bytes);
+              
+              console.log('Base64 decoding successful, payload length:', decodedPayload.length);
+              console.log('Decoded payload preview:', decodedPayload.substring(0, 200) + '...');
+            } catch (base64Error) {
+              // Fallback: try direct atob for ASCII-only tokens
+              try {
+                decodedPayload = atob(payloadBase64);
+                console.log('Base64 decoding successful (ASCII fallback), payload length:', decodedPayload.length);
+              } catch (fallbackError) {
+                console.error('Base64 decoding error:', base64Error);
+                console.error('Fallback decoding also failed:', fallbackError);
+                console.error('Problematic payload (full):', payloadBase64);
+                console.error('Problematic payload (first 200 chars):', payloadBase64.substring(0, 200));
+                throw new Error('Invalid base64 encoding in JWT payload: ' + (base64Error as Error).message);
+              }
+            }
+            
+            const payload = JSON.parse(decodedPayload);
+            console.log('JWT payload parsed successfully');
+            console.log('Payload keys:', Object.keys(payload));
+            console.log('Payload values preview:', JSON.stringify(payload, null, 2).substring(0, 500) + '...');
+            console.log('=== JWT TOKEN DEBUG END ===');
 
-          localStorage.removeItem('permissions');
-          localStorage.removeItem('category');
-          localStorage.removeItem('product');
-          localStorage.removeItem('userId');
+            // Clear existing data
+            localStorage.removeItem('permissions');
+            localStorage.removeItem('category');
+            localStorage.removeItem('product');
+            localStorage.removeItem('subCategory');
+            localStorage.removeItem('userId');
 
+            // Handle both array and comma-separated string formats
+            const permissions = Array.isArray(payload.Permission) ? payload.Permission : (payload.Permission || '');
+            const categories = Array.isArray(payload.Category) ? payload.Category : (payload.Category || '');
+            const products = Array.isArray(payload.Product) ? payload.Product : (payload.Product || '');
+            const subCategories = Array.isArray(payload.SubCategory) ? payload.SubCategory : (payload.SubCategory || '');
+            const isAdmin = payload.IsAdmin === 'true';
+            const nameEn = payload.NameEn || payload.UserName || '';
+            const nameAr = payload.NameAr || payload.UserName || '';
 
-          this.setUserPermissions(payload.Permission, payload.Category, payload.Product, payload.UserId, payload.UserName)
+            this.setUserPermissions(permissions, categories, products, subCategories, payload.UserId, payload.UserName, isAdmin, nameEn, nameAr);
+          } catch (error) {
+            console.error('Error parsing JWT token:', error);
+            console.error('Token that failed to parse:', res.token);
+            console.error('Token length:', res.token.length);
+            console.error('Token preview:', res.token.substring(0, 100) + '...');
+            
+            // Clear everything on parsing error
+            this.logout();
+            
+            // Don't show alert immediately, let the user see the console logs first
+            console.error('Login failed due to JWT token parsing error. Check console for details.');
+            
+            // Optional: Show a more informative error after a delay
+            setTimeout(() => {
+              alert('Login failed: JWT token parsing error. Please check console for details and try again.');
+            }, 1000);
+          }
         }
       })
     );
@@ -45,8 +141,12 @@ export class AuthService {
     localStorage.removeItem('permissions');
     localStorage.removeItem('category');
     localStorage.removeItem('product');
+    localStorage.removeItem('subCategory');
     localStorage.removeItem('userId');
     localStorage.removeItem('username');
+    localStorage.removeItem('nameEn');
+    localStorage.removeItem('nameAr');
+    localStorage.removeItem('isAdmin');
     this.clearUser();
   }
 
@@ -59,8 +159,12 @@ export class AuthService {
     this.permissions = [];
     this.categoryIds = [];
     this.productIds = [];
+    this.subCategoryIds = [];
     this.userId = '';
     this.username = '';
+    this.nameEn = '';
+    this.nameAr = '';
+    this.isAdmin = false;
     this.usernameSubject.next('');
   }
 
@@ -69,89 +173,205 @@ export class AuthService {
     return !!localStorage.getItem('jwt_token');
   }
 
-  setUserPermissions(perms: string[], catIds: string[], prodIds: string[], userId: string, username: string) {
-    this.permissions = perms;
-    this.categoryIds = catIds;
-    this.productIds = prodIds;
-    localStorage.setItem('permissions', JSON.stringify(perms));
-    localStorage.setItem('category', JSON.stringify(catIds));
-    localStorage.setItem('product', JSON.stringify(prodIds));
+  setUserPermissions(perms: string | string[], catIds: string | string[], prodIds: string | string[], subCatIds: string | string[], userId: string, username: string, isAdmin: boolean = false, nameEn: string = '', nameAr: string = '') {
+    // Handle comma-separated strings from JWT token
+    this.permissions = Array.isArray(perms) ? perms : (typeof perms === 'string' ? perms.split(',').filter((p: string) => p.trim()) : []);
+    this.categoryIds = Array.isArray(catIds) ? catIds : (typeof catIds === 'string' ? catIds.split(',').filter((c: string) => c.trim()) : []);
+    this.productIds = Array.isArray(prodIds) ? prodIds : (typeof prodIds === 'string' ? prodIds.split(',').filter((p: string) => p.trim()) : []);
+    this.subCategoryIds = Array.isArray(subCatIds) ? subCatIds : (typeof subCatIds === 'string' ? subCatIds.split(',').filter((s: string) => s.trim()) : []);
+    this.isAdmin = isAdmin;
+    this.nameEn = nameEn;
+    this.nameAr = nameAr;
+    
+    localStorage.setItem('permissions', JSON.stringify(this.permissions));
+    localStorage.setItem('category', JSON.stringify(this.categoryIds));
+    localStorage.setItem('product', JSON.stringify(this.productIds));
+    localStorage.setItem('subCategory', JSON.stringify(this.subCategoryIds));
     localStorage.setItem('userId', JSON.stringify(userId));
     localStorage.setItem('username', JSON.stringify(username));
+    localStorage.setItem('nameEn', JSON.stringify(nameEn));
+    localStorage.setItem('nameAr', JSON.stringify(nameAr));
+    localStorage.setItem('isAdmin', JSON.stringify(isAdmin));
     this.username = username;
     this.usernameSubject.next(username);
   }
 
   hasPermission(permission: string): boolean {
+    // ✅ OPTIMIZED: Admin users have all permissions
+    if (this.isAdmin) {
+      return true;
+    }
     return this.permissions.includes(permission);
   }
 
   hasCategory(catId: number): boolean {
+    // ✅ OPTIMIZED: Admin users have access to all categories
+    if (this.isAdmin) {
+      return true;
+    }
     return this.categoryIds.includes(catId.toString());
   }
 
   hasProduct(prodId: number): boolean {
+    // ✅ OPTIMIZED: Admin users have access to all products
+    if (this.isAdmin) {
+      return true;
+    }
     return this.productIds.includes(prodId.toString());
   }
 
+  getProductIds(): string[] {
+    return [...this.productIds]; // Return a copy to prevent external modification
+  }
+
+  hasSubCategory(subCatId: number): boolean {
+    // ✅ OPTIMIZED: Admin users have access to all subcategories
+    if (this.isAdmin) {
+      return true;
+    }
+    return this.subCategoryIds.includes(subCatId.toString());
+  }
+
   loadPermissionsFromStorage() {
-    const stored = localStorage.getItem('permissions');
-    const cat = localStorage.getItem('category');
-    const prod = localStorage.getItem('product');
-    const userId = localStorage.getItem('userId');
-    const username = localStorage.getItem('username');
-    if (stored) {
-      try {
-        this.permissions = JSON.parse(stored);
-      } catch (e) {
-        console.error('Failed to parse permissions from localStorage', e);
+    try {
+      const stored = localStorage.getItem('permissions');
+      const cat = localStorage.getItem('category');
+      const prod = localStorage.getItem('product');
+      const subCat = localStorage.getItem('subCategory');
+      const userId = localStorage.getItem('userId');
+      const username = localStorage.getItem('username');
+      const nameEn = localStorage.getItem('nameEn');
+      const nameAr = localStorage.getItem('nameAr');
+      const isAdmin = localStorage.getItem('isAdmin');
+      
+      // Safely parse permissions with size limit
+      if (stored && stored !== 'undefined' && stored.length < 100000) { // 100KB limit
+        try {
+          this.permissions = JSON.parse(stored);
+          if (!Array.isArray(this.permissions)) {
+            this.permissions = [];
+          }
+        } catch (e) {
+          console.error('Failed to parse permissions from localStorage', e);
+          this.permissions = [];
+        }
+      } else {
         this.permissions = [];
       }
-    } else {
-      this.permissions = [];
-    }
 
-    if (cat) {
-      try {
-        this.categoryIds = JSON.parse(cat);
-      } catch (e) {
-        console.error('Failed to parse categoryIds from localStorage', e);
+      // Safely parse category IDs with size limit
+      if (cat && cat !== 'undefined' && cat.length < 100000) {
+        try {
+          this.categoryIds = JSON.parse(cat);
+          if (!Array.isArray(this.categoryIds)) {
+            this.categoryIds = [];
+          }
+        } catch (e) {
+          console.error('Failed to parse categoryIds from localStorage', e);
+          this.categoryIds = [];
+        }
+      } else {
         this.categoryIds = [];
       }
-    }
-    else {
-      this.categoryIds = [];
-    }
 
-    if (prod) {
-      try {
-        this.productIds = JSON.parse(prod);
-      } catch (e) {
-        console.error('Failed to parse productIds from localStorage', e);
+      // Safely parse product IDs with size limit
+      if (prod && prod !== 'undefined' && prod.length < 100000) {
+        try {
+          this.productIds = JSON.parse(prod);
+          if (!Array.isArray(this.productIds)) {
+            this.productIds = [];
+          }
+        } catch (e) {
+          console.error('Failed to parse productIds from localStorage', e);
+          this.productIds = [];
+        }
+      } else {
         this.productIds = [];
       }
-    }
-    else {
-      this.productIds = [];
-    }
 
-    if (userId && userId != 'undefined') {
-      try {
-        this.userId = JSON.parse(userId);
-      } catch (e) {
-        console.error('Failed to parse userId from localStorage', e);
-        this.userId = '';
+      // Safely parse subcategory IDs with size limit
+      if (subCat && subCat !== 'undefined' && subCat.length < 100000) {
+        try {
+          this.subCategoryIds = JSON.parse(subCat);
+          if (!Array.isArray(this.subCategoryIds)) {
+            this.subCategoryIds = [];
+          }
+        } catch (e) {
+          console.error('Failed to parse subCategoryIds from localStorage', e);
+          this.subCategoryIds = [];
+        }
+      } else {
+        this.subCategoryIds = [];
       }
-    }
 
-    if (username && username != 'undefined') {
-      try {
-        this.username = JSON.parse(username);
-      } catch (e) {
-        console.error('Failed to parse username from localStorage', e);
-        this.username = '';
+      // Parse user ID
+      if (userId && userId !== 'undefined') {
+        try {
+          this.userId = JSON.parse(userId);
+        } catch (e) {
+          console.error('Failed to parse userId from localStorage', e);
+          this.userId = '';
+        }
       }
+
+      // Parse username
+      if (username && username !== 'undefined') {
+        try {
+          this.username = JSON.parse(username);
+        } catch (e) {
+          console.error('Failed to parse username from localStorage', e);
+          this.username = '';
+        }
+      }
+
+      // Parse nameEn
+      if (nameEn && nameEn !== 'undefined') {
+        try {
+          this.nameEn = JSON.parse(nameEn);
+        } catch (e) {
+          console.error('Failed to parse nameEn from localStorage', e);
+          this.nameEn = '';
+        }
+      }
+
+      // Parse nameAr
+      if (nameAr && nameAr !== 'undefined') {
+        try {
+          this.nameAr = JSON.parse(nameAr);
+        } catch (e) {
+          console.error('Failed to parse nameAr from localStorage', e);
+          this.nameAr = '';
+        }
+      }
+
+      // Parse isAdmin flag
+      if (isAdmin && isAdmin !== 'undefined') {
+        try {
+          this.isAdmin = JSON.parse(isAdmin);
+        } catch (e) {
+          console.error('Failed to parse isAdmin from localStorage', e);
+          this.isAdmin = false;
+        }
+      }
+    } catch (error) {
+      console.error('Critical error in loadPermissionsFromStorage:', error);
+      // Clear all data on critical error
+      this.clearUser();
+      this.clearLocalStorage();
     }
+  }
+
+  private clearLocalStorage() {
+    localStorage.removeItem('permissions');
+    localStorage.removeItem('category');
+    localStorage.removeItem('product');
+    localStorage.removeItem('subCategory');
+    localStorage.removeItem('userId');
+    localStorage.removeItem('username');
+    localStorage.removeItem('nameEn');
+    localStorage.removeItem('nameAr');
+    localStorage.removeItem('isAdmin');
+    localStorage.removeItem('jwt_token');
   }
 
 }

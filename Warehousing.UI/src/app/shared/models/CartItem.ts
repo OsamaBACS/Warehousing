@@ -1,11 +1,18 @@
 export interface CartItem {
   productId: number;
   quantity: number;
-  sellingPrice: number;
+  unitCost: number;
+  unitPrice: number;
+  discount: number;
+  storeId: number;
 }
 
 export interface CartItemForm {
   productId: number;
   quantity: number;
-  sellingPrice: number;
+  unitCost: number;
+  unitPrice: number;
+  discount: number;
+  storeId: number;
+  notes?: string;
 }

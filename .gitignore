@@ -17,6 +17,8 @@
 *.cache
 *.log
 *.bak
+# Ignore Resources folder
+Warehousing.Api/Resources/
 
 # VS-specific
 .vscode/

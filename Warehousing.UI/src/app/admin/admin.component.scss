@@ -1,25 +1,160 @@
-.sidebar {
-  min-width: 250px;
+// Sidebar styles
+aside {
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
 
-  .nav-link {
-    color: #333;
-    &.active {
-      font-weight: bold;
-      color: #0d6efd;
-    }
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 3px;
 
     &:hover {
-      background-color: rgba(13, 110, 253, 0.1);
-      border-radius: 5px;
+      background: #94a3b8;
     }
   }
 }
 
-.dark-mode-text {
-  color: #f1f1f1 !important;
+// Dark mode support
+.dark {
+  aside {
+    background: linear-gradient(to bottom, #1f2937, #111827);
+    border-color: #374151;
+
+    nav {
+      .text-gray-700 {
+        color: #d1d5db;
+      }
+
+      .hover\\:bg-gray-100:hover {
+        background-color: #374151;
+        color: #f9fafb;
+      }
+    }
+  }
+
+  header {
+    background-color: rgba(31, 41, 55, 0.95);
+    border-color: #374151;
+    color: #f9fafb;
+  }
+
+  main {
+    background-color: #111827;
+  }
 }
 
-#reportsSubMenu.collapse.show .bi-chevron-down {
-  transform: rotate(180deg);
+// Mobile responsiveness
+@media (max-width: 1023px) {
+  aside {
+    box-shadow: -2px 0 8px rgba(0, 0, 0, 0.1);
+  }
+
+  [dir="ltr"] aside {
+    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
+  }
+}
+
+// Smooth transitions
+.transform {
+  transition: transform 0.3s ease-in-out;
+}
+
+// Modern navigation item animations
+nav a,
+nav button {
+  position: relative;
+  
+  // Ripple effect on click
+  &::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(59, 130, 246, 0.3);
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+  }
+  
+  &:active::before {
+    width: 300px;
+    height: 300px;
+  }
+}
+
+// Active route indicator enhancement
+.bg-gradient-to-r.from-blue-500.to-indigo-600 {
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: linear-gradient(to bottom, #3b82f6, #6366f1);
+    border-radius: 0 4px 4px 0;
+    [dir="ltr"] & {
+      left: 0;
+      right: auto;
+      border-radius: 4px 0 0 4px;
+    }
+    [dir="rtl"] & {
+      right: 0;
+      left: auto;
+    }
+  }
+}
+
+// Group title styling enhancement
+h3.text-xs {
+  letter-spacing: 0.1em;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+// Icon container hover effects
+.w-8.h-8.rounded-lg {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  
+  &:hover {
+    transform: scale(1.1);
+  }
+}
+
+// Gradient background for active items
+.bg-gradient-to-r.from-blue-500.to-indigo-600 {
+  background: linear-gradient(135deg, #3b82f6 0%, #6366f1 100%);
+  box-shadow: 0 4px 14px 0 rgba(59, 130, 246, 0.39);
+  
+  &:hover {
+    box-shadow: 0 6px 20px 0 rgba(59, 130, 246, 0.45);
+  }
+}
+
+// Sidebar header glow effect
+.bg-gradient-to-r.from-blue-600.via-indigo-600.to-purple-600 {
+  background: linear-gradient(135deg, #2563eb 0%, #4f46e5 50%, #7c3aed 100%);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+// Footer user avatar enhancement
+.w-10.h-10.bg-gradient-to-br.from-blue-500.to-indigo-600 {
+  box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.3);
   transition: transform 0.3s ease;
+  
+  &:hover {
+    transform: scale(1.05);
+  }
+}
+
+// Responsive adjustments
+@media (max-width: 640px) {
+  aside {
+    width: 100%;
+    max-width: 280px;
+  }
 }

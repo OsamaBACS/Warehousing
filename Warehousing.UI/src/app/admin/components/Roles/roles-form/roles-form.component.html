@@ -1,84 +1,314 @@
-<div class="dialog-container p-3 p-md-4">
-    <h5 class="mb-4 text-center">إضافة / تعديل صلاحية</h5>
-
-    <form [formGroup]="roleForm">
-        <!-- Code -->
-        <div class="floating-label-input mb-3">
-            <input type="text" id="code" class="form-control" formControlName="code" placeholder=" " />
-            <label for="code">الكود</label>
+<div class="min-h-screen bg-gray-50 py-8" dir="rtl">
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+    <!-- Header -->
+    <div class="bg-white rounded-2xl shadow-lg p-6 mb-8">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center">
+          <div class="w-12 h-12 bg-gradient-to-br from-amber-500 to-orange-600 rounded-2xl flex items-center justify-center mr-4">
+            <i class="bi bi-shield-plus text-white text-xl"></i>
+          </div>
+          <div>
+            <h1 class="text-3xl font-bold text-gray-900">
+              {{ roleForm.get('id')?.value > 0 ? 'تعديل الصلاحية' : 'إضافة صلاحية جديدة' }}
+            </h1>
+            <p class="text-gray-600 mt-1">إدارة الصلاحيات والأدوار في النظام</p>
+          </div>
         </div>
+        <button class="w-10 h-10 bg-gray-100 hover:bg-gray-200 rounded-full flex items-center justify-center transition-colors" 
+                (click)="cancel()">
+          <i class="bi bi-x-lg text-gray-600"></i>
+        </button>
+      </div>
+    </div>
 
-        <!-- Name (EN) -->
-        <div class="floating-label-input mb-3">
-            <input type="text" id="nameEn" class="form-control" formControlName="nameEn" placeholder=" " />
-            <label for="nameEn">الاسم بالانجليزي</label>
-        </div>
-
-        <!-- Name (AR) -->
-        <div class="floating-label-input mb-3">
-            <input type="text" id="nameAr" class="form-control" formControlName="nameAr" placeholder=" " />
-            <label for="nameAr">الاسم بالعربي</label>
-        </div>
-
-        <!-- Permissions (Checkboxes) -->
-        <div class="mb-3">
-            <label class="form-label fw-bold">الصلاحيات</label>
-            <div class="row g-2">
-                <div class="col-12 col-sm-6 col-md-4" *ngFor="let p of permissions">
-                    <div class="form-check form-check-reverse">
-                        <input class="form-check-input" type="checkbox" id="perm_{{ p.id }}" [value]="p.id"
-                            [checked]="roleForm.get('rolePermissionIds')?.value.includes(p.id)"
-                            (change)="onPermissionChange(p.id, $event)" />
-                        <label class="form-check-label" [for]="'perm_' + p.id">
-                            {{ lang.currentLang === 'ar' ? p.nameAr : p.nameEn }}
-                        </label>
-                    </div>
-                </div>
+    <!-- Form -->
+    <div class="bg-white rounded-2xl shadow-xl p-8">
+      <form [formGroup]="roleForm" (ngSubmit)="save()" class="space-y-8">
+        <!-- Basic Information Section -->
+        <div class="border-b border-gray-200 pb-8">
+          <h2 class="text-xl font-bold text-gray-900 mb-6 flex items-center">
+            <i class="bi bi-info-circle text-amber-600 mr-3"></i>
+            المعلومات الأساسية
+          </h2>
+          
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <!-- Code -->
+            <div class="space-y-2">
+              <label class="block text-sm font-semibold text-gray-700">
+                <i class="bi bi-hash mr-2 text-gray-600"></i>
+                كود الصلاحية
+              </label>
+              <input type="text" 
+                     id="code"
+                     formControlName="code"
+                     class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-gray-500 transition-all duration-200 bg-gray-50 focus:bg-white"
+                     placeholder="أدخل كود الصلاحية">
             </div>
-        </div>
-        <hr>
-        <!-- Categories -->
-        <div class="mb-3">
-            <label class="form-label fw-bold">التصنيفات</label>
-            <div class="row g-2">
-                <div class="col-12 col-sm-6 col-md-4" *ngFor="let c of categories">
-                    <div class="form-check form-check-reverse">
-                        <input class="form-check-input" type="checkbox" [id]="'cat_' + c.id" [value]="c.id"
-                            [checked]="roleForm.get('categoryIds')?.value.includes(c.id)"
-                            (change)="onCategoryChange(c.id, $event)" />
-                        <label class="form-check-label" [for]="'cat_' + c.id">
-                            {{ lang.currentLang === 'ar' ? c.nameAr : c.nameEn }}
-                        </label>
-                    </div>
-                </div>
+
+            <!-- Name (Arabic) -->
+            <div class="space-y-2">
+              <label class="block text-sm font-semibold text-gray-700">
+                <i class="bi bi-tag mr-2 text-amber-600"></i>
+                الاسم بالعربية <span class="text-red-500">*</span>
+              </label>
+              <input type="text" 
+                     id="nameAr"
+                     formControlName="nameAr"
+                     class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-200 bg-gray-50 focus:bg-white"
+                     placeholder="أدخل الاسم بالعربية">
             </div>
-        </div>
-        <hr>
-        <!-- Products -->
-        <div class="mb-3">
-            <label class="form-label fw-bold">المنتجات</label>
-            <div class="row g-2">
-                <div class="col-12 col-sm-6 col-md-4" *ngFor="let p of products">
-                    <div class="form-check form-check-reverse">
-                        <input class="form-check-input" type="checkbox" [id]="'prod_' + p.id" [value]="p.id"
-                            [checked]="roleForm.get('productIds')?.value.includes(p.id)"
-                            (change)="onProductChange(p.id, $event)" />
-                        <label class="form-check-label" [for]="'prod_' + p.id">
-                            {{ lang.currentLang === 'ar' ? p.nameAr : p.nameEn }}
-                        </label>
-                    </div>
-                </div>
+
+            <!-- Name (English) -->
+            <div class="space-y-2">
+              <label class="block text-sm font-semibold text-gray-700">
+                <i class="bi bi-tag mr-2 text-amber-600"></i>
+                الاسم بالإنجليزية
+              </label>
+              <input type="text" 
+                     id="nameEn"
+                     formControlName="nameEn"
+                     class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-200 bg-gray-50 focus:bg-white"
+                     placeholder="Enter name in English">
             </div>
+
+            <!-- Printer Configuration -->
+            <div class="space-y-2">
+              <label class="block text-sm font-semibold text-gray-700">
+                <i class="bi bi-printer mr-2 text-purple-600"></i>
+                إعدادات الطابعة
+              </label>
+              <select formControlName="printerConfigurationId"
+                      class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all duration-200 bg-gray-50 focus:bg-white">
+                <option [value]="null">-- اختر إعدادات الطابعة --</option>
+                <option *ngFor="let config of printerConfigurations" [value]="config.id">
+                  {{ config.nameAr }} ({{ config.printerType }})
+                </option>
+              </select>
+              <p class="text-xs text-gray-500 mt-1">سيتم استخدام إعدادات الطابعة المحددة عند طباعة المستندات للمستخدمين بهذا الدور</p>
+            </div>
+          </div>
         </div>
 
-        <!-- Actions -->
-        <div class="mt-4 d-flex gap-2 flex-wrap">
-            <button type="submit" class="btn btn-primary flex-fill" [disabled]="roleForm.invalid" (click)="save()">
-                حفظ
-            </button>
-            <button type="button" class="btn btn-secondary flex-fill" (click)="cancel()">
-                إلغاء
-            </button>
+        <!-- Permissions Section -->
+        <div class="border-b border-gray-200 pb-8">
+          <h2 class="text-xl font-bold text-gray-900 mb-6 flex items-center">
+            <i class="bi bi-shield-check text-blue-600 mr-3"></i>
+            الصلاحيات
+          </h2>
+          
+          <div class="bg-blue-50 rounded-xl p-6">
+            <div class="flex justify-between items-center mb-4">
+              <p class="text-sm text-gray-600">اختر الصلاحيات التي يجب أن يتمتع بها هذا الدور:</p>
+              <div class="flex space-x-2 space-x-reverse">
+                <button type="button" 
+                        (click)="selectAllPermissions()"
+                        class="px-3 py-1 bg-blue-600 text-white text-xs rounded-lg hover:bg-blue-700 transition-colors">
+                  <i class="bi bi-check-square mr-1"></i>
+                  تحديد الكل
+                </button>
+                <button type="button" 
+                        (click)="deselectAllPermissions()"
+                        class="px-3 py-1 bg-gray-500 text-white text-xs rounded-lg hover:bg-gray-600 transition-colors">
+                  <i class="bi bi-square mr-1"></i>
+                  إلغاء الكل
+                </button>
+              </div>
+            </div>
+            <!-- Grouped Permissions -->
+            <div class="space-y-6">
+              <div *ngFor="let module of getObjectKeys(groupedPermissions)" class="border border-gray-200 rounded-xl overflow-hidden">
+                <!-- Module Header -->
+                <div class="bg-gray-50 px-4 py-3 border-b border-gray-200 flex items-center justify-between">
+                  <div class="flex items-center">
+                    <input type="checkbox" 
+                           [id]="'module_' + module"
+                           [checked]="isModuleFullySelected(module)"
+                           [indeterminate]="isModulePartiallySelected(module)"
+                           (change)="isModuleFullySelected(module) ? deselectAllPermissionsInModule(module) : selectAllPermissionsInModule(module)"
+                           class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2">
+                    <label [for]="'module_' + module" class="mr-3 text-sm font-semibold text-gray-800 cursor-pointer">
+                      {{ getModuleDisplayName(module) }}
+                    </label>
+                    <span class="text-xs text-gray-500 bg-gray-200 px-2 py-1 rounded-full">
+                      {{ groupedPermissions[module]?.length || 0 }} صلاحية
+                    </span>
+                  </div>
+                  <div class="flex space-x-2 space-x-reverse">
+                    <button type="button" 
+                            (click)="selectAllPermissionsInModule(module)"
+                            class="px-2 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700 transition-colors">
+                      <i class="bi bi-check-square mr-1"></i>
+                      تحديد الكل
+                    </button>
+                    <button type="button" 
+                            (click)="deselectAllPermissionsInModule(module)"
+                            class="px-2 py-1 bg-gray-500 text-white text-xs rounded hover:bg-gray-600 transition-colors">
+                      <i class="bi bi-square mr-1"></i>
+                      إلغاء الكل
+                    </button>
+                  </div>
+                </div>
+                
+                <!-- Module Permissions -->
+                <div class="p-4">
+                  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                    <div *ngFor="let p of groupedPermissions[module]" class="flex items-center p-3 bg-white rounded-lg border border-gray-200 hover:border-blue-300 transition-colors">
+                      <input type="checkbox" 
+                             id="perm_{{ p.id }}" 
+                             [value]="p.id"
+                             [checked]="roleForm.get('rolePermissionIds')?.value.includes(p.id)"
+                             (change)="onPermissionChange(p.id, $event)"
+                             class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2">
+                      <label for="perm_{{ p.id }}" class="mr-3 text-sm font-medium text-gray-700 cursor-pointer flex-1">
+                        {{ p.nameAr }}
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-    </form>
+
+        <!-- Categories Section -->
+        <div class="border-b border-gray-200 pb-8">
+          <h2 class="text-xl font-bold text-gray-900 mb-6 flex items-center">
+            <i class="bi bi-grid-3x3-gap text-green-600 mr-3"></i>
+            التصنيفات
+          </h2>
+          
+          <div class="bg-green-50 rounded-xl p-6">
+            <div class="flex justify-between items-center mb-4">
+              <p class="text-sm text-gray-600">اختر التصنيفات التي يمكن لهذا الدور الوصول إليها:</p>
+              <div class="flex space-x-2 space-x-reverse">
+                <button type="button" 
+                        (click)="selectAllCategories()"
+                        class="px-3 py-1 bg-green-600 text-white text-xs rounded-lg hover:bg-green-700 transition-colors">
+                  <i class="bi bi-check-square mr-1"></i>
+                  تحديد الكل
+                </button>
+                <button type="button" 
+                        (click)="deselectAllCategories()"
+                        class="px-3 py-1 bg-gray-500 text-white text-xs rounded-lg hover:bg-gray-600 transition-colors">
+                  <i class="bi bi-square mr-1"></i>
+                  إلغاء الكل
+                </button>
+              </div>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div *ngFor="let c of categories" class="flex items-center p-3 bg-white rounded-lg border border-gray-200 hover:border-green-300 transition-colors">
+                <input type="checkbox" 
+                       [id]="'cat_' + c.id" 
+                       [value]="c.id"
+                       [checked]="roleForm.get('categoryIds')?.value.includes(c.id)"
+                       (change)="onCategoryChange(c.id, $event)"
+                       class="w-4 h-4 text-green-600 bg-gray-100 border-gray-300 rounded focus:ring-green-500 focus:ring-2">
+                <label [for]="'cat_' + c.id" class="mr-3 text-sm font-medium text-gray-700 cursor-pointer flex-1">
+                  {{ c.nameAr }}
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sub-Categories Section -->
+        <div class="border-b border-gray-200 pb-8">
+          <h2 class="text-xl font-bold text-gray-900 mb-6 flex items-center">
+            <i class="bi bi-grid-3x3 text-orange-600 mr-3"></i>
+            التصنيفات الفرعية
+          </h2>
+          
+          <div class="bg-orange-50 rounded-xl p-6">
+            <div class="flex justify-between items-center mb-4">
+              <p class="text-sm text-gray-600">اختر التصنيفات الفرعية التي يمكن لهذا الدور الوصول إليها:</p>
+              <div class="flex space-x-2 space-x-reverse">
+                <button type="button" 
+                        (click)="selectAllSubCategories()"
+                        class="px-3 py-1 bg-orange-600 text-white text-xs rounded-lg hover:bg-orange-700 transition-colors">
+                  <i class="bi bi-check-square mr-1"></i>
+                  تحديد الكل
+                </button>
+                <button type="button" 
+                        (click)="deselectAllSubCategories()"
+                        class="px-3 py-1 bg-gray-500 text-white text-xs rounded-lg hover:bg-gray-600 transition-colors">
+                  <i class="bi bi-square mr-1"></i>
+                  إلغاء الكل
+                </button>
+              </div>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div *ngFor="let sc of subCategories" class="flex items-center p-3 bg-white rounded-lg border border-gray-200 hover:border-orange-300 transition-colors">
+                <input type="checkbox" 
+                       [id]="'subcat_' + sc.id" 
+                       [value]="sc.id"
+                       [checked]="roleForm.get('subCategoryIds')?.value.includes(sc.id)"
+                       (change)="onSubCategoryChange(sc.id, $event)"
+                       class="w-4 h-4 text-orange-600 bg-gray-100 border-gray-300 rounded focus:ring-orange-500 focus:ring-2">
+                <label [for]="'subcat_' + sc.id" class="mr-3 text-sm font-medium text-gray-700 cursor-pointer flex-1">
+                  {{ sc.nameAr }}
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Products Section -->
+        <div class="pb-8">
+          <h2 class="text-xl font-bold text-gray-900 mb-6 flex items-center">
+            <i class="bi bi-box text-purple-600 mr-3"></i>
+            المنتجات
+          </h2>
+          
+          <div class="bg-purple-50 rounded-xl p-6">
+            <div class="flex justify-between items-center mb-4">
+              <p class="text-sm text-gray-600">اختر المنتجات التي يمكن لهذا الدور الوصول إليها:</p>
+              <div class="flex space-x-2 space-x-reverse">
+                <button type="button" 
+                        (click)="selectAllProducts()"
+                        class="px-3 py-1 bg-purple-600 text-white text-xs rounded-lg hover:bg-purple-700 transition-colors">
+                  <i class="bi bi-check-square mr-1"></i>
+                  تحديد الكل
+                </button>
+                <button type="button" 
+                        (click)="deselectAllProducts()"
+                        class="px-3 py-1 bg-gray-500 text-white text-xs rounded-lg hover:bg-gray-600 transition-colors">
+                  <i class="bi bi-square mr-1"></i>
+                  إلغاء الكل
+                </button>
+              </div>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div *ngFor="let p of products" class="flex items-center p-3 bg-white rounded-lg border border-gray-200 hover:border-purple-300 transition-colors">
+                <input type="checkbox" 
+                       [id]="'prod_' + p.id" 
+                       [value]="p.id"
+                       [checked]="roleForm.get('productIds')?.value.includes(p.id)"
+                       (change)="onProductChange(p.id, $event)"
+                       class="w-4 h-4 text-purple-600 bg-gray-100 border-gray-300 rounded focus:ring-purple-500 focus:ring-2">
+                <label [for]="'prod_' + p.id" class="mr-3 text-sm font-medium text-gray-700 cursor-pointer flex-1">
+                  {{ p.nameAr }}
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="flex justify-end space-x-4 space-x-reverse pt-8 border-t border-gray-200">
+          <button type="button" 
+                  (click)="cancel()"
+                  class="px-8 py-3 bg-gray-100 text-gray-700 rounded-xl font-semibold hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-offset-2 transition-all duration-200 border border-gray-300">
+            <i class="bi bi-x-lg mr-2"></i>
+            إلغاء
+          </button>
+          <button type="submit" 
+                  [disabled]="roleForm.invalid"
+                  class="px-8 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white rounded-xl font-semibold hover:from-amber-700 hover:to-orange-700 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg transform hover:scale-105">
+            <i class="bi bi-check-lg mr-2"></i>
+            {{ roleForm.get('id')?.value > 0 ? 'تحديث الصلاحية' : 'حفظ الصلاحية' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
 </div>

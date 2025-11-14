@@ -10,7 +10,6 @@ import { CompanyComponent } from "./components/Companies/company.component/compa
 import { CustomersFormComponent } from "./components/Customers/customers-form.component/customers-form.component";
 import { CustomersComponent } from "./components/Customers/customers.component/customers.component";
 import { Dashboard } from "./components/dashboard/dashboard";
-import { MainComponent } from "./components/main/main.component";
 import { ProductFormComponent } from "./components/Products/product-form/product-form.component";
 import { InventoryReportComponent } from "./components/reports/inventory-report.component/inventory-report.component";
 import { TransactionsComponent } from "./components/reports/transactions.component/transactions.component";
@@ -38,10 +37,18 @@ import { ProductsComponent } from "./components/Products/products/products.compo
 import { SubCategoryComponent } from "./components/SubCategories/sub-category/sub-category.component";
 import { SubCategoryFormComponent } from "./components/SubCategories/sub-category-form/sub-category-form.component";
 import { SubCategoriesResolver } from "./resolvers/sub-categories-resolver";
-import { UserDevicesComponent } from "./components/Users/user-devices/user-devices.component";
 import { UsersListResolver } from "./resolvers/users-list-resolver";
 import { OrderListComponent } from "./components/Orders/order-list/order-list.component";
 import { OrderItemsListComponent } from "./components/Orders/order-items-list/order-items-list.component";
+import { StoreTransferFormComponent } from "./components/StoreTransfers/store-transfer-form/store-transfer-form.component";
+import { InventoryManagementComponent } from "./components/Inventory/inventory-management/inventory-management.component";
+import { InitialStockSetupComponent } from "./components/Inventory/initial-stock-setup/initial-stock-setup.component";
+import { InitialStockComponent } from "./components/initial-stock/initial-stock.component";
+import { ModifierManagementComponent } from "./components/Products/modifier-management/modifier-management.component";
+import { ActivityLogsComponent } from "./components/ActivityLogs/activity-logs.component";
+import { WorkingHoursComponent } from "./components/WorkingHours/working-hours.component";
+import { PrinterConfigurationsComponent } from "./components/PrinterConfigurations/printer-configurations/printer-configurations.component";
+import { PrinterConfigurationFormComponent } from "./components/PrinterConfigurations/printer-configuration-form/printer-configuration-form.component";
 
 
 const routes: Routes = [
@@ -50,9 +57,13 @@ const routes: Routes = [
     component: AdminComponent,
     canActivate: [AuthGuard],
     children: [
-      { path: '', redirectTo: 'main', pathMatch: 'full' },
-      { path: 'main', component: MainComponent },
-      { path: 'dashboard', component: Dashboard },
+      { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
+      { 
+        path: 'dashboard', 
+        component: Dashboard,
+        canActivate: [PermissionGuard],
+        data: { permission: [PermissionsEnum.VIEW_ADMIN] }
+      },
       {
         path: 'products',
         component: ProductsComponent,
@@ -72,6 +83,12 @@ const routes: Routes = [
           subCategoriesResolver: SubCategoriesResolver,
         }
       },
+      {
+        path: 'modifier-management',
+        component: ModifierManagementComponent,
+        canActivate: [PermissionGuard],
+        data: { permission: [PermissionsEnum.VIEW_PRODUCTS, PermissionsEnum.EDIT_PRODUCT] }
+      },
       { 
         path: 'users', component: UsersComponent,
         canActivate: [PermissionGuard],
@@ -85,12 +102,6 @@ const routes: Routes = [
         resolve: {
           StoresResolver: StoresResolver
         }
-      },
-      { 
-        path: 'users-devices', component: UserDevicesComponent,
-        canActivate: [PermissionGuard],
-        data: { permission: [PermissionsEnum.VIEW_USERS, PermissionsEnum.ADD_USER] },
-        resolve: { usersListResolver: UsersListResolver }
       },
       {
         path: 'roles',
@@ -106,7 +117,8 @@ const routes: Routes = [
         resolve: {
           categoriesResolver: CategoriesResolver,
           productsResolver: ProductsResolver,
-          permissionsResolver: PermissionsResolver
+          permissionsResolver: PermissionsResolver,
+          subCategoriesResolver: SubCategoriesResolver
         },
       },
       // { path: 'permissions', component: Permissions },
@@ -192,9 +204,17 @@ const routes: Routes = [
         path: 'inventory-report',
         component: InventoryReportComponent,
         canActivate: [PermissionGuard],
-        data: { permission: [PermissionsEnum.VIEW_INVENTORY_REPORT, PermissionsEnum.PRINT_INVENTORY_REPORT] }
+        data: { permission: [PermissionsEnum.VIEW_INVENTORY_REPORT, PermissionsEnum.PRINT_INVENTORY_REPORT] },
+        resolve: {
+          StoresResolver: StoresResolver
+        }
       },
-      { path: 'transaction/:id', component: TransactionsComponent },
+      { 
+        path: 'transaction/:id', 
+        component: TransactionsComponent,
+        canActivate: [PermissionGuard],
+        data: { permission: [PermissionsEnum.VIEW_INVENTORY_REPORT] }
+      },
       { 
         path: 'store', 
         component: StoreComponent,
@@ -224,14 +244,14 @@ const routes: Routes = [
         path: 'sub-category', 
         component: SubCategoryComponent,
         canActivate: [PermissionGuard],
-        data: { permission: [PermissionsEnum.VIEW_CATEGORIES, PermissionsEnum.ADD_CATEGORY, PermissionsEnum.EDIT_CATEGORY] }
+        data: { permission: [PermissionsEnum.VIEW_SUBCATEGORIES, PermissionsEnum.ADD_SUBCATEGORY, PermissionsEnum.EDIT_SUBCATEGORY] }
       },
       { 
         path: 
         'sub-category-form', 
         component: SubCategoryFormComponent,
         canActivate: [PermissionGuard],
-        data: { permission: [PermissionsEnum.VIEW_CATEGORIES, PermissionsEnum.ADD_CATEGORY, PermissionsEnum.EDIT_CATEGORY] },
+        data: { permission: [PermissionsEnum.VIEW_SUBCATEGORIES, PermissionsEnum.ADD_SUBCATEGORY, PermissionsEnum.EDIT_SUBCATEGORY] },
         resolve: {
           categoriesResolver: CategoriesResolver
         },
@@ -247,6 +267,72 @@ const routes: Routes = [
         component: UnitFormComponent,
         canActivate: [PermissionGuard],
         data: { permission: [PermissionsEnum.VIEW_UNITS, PermissionsEnum.ADD_UNIT, PermissionsEnum.EDIT_UNIT] }
+      },
+      {
+        path: 'store-transfers',
+        component: StoreTransferFormComponent,
+        canActivate: [PermissionGuard],
+        data: { permission: [PermissionsEnum.VIEW_STORE_TRANSFERS, PermissionsEnum.ADD_STORE_TRANSFER] },
+        resolve: {
+          StoresResolver: StoresResolver,
+          productsResolver: ProductsResolver
+        }
+      },
+      {
+        path: 'store-transfers-form',
+        component: StoreTransferFormComponent,
+        canActivate: [PermissionGuard],
+        data: { permission: [PermissionsEnum.ADD_STORE_TRANSFER, PermissionsEnum.EDIT_STORE_TRANSFER] },
+        resolve: {
+          StoresResolver: StoresResolver,
+          productsResolver: ProductsResolver
+        }
+      },
+      {
+        path: 'inventory-management',
+        component: InventoryManagementComponent,
+        canActivate: [PermissionGuard],
+        data: { permission: [PermissionsEnum.VIEW_INVENTORY_MANAGEMENT, PermissionsEnum.MANAGE_INVENTORY] },
+        resolve: {
+          StoresResolver: StoresResolver,
+          productsResolver: ProductsResolver
+        }
+      },
+      {
+        path: 'initial-stock-setup',
+        component: InitialStockSetupComponent,
+        canActivate: [PermissionGuard],
+        data: { permission: [PermissionsEnum.VIEW_INVENTORY_MANAGEMENT, PermissionsEnum.MANAGE_INVENTORY] }
+      },
+      {
+        path: 'initial-stock',
+        component: InitialStockComponent,
+        canActivate: [PermissionGuard],
+        data: { permission: [PermissionsEnum.MANAGE_INVENTORY] }
+      },
+      {
+        path: 'activity-logs',
+        component: ActivityLogsComponent,
+        canActivate: [PermissionGuard],
+        data: { permission: [PermissionsEnum.VIEW_ACTIVITY_LOGS] }
+      },
+      {
+        path: 'working-hours',
+        component: WorkingHoursComponent,
+        canActivate: [PermissionGuard],
+        data: { permission: [PermissionsEnum.VIEW_WORKING_HOURS] }
+      },
+      {
+        path: 'printer-configurations',
+        component: PrinterConfigurationsComponent,
+        canActivate: [PermissionGuard],
+        data: { permission: [PermissionsEnum.VIEW_PRINTER_CONFIGURATIONS] }
+      },
+      {
+        path: 'printer-configuration-form',
+        component: PrinterConfigurationFormComponent,
+        canActivate: [PermissionGuard],
+        data: { permission: [PermissionsEnum.VIEW_PRINTER_CONFIGURATIONS, PermissionsEnum.ADD_PRINTER_CONFIGURATION, PermissionsEnum.EDIT_PRINTER_CONFIGURATION] }
       },
       { path: '**', redirectTo: 'dashboard' }
     ]

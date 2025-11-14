@@ -10,6 +10,8 @@ namespace Warehousing.Repo.Dtos
         public List<RolePermissionDto> Permissions { get; set; }
         public List<int>? CategoryIds { get; set; }
         public List<int>? ProductIds { get; set; }
+        public List<int>? SubCategoryIds { get; set; }
+        public int? PrinterConfigurationId { get; set; }
     }
 
     public class RoleCreateUpdateDto
@@ -18,8 +20,11 @@ namespace Warehousing.Repo.Dtos
         public string? Code { get; set; } = string.Empty;
         public string? NameEn { get; set; } = string.Empty;
         public string NameAr { get; set; } = string.Empty;
+        public List<string>? PermissionCodes { get; set; } = new();
         public List<int>? RolePermissionIds { get; set; } = new();
         public List<int>? CategoryIds { get; set; }
         public List<int>? ProductIds { get; set; }
+        public List<int>? SubCategoryIds { get; set; }
+        public int? PrinterConfigurationId { get; set; }
     }
 }

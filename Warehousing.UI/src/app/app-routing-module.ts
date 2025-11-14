@@ -1,7 +1,6 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 import { Login } from './core/components/login/login';
-import { HomeComponent } from './home/home.component';
 import { CartComponent } from './shared/components/cart/cart.component';
 import { ProductsResolver } from './admin/resolvers/products-resolver';
 import { SuppliersResolver } from './admin/resolvers/suppliers-resolver';
@@ -16,7 +15,7 @@ import { UnitsResolver } from './admin/resolvers/units-resolver';
 const routes: Routes = [
   {
     path: '',
-    redirectTo: 'home',
+    redirectTo: 'order/2/categories',
     pathMatch: 'full',
   },
   {
@@ -26,11 +25,6 @@ const routes: Routes = [
   {
     path: 'order',
     loadChildren: () => import('./order/order.module').then((m) => m.OrderModule)
-  },
-  {
-    path: 'home', 
-    component: HomeComponent,
-    canActivate: [AuthGuard]
   },
   {
     path: 'cart', component: CartComponent,
