@@ -75,7 +75,7 @@ export class ProductsComponent implements OnInit {
   units!: Unit[];
   products$!: Observable<ProductPagination>;
   pageIndex: number = 1;
-  pageSize: number = 8;
+  pageSize: number = 10;
   totalPages = 1;
   totalPagesArray: number[] = [];
   productForm!: FormGroup;

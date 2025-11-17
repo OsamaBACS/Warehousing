@@ -78,9 +78,12 @@ builder.Services.AddAuthorization();
 
 var app = builder.Build();
 
-// Seed data on startup
+// Apply migrations and seed data on startup
 using (var scope = app.Services.CreateScope())
 {
+    var context = scope.ServiceProvider.GetRequiredService<WarehousingContext>();
+    await context.Database.MigrateAsync();
+
     var seedingService = scope.ServiceProvider.GetRequiredService<SeedingService>();
     await seedingService.SeedDataAsync();
 }

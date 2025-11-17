@@ -17,19 +17,11 @@ namespace Warehousing.Data.Services
         {
             // Always seed permissions first (they may be missing even if roles exist)
             await SeedPermissionsAsync();
-            
-            // Check if data already exists
-            if (await _context.Roles.AnyAsync())
-            {
-                // If roles exist, only seed printer configurations if they don't exist
-                await SeedPrinterConfigurationsAsync();
-                return; // Data already seeded
-            }
 
+            // Run the rest of the seeding in an idempotent way
             await SeedRolesAsync();
             await SeedUsersAsync();
             await SeedCategoriesAsync();
-            await SeedSubCategoriesAsync();
             await SeedStatusesAsync();
             await SeedOrderTypesAsync();
             await SeedTransactionTypesAsync();
@@ -44,17 +36,30 @@ namespace Warehousing.Data.Services
 
         private async Task SeedRolesAsync()
         {
-            var roles = new List<Role>
+            var defaultRoles = new List<Role>
             {
-                new Role { Id = 1, Code = "ADMIN", NameEn = "Admin", NameAr = "مدير", IsActive = true },
-                new Role { Id = 2, Code = "WAREHOUSE_MANAGER", NameEn = "Warehouse Manager", NameAr = "مسؤول المستودع", IsActive = true },
-                new Role { Id = 3, Code = "SALES_MANAGER", NameEn = "Sales Manager", NameAr = "مدير المبيعات", IsActive = true },
-                new Role { Id = 4, Code = "PURCHASE_MANAGER", NameEn = "Purchase Manager", NameAr = "مدير المشتريات", IsActive = true },
-                new Role { Id = 5, Code = "USER", NameEn = "User", NameAr = "مستخدم", IsActive = true }
+                new Role { Code = "ADMIN", NameEn = "Admin", NameAr = "مدير", IsActive = true },
+                new Role { Code = "WAREHOUSE_MANAGER", NameEn = "Warehouse Manager", NameAr = "مسؤول المستودع", IsActive = true },
+                new Role { Code = "SALES_MANAGER", NameEn = "Sales Manager", NameAr = "مدير المبيعات", IsActive = true },
+                new Role { Code = "PURCHASE_MANAGER", NameEn = "Purchase Manager", NameAr = "مدير المشتريات", IsActive = true },
+                new Role { Code = "USER", NameEn = "User", NameAr = "مستخدم", IsActive = true }
             };
 
-            _context.Roles.AddRange(roles);
-            await _context.SaveChangesAsync();
+            var existingRoleCodes = await _context.Roles
+                .Select(r => r.Code)
+                .Where(c => c != null)
+                .ToListAsync();
+
+            var toAdd = defaultRoles
+                .Where(r => !existingRoleCodes.Contains(r.Code))
+                .ToList();
+
+            if (toAdd.Any())
+            {
+                // Let SQL Server generate identity values
+                _context.Roles.AddRange(toAdd);
+                await _context.SaveChangesAsync();
+            }
         }
 
         private async Task SeedPermissionsAsync()
@@ -227,7 +232,6 @@ namespace Warehousing.Data.Services
 
             var adminUser = new User
             {
-                Id = 1,
                 NameEn = "System Administrator",
                 NameAr = "مدير النظام",
                 Username = "admin",
@@ -246,26 +250,279 @@ namespace Warehousing.Data.Services
 
         private async Task SeedCategoriesAsync()
         {
-            // Get categories from existing database
-            var existingCategories = await _context.Categories.ToListAsync();
-            if (existingCategories.Any())
+            // If categories already contain the new data (identified by a key category), skip reseeding
+            var hasNewData = await _context.Categories.AnyAsync(c => c.NameAr == "بديل الخشب");
+            if (hasNewData)
             {
-                return; // Categories already exist
+                return;
             }
 
-            // Categories will be populated from your existing database
-        }
-
-        private async Task SeedSubCategoriesAsync()
-        {
-            // Get subcategories from existing database
+            // Remove old seeded data (from initial migration) so we can insert the new dataset
             var existingSubCategories = await _context.SubCategories.ToListAsync();
             if (existingSubCategories.Any())
             {
-                return; // Subcategories already exist
+                _context.SubCategories.RemoveRange(existingSubCategories);
             }
 
-            // Subcategories will be populated from your existing database
+            var existingCategories = await _context.Categories.ToListAsync();
+            if (existingCategories.Any())
+            {
+                _context.Categories.RemoveRange(existingCategories);
+            }
+
+            await _context.SaveChangesAsync();
+
+            // Define new categories dataset (LegacyId used only for mapping subcategories; DB Id is identity)
+            var categories = new[]
+            {
+                new { LegacyId = 1,  NameAr = "بديل الخشب",              NameEn = "بديل الخشب",              Description = "",                                           ImagePath = (string?)"Resources/Images/Category/64cb3df8-aa35-445b-84a5-e8fc4d3d9a4c.jpeg", IsActive = true },
+                new { LegacyId = 2,  NameAr = "لوازم النجارين",          NameEn = "لوازم النجارين",          Description = "Steel bars, mesh, structural steel",          ImagePath = (string?)null,                                  IsActive = true },
+                new { LegacyId = 3,  NameAr = "الزهيوي",                 NameEn = "ZHWEI",                   Description = "فيابر حديد وستانليس\r\n\r\nألمازات\r\n\r\nريش حديد\r\n\r\nريش SDS\r\n\r\nريش خراقة\r\n\r\nريش حجر\r\n\r\nرواسي مصلب", ImagePath = (string?)null, IsActive = true },
+                new { LegacyId = 4,  NameAr = "الأدوات الصحية",           NameEn = "الأدوات الصحية",           Description = "بطاريات + محابس + شطافات",                 ImagePath = (string?)null,                                  IsActive = true },
+                new { LegacyId = 5,  NameAr = "الخردوات",                NameEn = "الخردوات",                Description = "جنازير + رول بلاك + عدد",                    ImagePath = (string?)null,                                  IsActive = true },
+                new { LegacyId = 6,  NameAr = "زرافيل",                  NameEn = "زرافيل",                  Description = "زرافيل كامل + سلندرات",                    ImagePath = (string?)null,                                  IsActive = true },
+                new { LegacyId = 7,  NameAr = "الديكور ولوازمه",         NameEn = "الديكور ولوازمه",         Description = "الديكور ولوازمه",                            ImagePath = (string?)null,                                  IsActive = true },
+                new { LegacyId = 8,  NameAr = "البراغي والمسامير",       NameEn = "البراغي والمسامير",       Description = "البراغي والمسامير",                          ImagePath = (string?)null,                                  IsActive = true },
+                new { LegacyId = 9,  NameAr = "لوازم الدهان",            NameEn = "لوازم الدهان",            Description = "",                                           ImagePath = (string?)null,                                  IsActive = true },
+                new { LegacyId = 10, NameAr = "شبك وأسلاك",              NameEn = "شبك وأسلاك",              Description = "شبك وأسلاك",                                  ImagePath = (string?)null,                                  IsActive = true },
+                new { LegacyId = 11, NameAr = "دهانات مشكل",             NameEn = "دهانات مشكل",             Description = "دهانات أصناف جديدة",                        ImagePath = (string?)null,                                  IsActive = true },
+                new { LegacyId = 12, NameAr = "العدد ولوازمها",          NameEn = "العدد ولوازمها",          Description = "العدد ولوازمها",                            ImagePath = (string?)null,                                  IsActive = true },
+                new { LegacyId = 13, NameAr = "فوم جدران رولات وقطع",   NameEn = "فوم جدران رولات وقطع",   Description = "فوم جدران رولات وقطع",                      ImagePath = (string?)null,                                  IsActive = true },
+                new { LegacyId = 14, NameAr = "فوم جدران رولات",         NameEn = "فوم جدران رولات",         Description = "فوم جدران رولات",                            ImagePath = (string?)null,                                  IsActive = false },
+                new { LegacyId = 15, NameAr = "معدات Conan",             NameEn = "معدات Conan",             Description = "معدات Conan",                                ImagePath = (string?)null,                                  IsActive = true },
+                new { LegacyId = 16, NameAr = "Dulux Paints",            NameEn = "دهانات ديلوكس",           Description = "Dulux Paints",                               ImagePath = (string?)null,                                  IsActive = true },
+                new { LegacyId = 17, NameAr = "Golden Paints",           NameEn = "دهانات جولدن",            Description = "دهانات جولدن",                               ImagePath = (string?)null,                                  IsActive = true },
+                new { LegacyId = 18, NameAr = "Quds Paints",             NameEn = "دهانات القدس",            Description = "دهانات القدس",                               ImagePath = (string?)null,                                  IsActive = true },
+                new { LegacyId = 19, NameAr = "منتجات سافيتو",          NameEn = "منتجات سافيتو",          Description = "منتجات سافيتو",                             ImagePath = (string?)null,                                  IsActive = true },
+                new { LegacyId = 20, NameAr = "علب رش ومزيل صدأ",        NameEn = "علب رش ومزيل صدأ",        Description = "علب رش ومزيل صدأ",                           ImagePath = (string?)null,                                  IsActive = true },
+                new { LegacyId = 21, NameAr = "دهانات روز باريس",        NameEn = "دهانات روز باريس",        Description = "دهانات روز باريس",                           ImagePath = (string?)null,                                  IsActive = true },
+                new { LegacyId = 22, NameAr = "منتجات تيراكو",          NameEn = "منتجات تيراكو",          Description = "منتجات تيراكو",                             ImagePath = (string?)null,                                  IsActive = true },
+                new { LegacyId = 23, NameAr = "منتجات أبولو",           NameEn = "منتجات أبولو",           Description = "منتجات أبولو",                              ImagePath = (string?)null,                                  IsActive = true },
+                new { LegacyId = 24, NameAr = "الكهربائيات",            NameEn = "الكهربائيات",            Description = "الكهربائيات",                               ImagePath = (string?)null,                                  IsActive = true },
+                new { LegacyId = 25, NameAr = "قطع مواسير تصريف",       NameEn = "قطع مواسير تصريف",       Description = "قطع مواسير تصريف",                          ImagePath = (string?)null,                                  IsActive = true },
+                new { LegacyId = 26, NameAr = "دهانات ناشونال",          NameEn = "دهانات ناشونال",          Description = "دهانات ناشونال",                             ImagePath = (string?)null,                                  IsActive = true },
+                new { LegacyId = 27, NameAr = "فورسيلينق",              NameEn = "فورسيلينق",              Description = "فورسيلينق",                                  ImagePath = (string?)null,                                  IsActive = false },
+                new { LegacyId = 28, NameAr = "كيازر",                  NameEn = "كيازر",                  Description = "كيازر",                                      ImagePath = (string?)null,                                  IsActive = true },
+                new { LegacyId = 29, NameAr = "معدات كازبر",            NameEn = "معدات كازبر",            Description = "معدات كازبر",                               ImagePath = (string?)null,                                  IsActive = true },
+                new { LegacyId = 30, NameAr = "مضخات",                  NameEn = "مضخات",                  Description = "مضخات",                                      ImagePath = (string?)null,                                  IsActive = true }
+            };
+
+            var categoryEntities = categories.Select(c => new Category
+            {
+                NameAr = c.NameAr,
+                NameEn = c.NameEn,
+                Description = c.Description,
+                ImagePath = c.ImagePath,
+                IsActive = c.IsActive
+            }).ToList();
+
+            _context.Categories.AddRange(categoryEntities);
+            await _context.SaveChangesAsync();
+
+            // Build mapping from LegacyId to actual database Id using NameAr as key
+            var categoryMap = _context.Categories
+                .ToDictionary(c => c.NameAr, c => c.Id);
+
+            var legacyIdToDbId = categories.ToDictionary(
+                c => c.LegacyId,
+                c => categoryMap[c.NameAr]
+            );
+
+            // Seed subcategories based on provided dataset
+            await SeedSubCategoriesAsync(legacyIdToDbId);
+        }
+
+        private async Task SeedSubCategoriesAsync(Dictionary<int, int> categoryIdMap)
+        {
+            // If we already have any of the new subcategories, skip reseeding
+            var hasNewData = await _context.SubCategories.AnyAsync(sc => sc.NameAr == "رونديلات");
+            if (hasNewData)
+            {
+                return;
+            }
+
+            var subCategories = new[]
+            {
+                new { NameAr = "رونديلات",                          NameEn = "رونديلات",                          Description = "رونديلات",                          IsActive = true,  LegacyCategoryId = 8,  ImagePath = (string?)null },
+                new { NameAr = "زوايا",                            NameEn = "زوايا",                            Description = "زوايا",                            IsActive = true,  LegacyCategoryId = 2,  ImagePath = (string?)null },
+                new { NameAr = "ميزان ماء Conan",                  NameEn = "ميزان ماء Conan",                  Description = "ميزان ماء Conan",                  IsActive = true,  LegacyCategoryId = 15, ImagePath = (string?)null },
+                new { NameAr = "Steel Mesh",                       NameEn = "شبك فولاذي",                       Description = "For concrete reinforcement",         IsActive = false, LegacyCategoryId = 2,  ImagePath = (string?)null },
+                new { NameAr = "Clay Bricks",                      NameEn = "طوب طيني",                         Description = "Traditional building material",     IsActive = false, LegacyCategoryId = 3,  ImagePath = (string?)null },
+                new { NameAr = "Concrete Blocks",                  NameEn = "بلوك خرساني",                      Description = "Hollow or solid blocks",            IsActive = false, LegacyCategoryId = 3,  ImagePath = (string?)null },
+                new { NameAr = "PVC Pipes",                        NameEn = "أنابيب PVC",                        Description = "For drainage and water systems",    IsActive = false, LegacyCategoryId = 4,  ImagePath = (string?)null },
+                new { NameAr = "Copper Pipes",                     NameEn = "أنابيب نحاسية",                    Description = "Used for water supply",             IsActive = false, LegacyCategoryId = 4,  ImagePath = (string?)null },
+                new { NameAr = "Electrical Wires",                 NameEn = "أسلاك كهربائية",                   Description = "Insulated copper wires",            IsActive = false, LegacyCategoryId = 5,  ImagePath = (string?)null },
+                new { NameAr = "Switches & Sockets",               NameEn = "مفاتيح ومقابس",                    Description = "Power control devices",             IsActive = false, LegacyCategoryId = 5,  ImagePath = (string?)null },
+                new { NameAr = "زرفيل كامل HD",                   NameEn = "زرفيل كامل HD",                   Description = "زرفيل كامل HD",                   IsActive = true,  LegacyCategoryId = 6,  ImagePath = (string?)null },
+                new { NameAr = "زرفيل كامل سوبر",                 NameEn = "زرفيل كامل سوبر",                 Description = "زرفيل كامل سوبر",                 IsActive = true,  LegacyCategoryId = 6,  ImagePath = (string?)null },
+                new { NameAr = "Toilets",                          NameEn = "مراحيض",                            Description = "Standard and smart toilets",        IsActive = false, LegacyCategoryId = 7,  ImagePath = (string?)null },
+                new { NameAr = "Bathroom Faucets",                 NameEn = "حنفيات حمام",                      Description = "Taps and mixers",                   IsActive = true,  LegacyCategoryId = 7,  ImagePath = (string?)null },
+                new { NameAr = "Ceramic Tiles",                    NameEn = "بلاط سيراميك",                     Description = "Wall and floor tiles",              IsActive = false, LegacyCategoryId = 8,  ImagePath = (string?)null },
+                new { NameAr = "Marble Flooring",                  NameEn = "أرضيات رخام",                      Description = "Luxury floor option",               IsActive = false, LegacyCategoryId = 8,  ImagePath = (string?)null },
+                new { NameAr = "Wooden Doors",                     NameEn = "أبواب خشبية",                      Description = "Interior and exterior use",         IsActive = false, LegacyCategoryId = 9,  ImagePath = (string?)null },
+                new { NameAr = "فراشي دهان",                      NameEn = "فراشي دهان",                       Description = "",                                  IsActive = false, LegacyCategoryId = 9,  ImagePath = (string?)null },
+                new { NameAr = "Hand Tools",                       NameEn = "أدوات يدوية",                       Description = "Saws, hammers, screwdrivers",       IsActive = true,  LegacyCategoryId = 10, ImagePath = (string?)null },
+                new { NameAr = "Power Tools",                      NameEn = "أدوات كهربائية",                    Description = "Drills, grinders, etc.",            IsActive = true,  LegacyCategoryId = 10, ImagePath = (string?)null },
+                new { NameAr = "WPC (20cm X 290cm)",               NameEn = "بديل الخشب (20cm X 290cm)",        Description = "بديل الخشب",                        IsActive = true,  LegacyCategoryId = 1,  ImagePath = (string?)"Resources/Images/SubCategory/10775048-b935-462b-9258-b4f127db8967_4de9fffd-65a1-4eb2-94ef-f5e215ea6e10.jpeg" },
+                new { NameAr = "(WPC (16cm X 290cm",               NameEn = "بديل الخشب (16cm X 290cm)",        Description = "",                                  IsActive = true,  LegacyCategoryId = 1,  ImagePath = (string?)null },
+                new { NameAr = "(Circled WPC (16cm x 290cm",       NameEn = "بديل الخشب الدائري (16cm x 290cm)", Description = "",                                 IsActive = true,  LegacyCategoryId = 1,  ImagePath = (string?)null },
+                new { NameAr = "WPC PS (12cm X 290cm)",            NameEn = "بديل الخشب PS (12cm X 290cm)",     Description = "",                                  IsActive = true,  LegacyCategoryId = 1,  ImagePath = (string?)null },
+                new { NameAr = "محابس وحنفيات",                   NameEn = "محابس وحنفيات",                   Description = "محبس زاوية\r\n\r\nمحبس دبل\r\n\r\nمحبس غسالة\r\n\r\nمحبس ستيم\r\n\r\nحنفيات", IsActive = true, LegacyCategoryId = 4, ImagePath = (string?)null },
+                new { NameAr = "برابيش",                          NameEn = "برابيش",                          Description = "بربيش غسالة \r\n\r\nبرابيش قيزر\r\n\r\nبرابيش بطارية", IsActive = true, LegacyCategoryId = 4, ImagePath = (string?)null },
+                new { NameAr = "بطارية مغسلة",                    NameEn = "بطارية مغسلة",                    Description = "",                                  IsActive = true,  LegacyCategoryId = 4,  ImagePath = (string?)null },
+                new { NameAr = "بطارية مجلى",                     NameEn = "بطارية مجلى",                     Description = "",                                  IsActive = true,  LegacyCategoryId = 4,  ImagePath = (string?)null },
+                new { NameAr = "بطارية دش",                       NameEn = "بطارية دش",                       Description = "",                                  IsActive = true,  LegacyCategoryId = 4,  ImagePath = (string?)null },
+                new { NameAr = "شطافات",                          NameEn = "شطافات",                          Description = "شطافات كروم (نحاس أو بلاستك)\r\n\r\nشطافات بلاستيك ابيض", IsActive = true, LegacyCategoryId = 4, ImagePath = (string?)null },
+                new { NameAr = "سيفونات وصبابات",                NameEn = "سيفونات وصبابات",                Description = "سيفون مغسلة\r\n\r\nسيفون مجلى\r\n\r\nصباب مغسلة كبس + عادي", IsActive = true, LegacyCategoryId = 4, ImagePath = (string?)null },
+                new { NameAr = "ردادات ماء",                      NameEn = "ردادات ماء",                      Description = "ردادات ماء",                        IsActive = true,  LegacyCategoryId = 4,  ImagePath = (string?)null },
+                new { NameAr = "فيابر حديد وستانليس",            NameEn = "فيابر حديد وستانليس",            Description = "فيابر حديد وستانليس",               IsActive = true,  LegacyCategoryId = 3,  ImagePath = (string?)null },
+                new { NameAr = "ألمازات",                         NameEn = "ألمازات",                         Description = "ألمازات قص\r\n\r\nألمازات حف",      IsActive = true,  LegacyCategoryId = 3,  ImagePath = (string?)null },
+                new { NameAr = "ريش حديد",                        NameEn = "ريش حديد",                        Description = "ريش حديد",                         IsActive = true,  LegacyCategoryId = 3,  ImagePath = (string?)null },
+                new { NameAr = "ريش SDS",                         NameEn = "ريش SDS",                         Description = "ريش SDS",                          IsActive = true,  LegacyCategoryId = 3,  ImagePath = (string?)null },
+                new { NameAr = "ريش خراقة",                       NameEn = "ريش خراقة",                       Description = "ريش خراقة",                        IsActive = true,  LegacyCategoryId = 3,  ImagePath = (string?)null },
+                new { NameAr = "ريش حجر",                         NameEn = "ريش حجر",                         Description = "ريش حجر",                          IsActive = true,  LegacyCategoryId = 3,  ImagePath = (string?)null },
+                new { NameAr = "رواسي مصلب",                     NameEn = "رواسي مصلب",                     Description = "رواسي مصلب",                       IsActive = true,  LegacyCategoryId = 3,  ImagePath = (string?)null },
+                new { NameAr = "نسلات وهولسو وفتاحات",           NameEn = "نسلات وهولسو وفتاحات",           Description = "نسلات وهولسو وفتاحات",             IsActive = true,  LegacyCategoryId = 3,  ImagePath = (string?)null },
+                new { NameAr = "اقفال",                          NameEn = "اقفال",                          Description = "",                                  IsActive = true,  LegacyCategoryId = 5,  ImagePath = (string?)null },
+                new { NameAr = "زرفيل قديمLD",                   NameEn = "زرفيل قديم LD",                  Description = "",                                  IsActive = true,  LegacyCategoryId = 6,  ImagePath = (string?)null },
+                new { NameAr = "سلندرات",                        NameEn = "سلندرات",                        Description = "",                                  IsActive = true,  LegacyCategoryId = 6,  ImagePath = (string?)null },
+                new { NameAr = "زرفيل حمام",                     NameEn = "زرفيل حمام",                     Description = "",                                  IsActive = true,  LegacyCategoryId = 6,  ImagePath = (string?)null },
+                new { NameAr = "زرفيل زاتي",                     NameEn = "زرفيل زاتي",                     Description = "",                                  IsActive = true,  LegacyCategoryId = 6,  ImagePath = (string?)null },
+                new { NameAr = "مشاحيف ستانليس",                NameEn = "مشاحيف ستانليس",                Description = "مشاحيف ستانليس",                  IsActive = true,  LegacyCategoryId = 9,  ImagePath = (string?)null },
+                new { NameAr = "سكاكين معجونة ستانليس",          NameEn = "سكاكين معجونة ستانليس",          Description = "سكاكين معجونة ستانليس",            IsActive = true,  LegacyCategoryId = 9,  ImagePath = (string?)null },
+                new { NameAr = "مشاحيف حديد",                    NameEn = "مشاحيف حديد",                    Description = "مشاحيف حديد",                      IsActive = true,  LegacyCategoryId = 9,  ImagePath = (string?)null },
+                new { NameAr = "رولات دهان وفتايل",              NameEn = "رولات دهان وفتايل",              Description = "رولات دهان وفتايل",                IsActive = true,  LegacyCategoryId = 9,  ImagePath = (string?)null },
+                new { NameAr = "قواعد حف دهان يدوي وماكنات",      NameEn = "قواعد حف دهان يدوي وماكنات",      Description = "قواعد حف دهان يدوي وماكنات",        IsActive = true,  LegacyCategoryId = 2,  ImagePath = (string?)null },
+                new { NameAr = "فرد رش",                          NameEn = "فرد رش",                          Description = "فرد رش دهان",                       IsActive = true,  LegacyCategoryId = 9,  ImagePath = (string?)null },
+                new { NameAr = "جنازير",                         NameEn = "جنازير",                         Description = "جنازير",                           IsActive = true,  LegacyCategoryId = 5,  ImagePath = (string?)null },
+                new { NameAr = "زوايا رفوف ديكور",               NameEn = "زوايا رفوف ديكور",               Description = "زوايا رفوف ديكور",                 IsActive = true,  LegacyCategoryId = 2,  ImagePath = (string?)null },
+                new { NameAr = "علاقات ملابس",                   NameEn = "علاقات ملابس",                   Description = "علاقات ملابس",                     IsActive = true,  LegacyCategoryId = 5,  ImagePath = (string?)null },
+                new { NameAr = "سكك جوارير بيل",                 NameEn = "سكك جوارير بيل",                 Description = "سكك جوارير بيل",                   IsActive = true,  LegacyCategoryId = 2,  ImagePath = (string?)null },
+                new { NameAr = "رسمات تطبيع",                    NameEn = "رسمات تطبيع",                    Description = "رسمات تطبيع",                      IsActive = true,  LegacyCategoryId = 9,  ImagePath = (string?)null },
+                new { NameAr = "يونيكا",                         NameEn = "يونيكا",                         Description = "يونيكا",                           IsActive = true,  LegacyCategoryId = 4,  ImagePath = (string?)null },
+                new { NameAr = "جسر حمام",                       NameEn = "جسر حمام",                       Description = "جسر حمام",                         IsActive = true,  LegacyCategoryId = 5,  ImagePath = (string?)null },
+                new { NameAr = "قاعدة اصلاح فصالة",              NameEn = "قاعدة اصلاح فصالة",              Description = "قاعدة اصلاح فصالة",                IsActive = true,  LegacyCategoryId = 2,  ImagePath = (string?)null },
+                new { NameAr = "مجابد",                          NameEn = "مجابد",                          Description = "مجابد",                           IsActive = true,  LegacyCategoryId = 2,  ImagePath = (string?)null },
+                new { NameAr = "فصالات",                         NameEn = "فصالات",                         Description = "فصالات",                          IsActive = true,  LegacyCategoryId = 2,  ImagePath = (string?)null },
+                new { NameAr = "نبل بطارية",                     NameEn = "نبل بطارية",                     Description = "نبل بطارية",                       IsActive = true,  LegacyCategoryId = 4,  ImagePath = (string?)null },
+                new { NameAr = "سلك تربيط مجلفن 1ملم",          NameEn = "سلك تربيط مجلفن 1ملم",          Description = "سلك تربيط مجلفن 1ملم",            IsActive = true,  LegacyCategoryId = 10, ImagePath = (string?)null },
+                new { NameAr = "براغي جبس بورد",                NameEn = "براغي جبس بورد",                Description = "براغي جبس بورد",                  IsActive = true,  LegacyCategoryId = 8,  ImagePath = (string?)null },
+                new { NameAr = "براغي شيقا",                    NameEn = "براغي شيقا",                    Description = "براغي شيقا",                      IsActive = true,  LegacyCategoryId = 8,  ImagePath = (string?)null },
+                new { NameAr = "براغي هنجر",                    NameEn = "براغي هنجر",                    Description = "براغي هنجر",                      IsActive = true,  LegacyCategoryId = 8,  ImagePath = (string?)null },
+                new { NameAr = "براغي مسنن طول متر",            NameEn = "براغي مسنن طول متر",            Description = "براغي مسنن طول متر",              IsActive = true,  LegacyCategoryId = 8,  ImagePath = (string?)null },
+                new { NameAr = "صواميل",                         NameEn = "صواميل",                         Description = "صواميل",                           IsActive = true,  LegacyCategoryId = 8,  ImagePath = (string?)null },
+                new { NameAr = "براغي شيبورد",                  NameEn = "براغي شيبورد",                  Description = "براغي شيبورد",                    IsActive = true,  LegacyCategoryId = 8,  ImagePath = (string?)null },
+                new { NameAr = "براغي رول بلاك",                NameEn = "براغي رول بلاك",                Description = "براغي رول بلاك",                  IsActive = true,  LegacyCategoryId = 8,  ImagePath = (string?)null },
+                new { NameAr = "زمبرك شفاط قصدير",              NameEn = "زمبرك شفاط قصدير",              Description = "زمبرك شفاط قصدير",                IsActive = true,  LegacyCategoryId = 5,  ImagePath = (string?)null },
+                new { NameAr = "فوم جدران رولات",               NameEn = "فوم جدران رولات",               Description = "فوم جدران رولات",                 IsActive = true,  LegacyCategoryId = 13, ImagePath = (string?)null },
+                new { NameAr = "فوم جدران قطع",                 NameEn = "فوم جدران قطع",                 Description = "فوم جدران قطع",                   IsActive = true,  LegacyCategoryId = 13, ImagePath = (string?)null },
+                new { NameAr = "مصارف ستانليس",                NameEn = "مصارف ستانليس",                Description = "مصارف ستانليس",                  IsActive = true,  LegacyCategoryId = 4,  ImagePath = (string?)null },
+                new { NameAr = "بديل الحجر",                     NameEn = "بديل الحجر",                     Description = "بديل الحجر",                       IsActive = true,  LegacyCategoryId = 7,  ImagePath = (string?)null },
+                new { NameAr = "زوايا حديد رفيع (عرض 1.5سم)",   NameEn = "زوايا حديد رفيع (عرض 1.5سم)",   Description = "زوايا حديد رفيع (عرض 1.5سم)",      IsActive = true,  LegacyCategoryId = 2,  ImagePath = (string?)null },
+                new { NameAr = "زوايا حديد عريض (عرض 3سم)",     NameEn = "زوايا حديد عريض (عرض 3سم)",     Description = "زوايا حديد عريض (عرض 3سم)",        IsActive = true,  LegacyCategoryId = 2,  ImagePath = (string?)null },
+                new { NameAr = "شبك مربع 1x1سم",                NameEn = "شبك مربع 1x1سم",                Description = "شبك مربع 1x1سم",                  IsActive = true,  LegacyCategoryId = 10, ImagePath = (string?)null },
+                new { NameAr = "أطقم براغي تثبيت",              NameEn = "أطقم براغي تثبيت",              Description = "أطقم براغي تثبيت",                IsActive = true,  LegacyCategoryId = 4,  ImagePath = (string?)null },
+                new { NameAr = "زوايا رف ابيض",                 NameEn = "زوايا رف ابيض",                 Description = "زوايا رف ابيض",                   IsActive = true,  LegacyCategoryId = 2,  ImagePath = (string?)null },
+                new { NameAr = "مسامير بولاد",                  NameEn = "مسامير بولاد",                  Description = "مسامير بولاد",                    IsActive = true,  LegacyCategoryId = 8,  ImagePath = (string?)null },
+                new { NameAr = "بوكس هنجر",                     NameEn = "بوكس هنجر",                     Description = "بوكس هنجر",                       IsActive = true,  LegacyCategoryId = 5,  ImagePath = (string?)null },
+                new { NameAr = "مقصات Conan",                   NameEn = "مقصات Conan",                   Description = "مقصات Conan",                     IsActive = true,  LegacyCategoryId = 15, ImagePath = (string?)null },
+                new { NameAr = "مشارط Conan",                   NameEn = "مشارط Conan",                   Description = "مشارط Conan",                     IsActive = true,  LegacyCategoryId = 15, ImagePath = (string?)null },
+                new { NameAr = "مسطرين Conan",                  NameEn = "مسطرين Conan",                  Description = "مسطرين Conan",                    IsActive = true,  LegacyCategoryId = 15, ImagePath = (string?)null },
+                new { NameAr = "أمتار Conan",                   NameEn = "أمتار Conan",                   Description = "أمتار Conan",                     IsActive = true,  LegacyCategoryId = 15, ImagePath = (string?)null },
+                new { NameAr = "مفكات Conan",                   NameEn = "مفكات Conan",                   Description = "مفكات Conan",                     IsActive = true,  LegacyCategoryId = 15, ImagePath = (string?)null },
+                new { NameAr = "زراديات وقطاعات Conan",        NameEn = "زراديات وقطاعات Conan",        Description = "زراديات وقطاعات Conan",          IsActive = true,  LegacyCategoryId = 15, ImagePath = (string?)null },
+                new { NameAr = "الن كيه Conan",                 NameEn = "الن كيه Conan",                 Description = "الن كيه Conan",                   IsActive = true,  LegacyCategoryId = 15, ImagePath = (string?)null },
+                new { NameAr = "منشار Conan",                   NameEn = "منشار Conan",                   Description = "منشار Conan",                     IsActive = true,  LegacyCategoryId = 15, ImagePath = (string?)null },
+                new { NameAr = "فرد تباشيم Conan",              NameEn = "فرد تباشيم Conan",              Description = "فرد تباشيم Conan",                IsActive = true,  LegacyCategoryId = 15, ImagePath = (string?)null },
+                new { NameAr = "مقصات شجر Conan",               NameEn = "مقصات شجر Conan",               Description = "مقصات شجر Conan",                 IsActive = true,  LegacyCategoryId = 15, ImagePath = (string?)null },
+                new { NameAr = "فرد زراعي Conan",               NameEn = "فرد زراعي Conan",               Description = "فرد زراعي Conan",                 IsActive = true,  LegacyCategoryId = 15, ImagePath = (string?)null },
+                new { NameAr = "اطقم بوكسات وطقطيقات Conan",    NameEn = "اطقم بوكسات وطقطيقات Conan",    Description = "اطقم بوكسات وطقطيقات Conan",      IsActive = true,  LegacyCategoryId = 15, ImagePath = (string?)null },
+                new { NameAr = "مشحاف روبة Conan",              NameEn = "مشحاف روبة Conan",              Description = "مشحاف روبة Conan",                IsActive = true,  LegacyCategoryId = 15, ImagePath = (string?)null },
+                new { NameAr = "موالج Conan",                   NameEn = "موالج Conan",                   Description = "موالج Conan",                     IsActive = true,  LegacyCategoryId = 15, ImagePath = (string?)null },
+                new { NameAr = "زرفيل كامل سوبر يد خلية",      NameEn = "زرفيل كامل سوبر يد خلية",      Description = "زرفيل كامل سوبر يد خلية",        IsActive = true,  LegacyCategoryId = 6,  ImagePath = (string?)null },
+                new { NameAr = " Vinyl Matt Dulux",             NameEn = " Vinyl Matt Dulux",             Description = " Vinyl Matt Dulux",               IsActive = true,  LegacyCategoryId = 16, ImagePath = (string?)null },
+                new { NameAr = "Vinyl Eggshell Dulux",          NameEn = "Vinyl Eggshell Dulux",          Description = "Vinyl Eggshell Dulux",            IsActive = true,  LegacyCategoryId = 16, ImagePath = (string?)null },
+                new { NameAr = "Vinyl Silk Dulux",              NameEn = "Vinyl Silk Dulux",              Description = "Vinyl Silk Dulux",                IsActive = true,  LegacyCategoryId = 16, ImagePath = (string?)null },
+                new { NameAr = "امنشن جولدن",                   NameEn = "امنشن جولدن",                   Description = "امنشن جولدن",                     IsActive = true,  LegacyCategoryId = 17, ImagePath = (string?)null },
+                new { NameAr = "اكشل جولدن",                    NameEn = "اكشل جولدن",                    Description = "اكشل جولدن",                      IsActive = true,  LegacyCategoryId = 17, ImagePath = (string?)null },
+                new { NameAr = "فاينل سلك جولدن",               NameEn = "فاينل سلك جولدن",               Description = "فاينل سلك جولدن",                 IsActive = true,  LegacyCategoryId = 17, ImagePath = (string?)null },
+                new { NameAr = "روف كوت جولدن",                 NameEn = "روف كوت جولدن",                 Description = "روف كوت جولدن",                   IsActive = true,  LegacyCategoryId = 17, ImagePath = (string?)null },
+                new { NameAr = "معجونة جولدن",                  NameEn = "معجونة جولدن",                  Description = "معجونة جولدن",                    IsActive = true,  LegacyCategoryId = 17, ImagePath = (string?)null },
+                new { NameAr = "ديكوري جولدن",                  NameEn = "ديكوري جولدن",                  Description = "ديكوري جولدن",                    IsActive = true,  LegacyCategoryId = 17, ImagePath = (string?)null },
+                new { NameAr = "روف كوت سافيتو",                NameEn = "روف كوت سافيتو",                Description = "روف كوت سافيتو",                  IsActive = true,  LegacyCategoryId = 19, ImagePath = (string?)null },
+                new { NameAr = "2K سافيتو",                     NameEn = "2K سافيتو",                     Description = "2K سافيتو",                        IsActive = true,  LegacyCategoryId = 19, ImagePath = (string?)null },
+                new { NameAr = "مزيل صدأ",                      NameEn = "مزيل صدأ",                      Description = "مزيل صدأ",                        IsActive = true,  LegacyCategoryId = 20, ImagePath = (string?)null },
+                new { NameAr = "سبريه رش صيني",                 NameEn = "سبريه رش صيني",                 Description = "سبريه رش صيني",                   IsActive = true,  LegacyCategoryId = 20, ImagePath = (string?)null },
+                new { NameAr = "آجو ومنظف مواسير",              NameEn = "آجو ومنظف مواسير",              Description = "آجو ومنظف مواسير",                IsActive = true,  LegacyCategoryId = 4,  ImagePath = (string?)null },
+                new { NameAr = "ساعات غاز",                     NameEn = "ساعات غاز",                     Description = "ساعات غاز",                       IsActive = true,  LegacyCategoryId = 5,  ImagePath = (string?)null },
+                new { NameAr = "مفرش نايلون",                   NameEn = "مفرش نايلون",                   Description = "مفرش نايلون",                     IsActive = true,  LegacyCategoryId = 9,  ImagePath = (string?)null },
+                new { NameAr = "ديكورات روز باريس",             NameEn = "ديكورات روز باريس",             Description = "ديكورات روز باريس",               IsActive = true,  LegacyCategoryId = 21, ImagePath = (string?)null },
+                new { NameAr = "عصا رول",                       NameEn = "عصا رول",                       Description = "عصا رول",                         IsActive = true,  LegacyCategoryId = 9,  ImagePath = (string?)null },
+                new { NameAr = "امنشن طرق",                     NameEn = "امنشن طرق",                     Description = "امنشن طرق",                       IsActive = true,  LegacyCategoryId = 17, ImagePath = (string?)null },
+                new { NameAr = "2K أبولو",                      NameEn = "2K أبولو",                      Description = "2K أبولو",                        IsActive = true,  LegacyCategoryId = 23, ImagePath = (string?)null },
+                new { NameAr = "معجونة فلر القدس",              NameEn = "معجونة فلر القدس",              Description = "معجونة فلر القدس",                IsActive = true,  LegacyCategoryId = 18, ImagePath = (string?)null },
+                new { NameAr = "دهانات تلكو فيا",              NameEn = "دهانات تلكو فيا",              Description = "دهانات تلكو فيا",                IsActive = true,  LegacyCategoryId = 11, ImagePath = (string?)null },
+                new { NameAr = "معجونة فلر تيراكو",             NameEn = "معجونة فلر تيراكو",             Description = "معجونة فلر تيراكو",               IsActive = true,  LegacyCategoryId = 22, ImagePath = (string?)null },
+                new { NameAr = "GM6 TiT",                       NameEn = "GM6 TiT",                       Description = "GM6 TiT",                         IsActive = true,  LegacyCategoryId = 11, ImagePath = (string?)null },
+                new { NameAr = "زرفيل مع سلندر بدون يدين",      NameEn = "زرفيل مع سلندر بدون يدين",      Description = "زرفيل مع سلندر بدون يدين",        IsActive = true,  LegacyCategoryId = 6,  ImagePath = (string?)null },
+                new { NameAr = "وصلة حبل ليد",                 NameEn = "وصلة حبل ليد",                 Description = "وصلة حبل ليد",                   IsActive = true,  LegacyCategoryId = 24, ImagePath = (string?)null },
+                new { NameAr = "زوايا كورنر",                   NameEn = "زوايا كورنر",                   Description = "زوايا كورنر",                     IsActive = true,  LegacyCategoryId = 9,  ImagePath = (string?)null },
+                new { NameAr = "امنشن القدس",                   NameEn = "امنشن القدس",                   Description = "امنشن القدس",                     IsActive = true,  LegacyCategoryId = 18, ImagePath = (string?)null },
+                new { NameAr = "موالج بلاستيك",                 NameEn = "موالج بلاستيك",                 Description = "موالج بلاستيك",                   IsActive = true,  LegacyCategoryId = 9,  ImagePath = (string?)null },
+                new { NameAr = "دهانات Elite",                  NameEn = "دهانات Elite",                  Description = "دهانات Elite",                    IsActive = true,  LegacyCategoryId = 11, ImagePath = (string?)null },
+                new { NameAr = "أكواع",                         NameEn = "أكواع",                         Description = "أكواع",                           IsActive = true,  LegacyCategoryId = 25, ImagePath = (string?)null },
+                new { NameAr = "فلتراب",                        NameEn = "فلتراب",                        Description = "فلتراب",                          IsActive = true,  LegacyCategoryId = 25, ImagePath = (string?)null },
+                new { NameAr = "زوايا ديكور",                   NameEn = "زوايا ديكور",                   Description = "زوايا ديكور",                     IsActive = true,  LegacyCategoryId = 7,  ImagePath = (string?)null },
+                new { NameAr = "سلر ولكر",                      NameEn = "سلر ولكر",                      Description = "سلر ولكر",                        IsActive = true,  LegacyCategoryId = 26, ImagePath = (string?)null },
+                new { NameAr = "لمبات",                         NameEn = "لمبات",                         Description = "لمبات",                           IsActive = true,  LegacyCategoryId = 24, ImagePath = (string?)null },
+                new { NameAr = "نيونات",                        NameEn = "نيونات",                        Description = "نيونات",                          IsActive = true,  LegacyCategoryId = 24, ImagePath = (string?)null },
+                new { NameAr = "قلوبات",                        NameEn = "قلوبات",                        Description = "قلوبات",                          IsActive = true,  LegacyCategoryId = 24, ImagePath = (string?)null },
+                new { NameAr = "علب كهرباء",                    NameEn = "علب كهرباء",                    Description = "علب كهرباء",                      IsActive = true,  LegacyCategoryId = 24, ImagePath = (string?)null },
+                new { NameAr = "مناهل",                         NameEn = "مناهل",                         Description = "مناهل",                           IsActive = true,  LegacyCategoryId = 4,  ImagePath = (string?)null },
+                new { NameAr = "كرنيش فوم",                     NameEn = "كرنيش فوم",                     Description = "كرنيش فوم",                       IsActive = true,  LegacyCategoryId = 7,  ImagePath = (string?)null },
+                new { NameAr = "رولات تغليف",                   NameEn = "رولات تغليف",                   Description = "رولات تغليف",                     IsActive = true,  LegacyCategoryId = 5,  ImagePath = (string?)null },
+                new { NameAr = "فورسيلينق",                     NameEn = "فورسيلينق",                     Description = "فورسيلينق",                       IsActive = true,  LegacyCategoryId = 7,  ImagePath = (string?)null },
+                new { NameAr = "كباشي بديل الخشب",              NameEn = "كباشي بديل الخشب",              Description = "كباشي بديل الخشب",                IsActive = true,  LegacyCategoryId = 7,  ImagePath = (string?)null },
+                new { NameAr = "بكس",                           NameEn = "بكس",                           Description = "بكس",                             IsActive = true,  LegacyCategoryId = 4,  ImagePath = (string?)null },
+                new { NameAr = "برابيش دش",                    NameEn = "برابيش دش",                    Description = "برابيش دش",                      IsActive = true,  LegacyCategoryId = 4,  ImagePath = (string?)null },
+                new { NameAr = "مرايا حمام",                    NameEn = "مرايا حمام",                    Description = "مرايا حمام",                      IsActive = true,  LegacyCategoryId = 4,  ImagePath = (string?)null },
+                new { NameAr = "مضخات",                         NameEn = "مضخات",                         Description = "مضخات",                           IsActive = true,  LegacyCategoryId = 4,  ImagePath = (string?)null },
+                new { NameAr = "بديل البلاط",                   NameEn = "بديل البلاط",                   Description = "بديل البلاط",                     IsActive = true,  LegacyCategoryId = 13, ImagePath = (string?)null },
+                new { NameAr = "سبوتات 3D مكفولة",             NameEn = "سبوتات 3D مكفولة",             Description = "سبوتات 3D مكفولة",               IsActive = true,  LegacyCategoryId = 24, ImagePath = (string?)null },
+                new { NameAr = "تفلون",                         NameEn = "تفلون",                         Description = "تفلون",                           IsActive = true,  LegacyCategoryId = 4,  ImagePath = (string?)null },
+                new { NameAr = "كف دش مع بربيش",               NameEn = "كف دش مع بربيش",               Description = "كف دش مع بربيش",                 IsActive = true,  LegacyCategoryId = 4,  ImagePath = (string?)null },
+                new { NameAr = "كيزر اردني",                   NameEn = "كيزر اردني",                   Description = "كيزر اردني",                     IsActive = true,  LegacyCategoryId = 28, ImagePath = (string?)null },
+                new { NameAr = "عدد نيجرة",                    NameEn = "عدد نيجرة",                    Description = "عدد نيجرة",                      IsActive = true,  LegacyCategoryId = 4,  ImagePath = (string?)null },
+                new { NameAr = "عوامات",                        NameEn = "عوامات",                        Description = "عوامات",                          IsActive = true,  LegacyCategoryId = 4,  ImagePath = (string?)null },
+                new { NameAr = "ماكنات حف",                     NameEn = "ماكنات حف",                     Description = "ماكنات حف",                       IsActive = true,  LegacyCategoryId = 29, ImagePath = (string?)null },
+                new { NameAr = "مناشير",                        NameEn = "مناشير",                        Description = "مناشير",                          IsActive = true,  LegacyCategoryId = 7,  ImagePath = (string?)null },
+                new { NameAr = "ليزر",                          NameEn = "ليزر",                          Description = "ليزر",                            IsActive = true,  LegacyCategoryId = 7,  ImagePath = (string?)null },
+                new { NameAr = "مضخات غسيل",                    NameEn = "مضخات غسيل",                    Description = "مضخات غسيل",                      IsActive = true,  LegacyCategoryId = 30, ImagePath = (string?)null },
+                new { NameAr = "فلاتر",                         NameEn = "فلاتر",                         Description = "فلاتر",                           IsActive = true,  LegacyCategoryId = 4,  ImagePath = (string?)null },
+                new { NameAr = "رجاج باطون",                    NameEn = "رجاج باطون",                    Description = "رجاج باطون",                      IsActive = true,  LegacyCategoryId = 29, ImagePath = (string?)null },
+                new { NameAr = "أب داون",                       NameEn = "أب داون",                       Description = "أب داون",                         IsActive = true,  LegacyCategoryId = 24, ImagePath = (string?)null },
+                new { NameAr = "فوم جدران رولات شمواه",        NameEn = "فوم جدران رولات شمواه",        Description = "فوم جدران رولات شمواه",          IsActive = true,  LegacyCategoryId = 13, ImagePath = (string?)null },
+                new { NameAr = "فوم رولات بديل رخام",          NameEn = "فوم رولات بديل رخام",          Description = "فوم رولات بديل رخام",            IsActive = true,  LegacyCategoryId = 13, ImagePath = (string?)null },
+                new { NameAr = "صوبات كهربائية",                NameEn = "صوبات كهربائية",                Description = "صوبات كهربائية",                  IsActive = true,  LegacyCategoryId = 24, ImagePath = (string?)null },
+                new { NameAr = "ورق حف",                        NameEn = "ورق حف",                        Description = "ورق حف",                          IsActive = true,  LegacyCategoryId = 9,  ImagePath = (string?)null },
+                new { NameAr = "شور جت",                        NameEn = "شور جت",                        Description = "شور جت",                          IsActive = true,  LegacyCategoryId = 4,  ImagePath = (string?)null },
+                new { NameAr = "سكاكين حديد",                  NameEn = "سكاكين حديد",                  Description = "سكاكين حديد",                    IsActive = true,  LegacyCategoryId = 9,  ImagePath = (string?)null },
+                new { NameAr = "جلد تجزيع",                    NameEn = "جلد تجزيع",                    Description = "جلد تجزيع",                      IsActive = true,  LegacyCategoryId = 9,  ImagePath = (string?)null },
+                new { NameAr = "حفافات يدوية",                  NameEn = "حفافات يدوية",                  Description = "حفافات يدوية",                    IsActive = true,  LegacyCategoryId = 9,  ImagePath = (string?)null }
+            };
+
+            var subCategoryEntities = subCategories.Select(sc => new SubCategory
+            {
+                NameAr = sc.NameAr,
+                NameEn = sc.NameEn,
+                Description = sc.Description,
+                ImagePath = sc.ImagePath,
+                IsActive = sc.IsActive,
+                CategoryId = categoryIdMap[sc.LegacyCategoryId]
+            }).ToList();
+
+            _context.SubCategories.AddRange(subCategoryEntities);
+            await _context.SaveChangesAsync();
         }
 
         private async Task SeedStatusesAsync()
@@ -344,16 +601,34 @@ namespace Warehousing.Data.Services
 
         private async Task SeedStoresAsync()
         {
-            var existingStores = await _context.Stores.ToListAsync();
-            if (existingStores.Any())
+            var existingStores = await _context.Stores.AnyAsync();
+            if (existingStores)
             {
                 return; // Stores already exist
             }
 
             var stores = new List<Store>
             {
-                new Store { Id = 1, NameEn = "Main Warehouse", NameAr = "المستودع الرئيسي", Description = "Primary storage location", Address = "Main Warehouse Address", IsActive = true },
-                new Store { Id = 2, NameEn = "Secondary Warehouse", NameAr = "المستودع الثانوي", Description = "Secondary storage location", Address = "Secondary Warehouse Address", IsActive = true }
+                new Store
+                {
+                    NameEn = "Main Warehouse",
+                    NameAr = "المستودع الرئيسي",
+                    Description = "Primary storage location",
+                    Address = "Main Warehouse Address",
+                    Code = "WH-01",
+                    IsActive = true,
+                    IsMainWarehouse = true
+                },
+                new Store
+                {
+                    NameEn = "Secondary Warehouse",
+                    NameAr = "المستودع الثانوي",
+                    Description = "Secondary storage location",
+                    Address = "Secondary Warehouse Address",
+                    Code = "WH-02",
+                    IsActive = true,
+                    IsMainWarehouse = false
+                }
             };
 
             _context.Stores.AddRange(stores);
@@ -370,7 +645,6 @@ namespace Warehousing.Data.Services
 
             var company = new Company
             {
-                Id = 1,
                 NameEn = "Warehousing Solutions Ltd",
                 NameAr = "شركة حلول المستودعات",
                 AddressEn = "123 Business Street, City Center",
@@ -396,17 +670,29 @@ namespace Warehousing.Data.Services
             // Get all permissions and assign them to admin role
             var permissions = await _context.Permissions.ToListAsync();
             var adminRole = await _context.Roles.FirstOrDefaultAsync(r => r.Code == "ADMIN");
-            
-            if (adminRole != null && permissions.Any())
+
+            if (adminRole == null || !permissions.Any())
             {
-                var rolePermissions = permissions.Select((p, index) => new RolePermission
+                return;
+            }
+
+            var existingPermissionIdsForAdmin = await _context.RolePermissions
+                .Where(rp => rp.RoleId == adminRole.Id)
+                .Select(rp => rp.PermissionId)
+                .ToListAsync();
+
+            var rolePermissionsToAdd = permissions
+                .Where(p => !existingPermissionIdsForAdmin.Contains(p.Id))
+                .Select(p => new RolePermission
                 {
-                    Id = index + 1,
                     RoleId = adminRole.Id,
                     PermissionId = p.Id
-                }).ToList();
+                })
+                .ToList();
 
-                _context.RolePermissions.AddRange(rolePermissions);
+            if (rolePermissionsToAdd.Any())
+            {
+                _context.RolePermissions.AddRange(rolePermissionsToAdd);
                 await _context.SaveChangesAsync();
             }
         }
@@ -415,12 +701,19 @@ namespace Warehousing.Data.Services
         {
             var adminUser = await _context.Users.FirstOrDefaultAsync(u => u.Username == "admin");
             var adminRole = await _context.Roles.FirstOrDefaultAsync(r => r.Code == "ADMIN");
-            
-            if (adminUser != null && adminRole != null)
+
+            if (adminUser == null || adminRole == null)
+            {
+                return;
+            }
+
+            var hasAdminRole = await _context.UserRoles
+                .AnyAsync(ur => ur.UserId == adminUser.Id && ur.RoleId == adminRole.Id);
+
+            if (!hasAdminRole)
             {
                 var userRole = new UserRole
                 {
-                    Id = 1,
                     UserId = adminUser.Id,
                     RoleId = adminRole.Id
                 };
@@ -440,7 +733,6 @@ namespace Warehousing.Data.Services
 
             var workingHours = new WorkingHours
             {
-                Id = 1,
                 Name = "Default Working Hours",
                 Description = "Standard working hours (Sunday to Thursday, 8:00 AM to 5:00 PM)",
                 StartTime = new TimeSpan(8, 0, 0), // 8:00 AM
