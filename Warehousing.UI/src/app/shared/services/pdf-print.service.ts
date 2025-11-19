@@ -59,7 +59,6 @@ export class PdfPrintService {
         }
       },
       error: (err) => {
-        console.warn('Could not load printer configuration:', err);
       }
     });
   }
@@ -104,7 +103,6 @@ export class PdfPrintService {
         return blob;
       }),
       catchError(error => {
-        console.error('Error generating print output:', error);
         throw error;
       })
     );
@@ -161,7 +159,6 @@ export class PdfPrintService {
         }, 10000);
       }
     } catch (error) {
-      console.error('Error printing:', error);
       throw error;
     }
   }
@@ -189,10 +186,8 @@ export class PdfPrintService {
           await device.transferOut(1, bytes);
           await device.close();
           
-          console.log('ESC/POS commands sent to printer via WebUSB');
           return;
         } catch (usbError) {
-          console.warn('WebUSB not available or access denied:', usbError);
         }
       }
 
@@ -209,7 +204,6 @@ export class PdfPrintService {
       // Show message to user
       alert('تم تحميل ملف ESC/POS. يرجى إرساله إلى الطابعة يدوياً أو استخدام برنامج الطباعة المخصص.');
     } catch (error) {
-      console.error('Error sending ESC/POS to printer:', error);
       throw error;
     }
   }
@@ -237,7 +231,6 @@ export class PdfPrintService {
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
     } catch (error) {
-      console.error('Error downloading file:', error);
       throw error;
     }
   }
@@ -263,7 +256,6 @@ export class PdfPrintService {
         }, 10000);
       }
     } catch (error) {
-      console.error('Error printing order PDF:', error);
       throw error;
     }
   }
@@ -285,7 +277,6 @@ export class PdfPrintService {
         URL.revokeObjectURL(url);
       }
     } catch (error) {
-      console.error('Error downloading order PDF:', error);
       throw error;
     }
   }
@@ -311,7 +302,6 @@ export class PdfPrintService {
         }, 10000);
       }
     } catch (error) {
-      console.error('Error printing report PDF:', error);
       throw error;
     }
   }
@@ -333,7 +323,6 @@ export class PdfPrintService {
         URL.revokeObjectURL(url);
       }
     } catch (error) {
-      console.error('Error downloading report PDF:', error);
       throw error;
     }
   }

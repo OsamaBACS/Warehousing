@@ -57,7 +57,6 @@ export class InitialStockSetupComponent implements OnInit {
         this.products = (res || []).filter(product => this.authService.hasProduct(product.id!));
       },
       error: (err) => {
-        console.error('Error loading products:', err);
         this.notification.error('خطأ في تحميل المنتجات', 'Initial Stock Setup');
       }
     });
@@ -69,7 +68,6 @@ export class InitialStockSetupComponent implements OnInit {
         this.stores = res || [];
       },
       error: (err) => {
-        console.error('Error loading stores:', err);
         this.notification.error('خطأ في تحميل المستودعات', 'Initial Stock Setup');
       }
     });
@@ -89,7 +87,6 @@ export class InitialStockSetupComponent implements OnInit {
         },
         error: (err) => {
           this.loading = false;
-          console.error('Error creating initial stock:', err);
           this.notification.error(err.error || 'خطأ في إنشاء المخزون الابتدائي', 'Initial Stock Setup');
         }
       });
@@ -153,7 +150,6 @@ export class InitialStockSetupComponent implements OnInit {
       },
       error: (err) => {
         this.loading = false;
-        console.error('Error creating bulk initial stock:', err);
         this.notification.error(err.error || 'خطأ في إنشاء المخزون الابتدائي المجمع', 'Bulk Initial Stock');
       }
     });

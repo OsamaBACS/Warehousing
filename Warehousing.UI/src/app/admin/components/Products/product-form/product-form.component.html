@@ -292,37 +292,163 @@
         <div class="bg-gradient-to-r from-indigo-500 to-purple-600 px-6 py-4">
           <h2 class="text-xl font-bold text-white flex items-center">
             <i class="bi bi-gear mr-3"></i>
-            إدارة المتغيرات والمكونات
+            المتغيرات والمكونات
           </h2>
         </div>
         
-        <div class="p-6">
-          <!-- Product Variants -->
-          <div class="mb-8">
-            <div class="bg-blue-50 rounded-xl p-4 mb-4">
-              <h3 class="text-lg font-semibold text-blue-900 flex items-center">
-                <i class="bi bi-tags mr-2"></i>
-                متغيرات المنتج
-              </h3>
-              <p class="text-blue-700 text-sm mt-1">إدارة المتغيرات المختلفة للمنتج (الحجم، اللون، إلخ)</p>
+        <div class="p-6 space-y-8">
+          <!-- Product Variants Summary -->
+          <div>
+            <div class="flex items-center justify-between mb-4">
+              <div>
+                <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+                  <i class="bi bi-tags mr-2 text-indigo-500"></i>
+                  متغيرات المنتج
+                </h3>
+                <p class="text-gray-500 text-sm mt-1">عرض سريع لجميع المتغيرات المرتبطة بهذا المنتج</p>
+              </div>
+              <button type="button" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+                (click)="openVariantManager()">
+                <i class="bi bi-sliders mr-2"></i>
+                إدارة المتغيرات
+              </button>
             </div>
-            <app-product-variants 
-              [productId]="productForm.get('id')?.value" 
+            <div class="overflow-x-auto border border-gray-200 rounded-xl">
+              <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                  <tr>
+                    <th class="px-4 py-3 text-right text-xs font-semibold text-gray-600 uppercase">الاسم</th>
+                    <th class="px-4 py-3 text-right text-xs font-semibold text-gray-600 uppercase">الكود</th>
+                    <th class="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase">الحالة</th>
+                    <th class="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase">سعر إضافي</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                  <tr *ngFor="let variant of variantSummary">
+                    <td class="px-4 py-3 text-sm font-medium text-gray-900">{{ variant.name }}</td>
+                    <td class="px-4 py-3 text-sm text-gray-600">{{ variant.code || '-' }}</td>
+                    <td class="px-4 py-3 text-sm text-center">
+                      <span class="px-3 py-1 rounded-full text-xs font-semibold"
+                        [class.bg-green-100]="variant.isActive"
+                        [class.text-green-700]="variant.isActive"
+                        [class.bg-red-100]="!variant.isActive"
+                        [class.text-red-700]="!variant.isActive">
+                        {{ variant.isActive ? 'نشط' : 'متوقف' }}
+                      </span>
+                    </td>
+                    <td class="px-4 py-3 text-sm text-center text-gray-700">
+                      {{ variant.priceAdjustment || 0 | number:'1.2-2' }}
+                    </td>
+                  </tr>
+                  <tr *ngIf="variantSummary.length === 0">
+                    <td colspan="4" class="px-4 py-6 text-center text-gray-500">
+                      لا توجد متغيرات مرتبطة بهذا المنتج حالياً
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Product Modifiers Summary -->
+          <div>
+            <div class="flex items-center justify-between mb-4">
+              <div>
+                <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+                  <i class="bi bi-list-ul mr-2 text-purple-500"></i>
+                  مكونات المنتج
+                </h3>
+                <p class="text-gray-500 text-sm mt-1">عرض المكونات الإضافية المفعّلة لهذا المنتج</p>
+              </div>
+              <button type="button" class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+                (click)="openModifierManager()">
+                <i class="bi bi-sliders mr-2"></i>
+                إدارة المكونات
+              </button>
+            </div>
+            <div class="overflow-x-auto border border-gray-200 rounded-xl">
+              <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                  <tr>
+                    <th class="px-4 py-3 text-right text-xs font-semibold text-gray-600 uppercase">المكون</th>
+                    <th class="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase">إجباري</th>
+                    <th class="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase">الحد الأقصى للاختيارات</th>
+                    <th class="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase">الحالة</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                  <tr *ngFor="let modifier of modifierSummary">
+                    <td class="px-4 py-3 text-sm font-medium text-gray-900">{{ modifier.modifier?.name || modifier.modifierName }}</td>
+                    <td class="px-4 py-3 text-sm text-center">
+                      <span class="px-2 py-1 rounded-full text-xs font-semibold"
+                        [class.bg-blue-100]="modifier.isRequired"
+                        [class.text-blue-700]="modifier.isRequired"
+                        [class.bg-gray-100]="!modifier.isRequired"
+                        [class.text-gray-600]="!modifier.isRequired">
+                        {{ modifier.isRequired ? 'نعم' : 'اختياري' }}
+                      </span>
+                    </td>
+                    <td class="px-4 py-3 text-sm text-center text-gray-700">{{ modifier.maxSelections || 1 }}</td>
+                    <td class="px-4 py-3 text-sm text-center">
+                      <span class="px-3 py-1 rounded-full text-xs font-semibold"
+                        [class.bg-green-100]="modifier.isActive"
+                        [class.text-green-700]="modifier.isActive"
+                        [class.bg-red-100]="!modifier.isActive"
+                        [class.text-red-700]="!modifier.isActive">
+                        {{ modifier.isActive ? 'نشط' : 'متوقف' }}
+                      </span>
+                    </td>
+                  </tr>
+                  <tr *ngIf="modifierSummary.length === 0">
+                    <td colspan="4" class="px-4 py-6 text-center text-gray-500">
+                      لا توجد مكونات مرتبطة بهذا المنتج
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Variant Manager Overlay -->
+      <div *ngIf="showVariantManager" class="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm flex items-start justify-center z-40 overflow-y-auto">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl mt-10 mb-10">
+          <div class="flex items-center justify-between px-6 py-4 border-b">
+            <h3 class="text-xl font-bold text-gray-900 flex items-center">
+              <i class="bi bi-sliders mr-2 text-indigo-600"></i>
+              إدارة متغيرات المنتج
+            </h3>
+            <button type="button" class="w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center"
+              (click)="closeVariantManager()">
+              <i class="bi bi-x text-gray-600"></i>
+            </button>
+          </div>
+          <div class="p-6">
+            <app-product-variants
+              [productId]="productForm.get('id')?.value"
               (variantsUpdated)="onVariantsUpdated($event)">
             </app-product-variants>
           </div>
+        </div>
+      </div>
 
-          <!-- Product Modifiers -->
-          <div>
-            <div class="bg-purple-50 rounded-xl p-4 mb-4">
-              <h3 class="text-lg font-semibold text-purple-900 flex items-center">
-                <i class="bi bi-list-ul mr-2"></i>
-                مكونات المنتج
-              </h3>
-              <p class="text-purple-700 text-sm mt-1">إدارة المكونات الإضافية والخيارات للمنتج</p>
-            </div>
-            <app-product-modifiers 
-              [productId]="productForm.get('id')?.value" 
+      <!-- Modifier Manager Overlay -->
+      <div *ngIf="showModifierManager" class="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm flex items-start justify-center z-40 overflow-y-auto">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl mt-10 mb-10">
+          <div class="flex items-center justify-between px-6 py-4 border-b">
+            <h3 class="text-xl font-bold text-gray-900 flex items-center">
+              <i class="bi bi-sliders mr-2 text-purple-600"></i>
+              إدارة مكونات المنتج
+            </h3>
+            <button type="button" class="w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center"
+              (click)="closeModifierManager()">
+              <i class="bi bi-x text-gray-600"></i>
+            </button>
+          </div>
+          <div class="p-6">
+            <app-product-modifiers
+              [productId]="productForm.get('id')?.value"
               (modifiersUpdated)="onModifiersUpdated($event)">
             </app-product-modifiers>
           </div>

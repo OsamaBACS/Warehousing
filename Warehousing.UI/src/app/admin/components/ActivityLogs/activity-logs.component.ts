@@ -74,7 +74,6 @@ export class ActivityLogsComponent implements OnInit, DoCheck {
         this.loading = false;
       },
       error: (error: unknown) => {
-        console.error('Error loading activity logs:', error);
         this.notificationService.error('Failed to load activity logs');
         this.loading = false;
       }

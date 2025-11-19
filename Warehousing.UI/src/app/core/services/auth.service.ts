@@ -28,31 +28,20 @@ export class AuthService {
   login(credentials: { username: string, password: string }) {
     return this.http.post<LoginResult>(`${this.url}login`, credentials).pipe(
       tap(res => {
-        console.log('AuthService response:', res);
         if (res.success && res.token) {
           localStorage.setItem('jwt_token', res.token);
           
           try {
             // Debug: Log the token structure
-            console.log('=== JWT TOKEN DEBUG START ===');
-            console.log('JWT Token length:', res.token.length);
-            console.log('JWT Token preview:', res.token.substring(0, 100) + '...');
             
             const tokenParts = res.token.split('.');
-            console.log('Token parts count:', tokenParts.length);
-            console.log('Header:', tokenParts[0]);
-            console.log('Payload (base64):', tokenParts[1]);
-            console.log('Signature:', tokenParts[2]);
             
             if (tokenParts.length !== 3) {
-              console.error('Invalid JWT token format - expected 3 parts, got', tokenParts.length);
               throw new Error('Invalid JWT token format - expected 3 parts, got ' + tokenParts.length);
             }
             
             // Validate base64 encoding
             const payloadBase64 = tokenParts[1];
-            console.log('Payload base64 length:', payloadBase64.length);
-            console.log('Payload base64 preview:', payloadBase64.substring(0, 100) + '...');
             
             // Check if it's valid base64
             let decodedPayload;
@@ -75,27 +64,16 @@ export class AuthService {
               }
               decodedPayload = new TextDecoder('utf-8').decode(bytes);
               
-              console.log('Base64 decoding successful, payload length:', decodedPayload.length);
-              console.log('Decoded payload preview:', decodedPayload.substring(0, 200) + '...');
             } catch (base64Error) {
               // Fallback: try direct atob for ASCII-only tokens
               try {
                 decodedPayload = atob(payloadBase64);
-                console.log('Base64 decoding successful (ASCII fallback), payload length:', decodedPayload.length);
               } catch (fallbackError) {
-                console.error('Base64 decoding error:', base64Error);
-                console.error('Fallback decoding also failed:', fallbackError);
-                console.error('Problematic payload (full):', payloadBase64);
-                console.error('Problematic payload (first 200 chars):', payloadBase64.substring(0, 200));
                 throw new Error('Invalid base64 encoding in JWT payload: ' + (base64Error as Error).message);
               }
             }
             
             const payload = JSON.parse(decodedPayload);
-            console.log('JWT payload parsed successfully');
-            console.log('Payload keys:', Object.keys(payload));
-            console.log('Payload values preview:', JSON.stringify(payload, null, 2).substring(0, 500) + '...');
-            console.log('=== JWT TOKEN DEBUG END ===');
 
             // Clear existing data
             localStorage.removeItem('permissions');
@@ -115,16 +93,11 @@ export class AuthService {
 
             this.setUserPermissions(permissions, categories, products, subCategories, payload.UserId, payload.UserName, isAdmin, nameEn, nameAr);
           } catch (error) {
-            console.error('Error parsing JWT token:', error);
-            console.error('Token that failed to parse:', res.token);
-            console.error('Token length:', res.token.length);
-            console.error('Token preview:', res.token.substring(0, 100) + '...');
             
             // Clear everything on parsing error
             this.logout();
             
             // Don't show alert immediately, let the user see the console logs first
-            console.error('Login failed due to JWT token parsing error. Check console for details.');
             
             // Optional: Show a more informative error after a delay
             setTimeout(() => {
@@ -252,7 +225,6 @@ export class AuthService {
             this.permissions = [];
           }
         } catch (e) {
-          console.error('Failed to parse permissions from localStorage', e);
           this.permissions = [];
         }
       } else {
@@ -267,7 +239,6 @@ export class AuthService {
             this.categoryIds = [];
           }
         } catch (e) {
-          console.error('Failed to parse categoryIds from localStorage', e);
           this.categoryIds = [];
         }
       } else {
@@ -282,7 +253,6 @@ export class AuthService {
             this.productIds = [];
           }
         } catch (e) {
-          console.error('Failed to parse productIds from localStorage', e);
           this.productIds = [];
         }
       } else {
@@ -297,7 +267,6 @@ export class AuthService {
             this.subCategoryIds = [];
           }
         } catch (e) {
-          console.error('Failed to parse subCategoryIds from localStorage', e);
           this.subCategoryIds = [];
         }
       } else {
@@ -309,7 +278,6 @@ export class AuthService {
         try {
           this.userId = JSON.parse(userId);
         } catch (e) {
-          console.error('Failed to parse userId from localStorage', e);
           this.userId = '';
         }
       }
@@ -319,7 +287,6 @@ export class AuthService {
         try {
           this.username = JSON.parse(username);
         } catch (e) {
-          console.error('Failed to parse username from localStorage', e);
           this.username = '';
         }
       }
@@ -329,7 +296,6 @@ export class AuthService {
         try {
           this.nameEn = JSON.parse(nameEn);
         } catch (e) {
-          console.error('Failed to parse nameEn from localStorage', e);
           this.nameEn = '';
         }
       }
@@ -339,7 +305,6 @@ export class AuthService {
         try {
           this.nameAr = JSON.parse(nameAr);
         } catch (e) {
-          console.error('Failed to parse nameAr from localStorage', e);
           this.nameAr = '';
         }
       }
@@ -349,12 +314,10 @@ export class AuthService {
         try {
           this.isAdmin = JSON.parse(isAdmin);
         } catch (e) {
-          console.error('Failed to parse isAdmin from localStorage', e);
           this.isAdmin = false;
         }
       }
     } catch (error) {
-      console.error('Critical error in loadPermissionsFromStorage:', error);
       // Clear all data on critical error
       this.clearUser();
       this.clearLocalStorage();

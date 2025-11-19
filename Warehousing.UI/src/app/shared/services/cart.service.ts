@@ -63,7 +63,6 @@ export class CartService {
         this.stores = stores;
       },
       error: (error) => {
-        console.error('Error loading stores:', error);
       }
     });
   }
@@ -115,7 +114,6 @@ export class CartService {
       this.cartCount$.next(0);
       // If cart form exists but has no items, clear it
       if (savedcartForm) {
-        console.log('Cart form exists but has no items, clearing...');
         localStorage.removeItem('cartForm');
         this.cartForm = this.createCartForm();
       }
@@ -125,7 +123,6 @@ export class CartService {
   loadOrder(order: OrderDto): void {
     this.clearCart(); // make sure fresh start
     this.orderObject = order;
-    console.log(this.orderObject)
     this.orderTypeId = order.orderTypeId!;
 
     this.cartForm.patchValue({
@@ -279,7 +276,6 @@ export class CartService {
         return false;
       }
     } catch (error) {
-      console.error('Stock validation error:', error);
       this.notification.error('خطأ في التحقق من المخزون', 'خطأ');
       return false;
     }
@@ -337,7 +333,6 @@ export class CartService {
 
       return true;
     } catch (error) {
-      console.error('Store and variant validation error:', error);
       this.notification.error('خطأ في التحقق من المخزون', 'خطأ');
       return false;
     }
@@ -401,7 +396,6 @@ export class CartService {
         return false;
       }
     } catch (error) {
-      console.error('Stock validation error:', error);
       this.notification.error('خطأ في التحقق من المخزون', 'خطأ');
       return false;
     }

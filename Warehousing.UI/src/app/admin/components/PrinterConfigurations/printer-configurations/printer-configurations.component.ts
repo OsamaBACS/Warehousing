@@ -35,7 +35,6 @@ export class PrinterConfigurationsComponent implements OnInit {
         this.loading = false;
       },
       error: (err) => {
-        console.error('Error loading printer configurations:', err);
         this.toastr.error('حدث خطأ أثناء تحميل إعدادات الطابعة', 'خطأ');
         this.loading = false;
       }
@@ -63,7 +62,6 @@ export class PrinterConfigurationsComponent implements OnInit {
           this.loadConfigurations();
         },
         error: (err) => {
-          console.error('Error deleting printer configuration:', err);
           this.toastr.error(err.error || 'حدث خطأ أثناء حذف إعدادات الطابعة', 'خطأ');
         }
       });

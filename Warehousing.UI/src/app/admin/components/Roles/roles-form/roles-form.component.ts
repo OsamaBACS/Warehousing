@@ -46,10 +46,8 @@ export class RolesFormComponent implements OnInit {
 
   ngOnInit(): void {
     // Debug: Check if permissions are loaded
-    console.log('Permissions loaded:', this.permissions?.length);
     if (this.permissions) {
       const printerPerms = this.permissions.filter(p => p.code?.includes('PRINTER'));
-      console.log('Printer permissions found:', printerPerms);
     }
     this.groupPermissions();
     this.loadPrinterConfigurations();
@@ -74,7 +72,6 @@ export class RolesFormComponent implements OnInit {
               this.initializingForm(roleDtoForAdd)
             },
             error: (err) => {
-              console.log(err.error);
             }
           });
       }
@@ -87,7 +84,6 @@ export class RolesFormComponent implements OnInit {
         this.printerConfigurations = configs;
       },
       error: (err) => {
-        console.error('Error loading printer configurations:', err);
       }
     });
   }
@@ -96,18 +92,15 @@ export class RolesFormComponent implements OnInit {
     this.groupedPermissions = {};
     
     if (!this.permissions || this.permissions.length === 0) {
-      console.warn('No permissions loaded!');
       return;
     }
     
     this.permissions.forEach(permission => {
       if (!permission.code) {
-        console.warn('Permission without code:', permission);
         return;
       }
       // Debug: Log printer-related permissions
       if (permission.code.includes('PRINTER') || permission.code.includes('printer')) {
-        console.log('Found printer permission:', permission.code, permission.nameAr);
       }
       let module = this.getModuleFromCode(permission.code);
       if (!this.groupedPermissions[module]) {
@@ -118,10 +111,7 @@ export class RolesFormComponent implements OnInit {
     
     // Debug: Check if printer config module was created
     if (this.groupedPermissions['admin/printer-configurations']) {
-      console.log('Printer configurations module found with', this.groupedPermissions['admin/printer-configurations'].length, 'permissions');
     } else {
-      console.warn('Printer configurations module NOT found in grouped permissions');
-      console.log('Available modules:', Object.keys(this.groupedPermissions));
     }
   }
 
@@ -388,7 +378,6 @@ export class RolesFormComponent implements OnInit {
           }
         },
         error: (err) => {
-          console.log(err.error);
           this.toastr.error(err.error, 'Role')
         }
       });

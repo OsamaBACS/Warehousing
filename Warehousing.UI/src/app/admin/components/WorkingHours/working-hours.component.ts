@@ -62,7 +62,6 @@ export class WorkingHoursComponent implements OnInit, DoCheck {
     
     // Validate it's a valid day (0-6)
     if (isNaN(dayNum) || dayNum < 0 || dayNum > 6) {
-      console.warn('Invalid day number:', dayNumber);
       return '';
     }
     
@@ -214,7 +213,6 @@ export class WorkingHoursComponent implements OnInit, DoCheck {
         this.loading = false;
       },
       error: (error: unknown) => {
-        console.error('Error loading working hours:', error);
         this.notificationService.error('Failed to load working hours configuration');
         this.loading = false;
       }
@@ -274,7 +272,6 @@ export class WorkingHoursComponent implements OnInit, DoCheck {
         this.workingHoursStatus = status;
       },
       error: (error: unknown) => {
-        console.error('Error loading working hours status:', error);
       }
     });
   }
@@ -312,7 +309,6 @@ export class WorkingHoursComponent implements OnInit, DoCheck {
       createdBy: this.workingHours?.createdBy || ''
     };
 
-    console.log('Saving working hours:', updatedData); // Debug log
 
     this.workingHoursService.updateWorkingHours(updatedData).subscribe({
       next: (data: WorkingHours) => {
@@ -325,7 +321,6 @@ export class WorkingHoursComponent implements OnInit, DoCheck {
         this.loadWorkingHours();
       },
       error: (error: unknown) => {
-        console.error('Error updating working hours:', error);
         this.notificationService.error('Failed to update working hours');
         this.saving = false;
       }
@@ -354,7 +349,6 @@ export class WorkingHoursComponent implements OnInit, DoCheck {
         this.resetExceptionForm();
       },
       error: (error: unknown) => {
-        console.error('Error adding exception:', error);
         this.notificationService.error('Failed to add exception');
       }
     });
@@ -394,7 +388,6 @@ export class WorkingHoursComponent implements OnInit, DoCheck {
         this.resetExceptionForm();
       },
       error: (error: unknown) => {
-        console.error('Error updating exception:', error);
         this.notificationService.error('Failed to update exception');
       }
     });
@@ -408,7 +401,6 @@ export class WorkingHoursComponent implements OnInit, DoCheck {
           this.loadWorkingHours();
         },
         error: (error: unknown) => {
-          console.error('Error deleting exception:', error);
           this.notificationService.error('Failed to delete exception');
         }
       });

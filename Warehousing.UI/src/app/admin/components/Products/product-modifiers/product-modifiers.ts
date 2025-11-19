@@ -73,7 +73,6 @@ export class ProductModifiersComponent implements OnInit {
         this.loading = false;
       },
       error: (error) => {
-        console.error('Error loading modifier groups:', error);
         this.loading = false;
       }
     });
@@ -85,7 +84,6 @@ export class ProductModifiersComponent implements OnInit {
         this.availableModifiers = modifiers;
       },
       error: (error) => {
-        console.error('Error loading modifiers:', error);
       }
     });
   }
@@ -99,7 +97,6 @@ export class ProductModifiersComponent implements OnInit {
         }
       },
       error: (error) => {
-        console.error('Error loading modifier options:', error);
       }
     });
   }
@@ -124,7 +121,6 @@ export class ProductModifiersComponent implements OnInit {
           this.modifiersUpdated.emit(this.modifierGroups);
         },
         error: (error) => {
-          console.error('Error creating modifier group:', error);
         }
       });
     }
@@ -155,7 +151,6 @@ export class ProductModifiersComponent implements OnInit {
           this.resetOptionForm();
         },
         error: (error) => {
-          console.error('Error creating modifier option:', error);
         }
       });
     }
@@ -205,7 +200,6 @@ export class ProductModifiersComponent implements OnInit {
           this.modifiersUpdated.emit(this.modifierGroups);
         },
         error: (error) => {
-          console.error('Error deleting modifier group:', error);
         }
       });
     }
@@ -222,7 +216,6 @@ export class ProductModifiersComponent implements OnInit {
           }
         },
         error: (error) => {
-          console.error('Error deleting modifier option:', error);
         }
       });
     }

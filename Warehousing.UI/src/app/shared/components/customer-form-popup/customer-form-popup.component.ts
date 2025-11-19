@@ -49,7 +49,6 @@ export class CustomerFormPopupComponent implements OnInit {
         },
         error: (error: any) => {
           this.toastr.error('حدث خطأ أثناء إنشاء العميل', 'خطأ');
-          console.error('Error creating customer:', error);
           this.isLoading = false;
         }
       });

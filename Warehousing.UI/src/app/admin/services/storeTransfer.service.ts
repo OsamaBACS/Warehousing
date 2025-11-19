@@ -8,37 +8,47 @@ import { StoreTransfer, StoreTransferDto } from '../models/storeTransfer';
 })
 export class StoreTransferService {
 
+  private readonly baseUrl = `${environment.baseUrl}/StoreTransfer`;
+
   constructor(private http: HttpClient) { }
-  url = environment.baseUrl + '/StoreTransfers/';
 
-  GetTransfers() {
-    return this.http.get<StoreTransfer[]>(`${this.url}GetTransfers`);
+  getTransfers() {
+    return this.http.get<StoreTransfer[]>(this.baseUrl);
   }
 
-  GetTransferById(transferId: number) {
-    return this.http.get<StoreTransfer>(`${this.url}GetTransferById?Id=${transferId}`);
+  getTransferById(transferId: number) {
+    return this.http.get<StoreTransfer>(`${this.baseUrl}/${transferId}`);
   }
 
-  GetTransferWithItems(transferId: number) {
-    return this.http.get<StoreTransfer>(`${this.url}GetTransferWithItems?Id=${transferId}`);
+  getTransferWithItems(transferId: number) {
+    return this.http.get<StoreTransfer>(`${this.baseUrl}/with-items/${transferId}`);
   }
 
-  GetTransfersByStore(storeId: number) {
-    return this.http.get<StoreTransfer[]>(`${this.url}GetTransfersByStore?storeId=${storeId}`);
+  getTransfersByStore(storeId: number, isFromStore: boolean = true) {
+    return this.http.get<StoreTransfer[]>(`${this.baseUrl}/by-store/${storeId}?isFromStore=${isFromStore}`);
   }
 
-  CreateTransfer(transfer: StoreTransferDto) {
-    return this.http.post<any>(`${this.url}CreateTransfer`, transfer);
+  getTransfersByStatus(statusId: number) {
+    return this.http.get<StoreTransfer[]>(`${this.baseUrl}/by-status/${statusId}`);
   }
 
-  UpdateTransfer(transferId: number, transfer: StoreTransferDto) {
-    return this.http.put<any>(`${this.url}UpdateTransfer?Id=${transferId}`, transfer);
+  createTransfer(transfer: StoreTransferDto) {
+    return this.http.post<StoreTransfer>(this.baseUrl, transfer);
   }
 
-  DeleteTransfer(transferId: number) {
-    return this.http.delete<any>(`${this.url}DeleteTransfer?Id=${transferId}`);
+  updateTransfer(transferId: number, transfer: StoreTransferDto) {
+    return this.http.put<StoreTransfer>(`${this.baseUrl}/${transferId}`, transfer);
+  }
+
+  deleteTransfer(transferId: number) {
+    return this.http.delete<void>(`${this.baseUrl}/${transferId}`);
+  }
+
+  completeTransfer(transferId: number) {
+    return this.http.post(`${this.baseUrl}/${transferId}/complete`, {});
+  }
+
+  cancelTransfer(transferId: number) {
+    return this.http.post(`${this.baseUrl}/${transferId}/cancel`, {});
   }
 }
-
-
-

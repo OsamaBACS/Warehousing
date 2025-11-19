@@ -59,7 +59,6 @@ export class InitialStockComponent implements OnInit {
       this.stores = stores || [];
       this.isLoading = false;
     }).catch(error => {
-      console.error('Error loading data:', error);
       this.toastr.error('خطأ في تحميل البيانات', 'خطأ');
       this.isLoading = false;
     });
@@ -114,7 +113,6 @@ export class InitialStockComponent implements OnInit {
           this.isSubmitting = false;
         },
         error: (error) => {
-          console.error('Error setting up initial stock:', error);
           this.toastr.error('خطأ في إعداد الرصيد الابتدائي', 'خطأ');
           this.isSubmitting = false;
         }
