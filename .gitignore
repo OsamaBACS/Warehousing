@@ -53,6 +53,9 @@ Warehousing.UI/.env
 Warehousing.UI/.env.*.local
 Warehousing.UI/.npm/
 Warehousing.UI/package-lock.json
+/Warehousing.Api/actualValues.txt
+.env
+*.env
 
 # Angular test coverage
 Warehousing.UI/coverage/
