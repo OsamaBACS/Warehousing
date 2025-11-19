@@ -13,6 +13,7 @@ import { StoreSimple } from '../../admin/models/StoreSimple';
 import { OrderDto } from '../../admin/models/OrderDto';
 import { OrderItemDto } from '../../admin/models/OrderItemDto';
 import { AuthService } from '../../core/services/auth.service';
+import { ImageUrlService } from '../../shared/services/image-url.service';
 // Removed unnecessary imports since we navigate to detail page
 
 @Component({
@@ -32,6 +33,7 @@ export class OrderProductsComponent implements OnInit {
     private breadcrumbService: BreadcrumbService,
     private orderBreadcrumbService: OrderBreadcrumbService,
     private authService: AuthService,
+    public imageUrlService: ImageUrlService,
     // Removed unnecessary services since we navigate to detail page
   ) {
     this.subCategories = this.route.snapshot.data['subCategoriesResolver'];

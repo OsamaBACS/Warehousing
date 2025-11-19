@@ -5,6 +5,8 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
 import { SubCategory } from '../../../models/SubCategory';
 import { Category } from '../../../models/category';
+import { ImageUrlService } from '../../../../shared/services/image-url.service';
+import { environment } from '../../../../../environments/environment';
 
 @Component({
   selector: 'app-sub-category-form',
@@ -16,13 +18,15 @@ export class SubCategoryFormComponent implements OnInit {
 
   subCategoryForm!: FormGroup;
   categories: Category[] = [];
+  serverUrl = environment.resourcesUrl || '';
 
   constructor(
     private fb: FormBuilder,
     private subCategoryService: SubCategoryService,
     private router: Router,
     private route: ActivatedRoute,
-    private toastr: ToastrService
+    private toastr: ToastrService,
+    public imageUrlService: ImageUrlService
   ) {
     this.categories = this.route.snapshot.data['categoriesResolver'];
   }

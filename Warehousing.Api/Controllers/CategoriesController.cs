@@ -23,6 +23,20 @@ namespace Warehousing.Api.Controllers
             _fileStorageService = fileStorageService;
         }
 
+        private string GetImageUrl(string? imagePath)
+        {
+            if (string.IsNullOrEmpty(imagePath))
+                return string.Empty;
+
+            if (_fileStorageService != null)
+            {
+                return _fileStorageService.GetFileUrl(imagePath);
+            }
+
+            // Fallback: return relative path
+            return $"/{imagePath.Replace("\\", "/")}";
+        }
+
         [HttpGet]
         [Route("GetCategories")]
         public async Task<IActionResult> GetCategories()
@@ -33,6 +47,13 @@ namespace Warehousing.Api.Controllers
                     .GetAll()
                     .ProjectTo<CategorySimpleDto>(_mapper.ConfigurationProvider)
                     .ToListAsync();
+                
+                // Convert image paths to URLs
+                foreach (var category in list)
+                {
+                    category.ImagePath = GetImageUrl(category.ImagePath);
+                }
+                
                 return Ok(list);
             }
             catch (Exception ex)
@@ -51,6 +72,13 @@ namespace Warehousing.Api.Controllers
                     .GetByCondition(c => c.IsActive)
                     .ProjectTo<CategorySimpleDto>(_mapper.ConfigurationProvider)
                     .ToListAsync();
+                
+                // Convert image paths to URLs
+                foreach (var category in list)
+                {
+                    category.ImagePath = GetImageUrl(category.ImagePath);
+                }
+                
                 return Ok(list);
             }
             catch (Exception ex)
@@ -74,6 +102,9 @@ namespace Warehousing.Api.Controllers
                 {
                     return NotFound("Category Not Found!");
                 }
+                
+                // Convert image path to URL
+                category.ImagePath = GetImageUrl(category.ImagePath);
                 
                 return Ok(category);
             }
@@ -156,7 +187,9 @@ namespace Warehousing.Api.Controllers
                         
                         _mapper.Map(dto, CategoryToUpdate);
                         var result = await _unitOfWork.CategoryRepo.UpdateAsync(CategoryToUpdate);
-                        return Ok(_mapper.Map<CategoryDto>(result));
+                        var resultDto = _mapper.Map<CategoryDto>(result);
+                        resultDto.ImagePath = GetImageUrl(resultDto.ImagePath);
+                        return Ok(resultDto);
                     }
                     else
                     {
@@ -169,7 +202,9 @@ namespace Warehousing.Api.Controllers
                     var result = await _unitOfWork.CategoryRepo.CreateAsync(category);
                     if (result != null)
                     {
-                        return Ok(_mapper.Map<CategoryDto>(result));
+                        var resultDto = _mapper.Map<CategoryDto>(result);
+                        resultDto.ImagePath = GetImageUrl(resultDto.ImagePath);
+                        return Ok(resultDto);
                     }
                     else
                     {
@@ -225,6 +260,20 @@ namespace Warehousing.Api.Controllers
                     .ProjectTo<CategoryDto>(_mapper.ConfigurationProvider)
                     .ToListAsync();
 
+                // Convert image paths to URLs
+                foreach (var category in categories)
+                {
+                    category.ImagePath = GetImageUrl(category.ImagePath);
+                    // Also convert subcategory image paths
+                    if (category.SubCategories != null)
+                    {
+                        foreach (var subCategory in category.SubCategories)
+                        {
+                            subCategory.ImagePath = GetImageUrl(subCategory.ImagePath);
+                        }
+                    }
+                }
+
                 return Ok(categories);
             }
             catch (Exception ex)
@@ -244,6 +293,12 @@ namespace Warehousing.Api.Controllers
                                          c.Description.Contains(searchTerm))
                     .ProjectTo<CategoryDto>(_mapper.ConfigurationProvider)
                     .ToListAsync();
+
+                // Convert image paths to URLs
+                foreach (var category in categories)
+                {
+                    category.ImagePath = GetImageUrl(category.ImagePath);
+                }
 
                 return Ok(categories);
             }

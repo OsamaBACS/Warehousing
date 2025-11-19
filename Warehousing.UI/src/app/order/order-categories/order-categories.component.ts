@@ -12,6 +12,7 @@ import { environment } from '../../../environments/environment';
 import { ProductsService } from '../../admin/services/products.service';
 import { FormControl } from '@angular/forms';
 import { Product } from '../../admin/models/product';
+import { ImageUrlService } from '../../shared/services/image-url.service';
 
 @Component({
   selector: 'app-order-categories',
@@ -29,7 +30,8 @@ export class OrderCategoriesComponent implements OnInit, OnDestroy {
     private breadcrumbService: BreadcrumbService,
     private orderBreadcrumbService: OrderBreadcrumbService,
     private authService: AuthService,
-    private productsService: ProductsService
+    private productsService: ProductsService,
+    public imageUrlService: ImageUrlService
   ) { }
 
   ngOnDestroy(): void {

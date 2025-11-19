@@ -1,5 +1,6 @@
 using Warehousing.Repo.Dtos;
 using Warehousing.Repo.Shared;
+using Warehousing.Repo.Interfaces;
 using AutoMapper;
 using AutoMapper.QueryableExtensions;
 using Microsoft.AspNetCore.Mvc;
@@ -14,11 +15,27 @@ namespace Warehousing.Api.Controllers
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
+        private readonly IFileStorageService? _fileStorageService;
 
-        public ProductsController(IUnitOfWork unitOfWork, IMapper mapper)
+        public ProductsController(IUnitOfWork unitOfWork, IMapper mapper, IFileStorageService? fileStorageService = null)
         {
             _unitOfWork = unitOfWork;
             _mapper = mapper;
+            _fileStorageService = fileStorageService;
+        }
+
+        private string GetImageUrl(string? imagePath)
+        {
+            if (string.IsNullOrEmpty(imagePath))
+                return string.Empty;
+
+            if (_fileStorageService != null)
+            {
+                return _fileStorageService.GetFileUrl(imagePath);
+            }
+
+            // Fallback: return relative path
+            return $"/{imagePath.Replace("\\", "/")}";
         }
 
         [HttpGet]
@@ -123,7 +140,7 @@ namespace Warehousing.Api.Controllers
                     Description = p.Description ?? string.Empty,
                     CostPrice = p.CostPrice,
                     SellingPrice = p.SellingPrice,
-                    ImagePath = p.ImagePath,
+                    ImagePath = GetImageUrl(p.ImagePath),
                     IsActive = p.IsActive,
                     SubCategoryId = p.SubCategoryId,
                     SubCategory = p.SubCategory != null ? new SubCategoryDto
@@ -132,7 +149,7 @@ namespace Warehousing.Api.Controllers
                         NameEn = p.SubCategory.NameEn,
                         NameAr = p.SubCategory.NameAr,
                         Description = p.SubCategory.Description,
-                        ImagePath = p.SubCategory.ImagePath,
+                        ImagePath = GetImageUrl(p.SubCategory.ImagePath),
                         IsActive = p.SubCategory.IsActive,
                         CategoryId = p.SubCategory.CategoryId
                         // No Products collection to prevent circular reference
@@ -234,7 +251,7 @@ namespace Warehousing.Api.Controllers
                         Description = p.Description ?? string.Empty,
                         CostPrice = p.CostPrice,
                         SellingPrice = p.SellingPrice,
-                        ImagePath = p.ImagePath,
+                        ImagePath = GetImageUrl(p.ImagePath),
                         IsActive = p.IsActive,
                         SubCategoryId = p.SubCategoryId,
                         SubCategory = p.SubCategory != null ? new SubCategoryDto
@@ -243,7 +260,7 @@ namespace Warehousing.Api.Controllers
                             NameEn = p.SubCategory.NameEn,
                             NameAr = p.SubCategory.NameAr,
                             Description = p.SubCategory.Description,
-                            ImagePath = p.SubCategory.ImagePath,
+                            ImagePath = GetImageUrl(p.SubCategory.ImagePath),
                             IsActive = p.SubCategory.IsActive,
                             CategoryId = p.SubCategory.CategoryId
                             // No Products collection to prevent circular reference

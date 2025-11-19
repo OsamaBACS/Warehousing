@@ -14,7 +14,7 @@
       <div class="space-y-4">
         <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
           <div class="aspect-square bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center p-8">
-            <app-image-uploader [initialImageUrl]="serverUrl + product.imagePath" [readonly]="true">
+            <app-image-uploader [initialImageUrl]="imageUrlService.getImageUrl(product.imagePath, serverUrl)" [readonly]="true">
             </app-image-uploader>
           </div>
         </div>

@@ -4,6 +4,8 @@ import { CategoriesService } from '../../../services/categories.service';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
 import { Category } from '../../../models/category';
+import { ImageUrlService } from '../../../../shared/services/image-url.service';
+import { environment } from '../../../../../environments/environment';
 
 @Component({
   selector: 'app-category-form',
@@ -14,13 +16,15 @@ import { Category } from '../../../models/category';
 export class CategoryFormComponent implements OnInit {
 
   categoryForm!: FormGroup;
+  serverUrl = environment.resourcesUrl || '';
 
   constructor(
     private fb: FormBuilder,
     private categoriesService: CategoriesService,
     private router: Router,
     private route: ActivatedRoute,
-    private toastr: ToastrService
+    private toastr: ToastrService,
+    public imageUrlService: ImageUrlService
   ) {
   }
 

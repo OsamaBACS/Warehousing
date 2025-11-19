@@ -5,6 +5,7 @@ import { LanguageService } from '../../../../core/services/language.service';
 import { AuthService } from '../../../../core/services/auth.service';
 import { Observable, map } from 'rxjs';
 import { SubCategory } from '../../../models/SubCategory';
+import { ImageUrlService } from '../../../../shared/services/image-url.service';
 
 @Component({
   selector: 'app-sub-category',
@@ -19,7 +20,8 @@ export class SubCategoryComponent implements OnInit {
     private router: Router,
     private route: ActivatedRoute,
     public lang: LanguageService,
-    public authService: AuthService
+    public authService: AuthService,
+    public imageUrlService: ImageUrlService
   ){}
 
   ngOnInit(): void {

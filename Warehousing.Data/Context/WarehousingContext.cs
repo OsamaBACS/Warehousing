@@ -45,13 +45,13 @@ namespace Warehousing.Data.Context
             // Configure StoreTransfer relationships
             modelBuilder.Entity<StoreTransfer>()
                 .HasOne(st => st.FromStore)
-                .WithMany()
+                .WithMany(s => s.TransfersFrom)
                 .HasForeignKey(st => st.FromStoreId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<StoreTransfer>()
                 .HasOne(st => st.ToStore)
-                .WithMany()
+                .WithMany(s => s.TransfersTo)
                 .HasForeignKey(st => st.ToStoreId)
                 .OnDelete(DeleteBehavior.Restrict);
 
@@ -168,6 +168,109 @@ namespace Warehousing.Data.Context
                 .WithMany(pc => pc.Roles)
                 .HasForeignKey(r => r.PrinterConfigurationId)
                 .OnDelete(DeleteBehavior.SetNull);
+
+            // Configure decimal precision and scale for all decimal properties
+            // Company
+            modelBuilder.Entity<Company>()
+                .Property(c => c.Capital)
+                .HasPrecision(18, 2);
+
+            // Inventory
+            modelBuilder.Entity<Inventory>()
+                .Property(i => i.Quantity)
+                .HasPrecision(18, 3);
+
+            // InventoryTransaction
+            modelBuilder.Entity<InventoryTransaction>()
+                .Property(it => it.QuantityAfter)
+                .HasPrecision(18, 3);
+            modelBuilder.Entity<InventoryTransaction>()
+                .Property(it => it.QuantityBefore)
+                .HasPrecision(18, 3);
+            modelBuilder.Entity<InventoryTransaction>()
+                .Property(it => it.QuantityChanged)
+                .HasPrecision(18, 3);
+            modelBuilder.Entity<InventoryTransaction>()
+                .Property(it => it.UnitCost)
+                .HasPrecision(18, 2);
+
+            // Order
+            modelBuilder.Entity<Order>()
+                .Property(o => o.TotalAmount)
+                .HasPrecision(18, 2);
+
+            // OrderItem
+            modelBuilder.Entity<OrderItem>()
+                .Property(oi => oi.Discount)
+                .HasPrecision(18, 2);
+            modelBuilder.Entity<OrderItem>()
+                .Property(oi => oi.Quantity)
+                .HasPrecision(18, 3);
+            modelBuilder.Entity<OrderItem>()
+                .Property(oi => oi.UnitCost)
+                .HasPrecision(18, 2);
+            modelBuilder.Entity<OrderItem>()
+                .Property(oi => oi.UnitPrice)
+                .HasPrecision(18, 2);
+
+            // OrderItemModifier
+            modelBuilder.Entity<OrderItemModifier>()
+                .Property(oim => oim.CostAdjustment)
+                .HasPrecision(18, 2);
+            modelBuilder.Entity<OrderItemModifier>()
+                .Property(oim => oim.PriceAdjustment)
+                .HasPrecision(18, 2);
+
+            // Product
+            modelBuilder.Entity<Product>()
+                .Property(p => p.CostPrice)
+                .HasPrecision(18, 2);
+            modelBuilder.Entity<Product>()
+                .Property(p => p.ReorderLevel)
+                .HasPrecision(18, 3);
+            modelBuilder.Entity<Product>()
+                .Property(p => p.SellingPrice)
+                .HasPrecision(18, 2);
+
+            // ProductModifier
+            modelBuilder.Entity<ProductModifier>()
+                .Property(pm => pm.CostAdjustment)
+                .HasPrecision(18, 2);
+            modelBuilder.Entity<ProductModifier>()
+                .Property(pm => pm.PriceAdjustment)
+                .HasPrecision(18, 2);
+
+            // ProductModifierOption
+            modelBuilder.Entity<ProductModifierOption>()
+                .Property(pmo => pmo.CostAdjustment)
+                .HasPrecision(18, 2);
+            modelBuilder.Entity<ProductModifierOption>()
+                .Property(pmo => pmo.PriceAdjustment)
+                .HasPrecision(18, 2);
+
+            // ProductRecipe
+            modelBuilder.Entity<ProductRecipe>()
+                .Property(pr => pr.Quantity)
+                .HasPrecision(18, 3);
+
+            // ProductVariant
+            modelBuilder.Entity<ProductVariant>()
+                .Property(pv => pv.CostAdjustment)
+                .HasPrecision(18, 2);
+            modelBuilder.Entity<ProductVariant>()
+                .Property(pv => pv.PriceAdjustment)
+                .HasPrecision(18, 2);
+            modelBuilder.Entity<ProductVariant>()
+                .Property(pv => pv.ReorderLevel)
+                .HasPrecision(18, 3);
+
+            // StoreTransferItem
+            modelBuilder.Entity<StoreTransferItem>()
+                .Property(sti => sti.Quantity)
+                .HasPrecision(18, 3);
+            modelBuilder.Entity<StoreTransferItem>()
+                .Property(sti => sti.UnitCost)
+                .HasPrecision(18, 2);
         }
 
 
