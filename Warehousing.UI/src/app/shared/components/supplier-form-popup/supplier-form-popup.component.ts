@@ -51,7 +51,6 @@ export class SupplierFormPopupComponent implements OnInit {
         },
         error: (error: any) => {
           this.toastr.error('حدث خطأ أثناء إنشاء المورد', 'خطأ');
-          console.error('Error creating supplier:', error);
           this.isLoading = false;
         }
       });

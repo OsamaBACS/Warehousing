@@ -83,14 +83,12 @@ export class CartComponent implements OnInit, OnDestroy {
         }
       },
       error: (err) => {
-        console.error('Error loading company data:', err);
         // Try to get from localStorage as fallback
         const cached = localStorage.getItem('companyInfo');
         if (cached) {
           try {
             this.company = JSON.parse(cached);
           } catch (e) {
-            console.error('Error parsing cached company info:', e);
           }
         }
       }
@@ -108,14 +106,12 @@ export class CartComponent implements OnInit, OnDestroy {
           }
         },
         error: (err) => {
-          console.error('Error loading user data:', err);
           // Try to get from localStorage as fallback
           const cached = localStorage.getItem('userInfo');
           if (cached) {
             try {
               this.currentUser = JSON.parse(cached);
             } catch (e) {
-              console.error('Error parsing cached user info:', e);
             }
           }
         }
@@ -401,14 +397,12 @@ export class CartComponent implements OnInit, OnDestroy {
     this.orderService.SaveOrder(this.cartService.cartForm.value).subscribe({
       next: (response) => {
         if (response) {
-          console.log(response);
           this.toastr.success('تم حفظ الطلب بنجاح');
           this.cartService.clearCart();
           this.router.navigate(['/']);
         }
       },
       error: (err) => {
-        console.error('Error saving order:', err);
         // Restore the original statusId so the button remains visible
         this.cartService.cartForm.get('statusId')?.setValue(originalStatusId);
         const errorMessage = this.extractErrorMessage(err);
@@ -450,14 +444,12 @@ export class CartComponent implements OnInit, OnDestroy {
         this.orderService.SaveOrder(this.cartService.cartForm.value).subscribe({
           next: (response) => {
             if (response) {
-              console.log(response);
               this.toastr.success('تم إلغاء الطلب بنجاح');
               this.cartService.clearCart();
               this.router.navigate(['/']);
             }
           },
           error: (err) => {
-            console.error('Error saving order:', err);
             const errorMessage = this.extractErrorMessage(err);
             this.toastr.error(errorMessage);
             // Don't clear cart on error - keep the data so user can try again
@@ -480,14 +472,12 @@ export class CartComponent implements OnInit, OnDestroy {
     this.orderService.SaveOrder(this.cartService.cartForm.value).subscribe({
       next: (response) => {
         if (response) {
-          console.log(response);
           this.toastr.success('تم إرسال الطلب بنجاح');
           this.cartService.clearCart();
           this.router.navigate(['/']);
         }
       },
       error: (err) => {
-        console.error('Error saving order:', err);
         // Restore the original statusId so the button remains visible
         this.cartService.cartForm.get('statusId')?.setValue(originalStatusId);
         const errorMessage = this.extractErrorMessage(err);
@@ -508,7 +498,6 @@ export class CartComponent implements OnInit, OnDestroy {
 
     dialogRef.afterClosed().subscribe((result: boolean) => {
       if (result) {
-        console.log(result)
         if (orderId) {
           this.changeOrderStatus(+orderId);
         }
@@ -529,7 +518,6 @@ export class CartComponent implements OnInit, OnDestroy {
         }
       },
       error: (err) => {
-        console.error(err);
         const errorMessage = this.extractErrorMessage(err);
         this.toastr.error(errorMessage, 'خطأ في الطلب');
       }
@@ -547,7 +535,6 @@ export class CartComponent implements OnInit, OnDestroy {
 
     dialogRef.afterClosed().subscribe((result: boolean) => {
       if (result) {
-        console.log(result)
         if (orderId) {
           this.EditApprovedOrder(+orderId);
         }
@@ -568,7 +555,6 @@ export class CartComponent implements OnInit, OnDestroy {
         }
       },
       error: (err) => {
-        console.error(err);
         const errorMessage = this.extractErrorMessage(err);
         this.toastr.error(errorMessage, 'خطأ في التعديل');
       }
@@ -586,7 +572,6 @@ export class CartComponent implements OnInit, OnDestroy {
 
     dialogRef.afterClosed().subscribe((result: boolean) => {
       if (result) {
-        console.log(result)
         if (orderId) {
           this.CancelApprovedOrder(+orderId);
         }
@@ -607,7 +592,6 @@ export class CartComponent implements OnInit, OnDestroy {
         }
       },
       error: (err) => {
-        console.error(err);
         const errorMessage = this.extractErrorMessage(err);
         this.toastr.error(errorMessage, 'خطأ في الإلغاء');
       }
@@ -732,7 +716,6 @@ export class CartComponent implements OnInit, OnDestroy {
         'وثيقة الشراء' : 'وثيقة البيع';
       this.printService.printHtml(this.printSection.nativeElement.innerHTML, documentTitle);
     } else {
-      console.error("Print section not found");
     }
   }
 
@@ -740,7 +723,6 @@ export class CartComponent implements OnInit, OnDestroy {
   async printOrderPDF() {
     try {
       if (!this.printSection) {
-        console.error("Print section not found");
         return;
       }
 
@@ -762,7 +744,6 @@ export class CartComponent implements OnInit, OnDestroy {
         this.printOrder();
       }
     } catch (error) {
-      console.error('Error printing PDF:', error);
       // Fallback to regular print service
       this.printOrder();
     }
@@ -771,7 +752,6 @@ export class CartComponent implements OnInit, OnDestroy {
   async downloadOrderPDF() {
     try {
       if (!this.printSection) {
-        console.error("Print section not found");
         return;
       }
 
@@ -790,7 +770,6 @@ export class CartComponent implements OnInit, OnDestroy {
         this.toastr.warning('خدمة PDF غير متاحة حالياً', 'تحذير');
       }
     } catch (error) {
-      console.error('Error downloading PDF:', error);
       this.toastr.error('خطأ في تحميل PDF', 'خطأ');
     }
   }
@@ -852,7 +831,6 @@ export class CartComponent implements OnInit, OnDestroy {
       try {
         return JSON.parse(companyInfo);
       } catch (e) {
-        console.error('Error parsing company info from localStorage:', e);
       }
     }
     
@@ -947,7 +925,6 @@ export class CartComponent implements OnInit, OnDestroy {
       try {
         return JSON.parse(userInfo);
       } catch (e) {
-        console.error('Error parsing user info from localStorage:', e);
       }
     }
     

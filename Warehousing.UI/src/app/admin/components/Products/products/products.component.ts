@@ -59,7 +59,6 @@ export class ProductsComponent implements OnInit {
         this.categories = res;
       },
       error: (err) => {
-        console.log(err.error)
       }
     });
     this.unitsService.GetUnits().subscribe({
@@ -67,7 +66,6 @@ export class ProductsComponent implements OnInit {
         this.units = res;
       },
       error: (err) => {
-        console.log(err.error)
       }
     });
     this.serverUrl = this.productService.url.substring(0, this.productService.url.indexOf('api'));

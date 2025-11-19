@@ -130,7 +130,6 @@ export class OrderCategoriesComponent implements OnInit, OnDestroy {
           map(products => products.filter(product => this.authService.hasProduct(product.id!))),
           tap(() => this.searchLoading = false),
           catchError(error => {
-            console.error('Error searching products', error);
             this.searchLoading = false;
             this.searchError = 'حدث خطأ أثناء البحث عن المنتجات. حاول مرة أخرى.';
             return of<Product[]>([]);

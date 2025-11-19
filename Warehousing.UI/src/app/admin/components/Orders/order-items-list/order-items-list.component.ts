@@ -104,7 +104,6 @@ export class OrderItemsListComponent implements OnInit {
       const documentTitle = `طلب رقم ${this.orderId}`;
       this.printService.printHtml(this.printSection.nativeElement.innerHTML, documentTitle);
     } else {
-      console.error("Print section not found");
       this.toastr.error('خطأ في الطباعة', 'خطأ');
     }
   }
@@ -112,7 +111,6 @@ export class OrderItemsListComponent implements OnInit {
   async printOrderPDF() {
     try {
       if (!this.printSection) {
-        console.error("Print section not found");
         this.toastr.error('خطأ في الطباعة', 'خطأ');
         return;
       }
@@ -134,7 +132,6 @@ export class OrderItemsListComponent implements OnInit {
         this.printOrder();
       }
     } catch (error) {
-      console.error('Error printing PDF:', error);
       this.toastr.error('خطأ في طباعة PDF', 'خطأ');
       // Fallback to regular print service
       this.printOrder();
@@ -144,7 +141,6 @@ export class OrderItemsListComponent implements OnInit {
   async downloadOrderPDF() {
     try {
       if (!this.printSection) {
-        console.error("Print section not found");
         this.toastr.error('خطأ في الطباعة', 'خطأ');
         return;
       }
@@ -163,7 +159,6 @@ export class OrderItemsListComponent implements OnInit {
         this.toastr.warning('خدمة PDF غير متاحة حالياً', 'تحذير');
       }
     } catch (error) {
-      console.error('Error downloading PDF:', error);
       this.toastr.error('خطأ في تحميل PDF', 'خطأ');
     }
   }

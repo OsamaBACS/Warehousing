@@ -117,7 +117,8 @@ export class SidebarComponent implements OnInit, OnDestroy, OnChanges {
 
   isActiveRoute(route?: string | null): boolean {
     if (!route) return false;
-    return this.currentRoute.includes(route);
+    const currentPath = this.currentRoute.split('?')[0];
+    return currentPath === route || currentPath.startsWith(`${route}/`);
   }
 
   toggleLanguage() {

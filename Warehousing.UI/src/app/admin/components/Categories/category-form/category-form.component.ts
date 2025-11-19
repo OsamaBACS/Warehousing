@@ -39,7 +39,6 @@ export class CategoryFormComponent implements OnInit {
             this.initializingForm(res);
           },
           error: (err) => {
-            console.error(err.error);
           }
         });
       }

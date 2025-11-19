@@ -38,7 +38,6 @@ export class TransactionsComponent implements OnInit {
 
   ngOnInit(): void {
     this.productId = +this.route.snapshot.paramMap.get('id')!;
-    console.log('Product ID:', this.productId);
 
     this.loadProductDetails();
     // You can now call a service like:

@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormArray } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators, FormArray, ValidatorFn, AbstractControl } from '@angular/forms';
 import { StoreTransferService } from '../../../services/storeTransfer.service';
 import { StoreService } from '../../../services/store.service';
 import { ProductsService } from '../../../services/products.service';
@@ -56,23 +56,31 @@ export class StoreTransferFormComponent implements OnInit {
       toStoreId: [null, Validators.required],
       statusId: [1], // Draft status
       items: this.fb.array([])
+    }, { validators: this.storesMustDifferValidator });
+
+    this.transferForm.get('fromStoreId')?.valueChanges.subscribe(fromStoreId => {
+      const toControl = this.transferForm.get('toStoreId');
+      if (toControl) {
+        if (toControl.value === fromStoreId) {
+          toControl.setValue(null);
+        }
+        toControl.updateValueAndValidity({ emitEvent: false });
+      }
     });
   }
 
   loadData(): void {
     this.storeService.GetStores().subscribe({
-      next: (stores) => this.stores = stores,
-      error: (err) => console.error('Error loading stores:', err)
+      next: (stores) => this.stores = stores
     });
 
     this.productService.GetProducts().subscribe({
-      next: (products) => this.products = products,
-      error: (err) => console.error('Error loading products:', err)
+      next: (products) => this.products = products
     });
   }
 
   loadTransfer(id: number): void {
-    this.transferService.GetTransferWithItems(id).subscribe({
+    this.transferService.getTransferWithItems(id).subscribe({
       next: (transfer) => {
         this.transferForm.patchValue({
           id: transfer.id,
@@ -88,8 +96,7 @@ export class StoreTransferFormComponent implements OnInit {
           this.addTransferItem(item.productId, item.quantity, item.unitCost, item.notes);
         });
       },
-      error: (err) => {
-        console.error('Error loading transfer:', err);
+      error: () => {
         this.notification.error('Error loading transfer', 'Store Transfer');
       }
     });
@@ -131,24 +138,23 @@ export class StoreTransferFormComponent implements OnInit {
       const transferData: StoreTransferDto = this.transferForm.value;
 
       if (this.isEditMode && this.transferId) {
-        this.transferService.UpdateTransfer(this.transferId, transferData).subscribe({
-          next: (response) => {
+        this.transferService.updateTransfer(this.transferId, transferData).subscribe({
+          next: () => {
             this.notification.success('Transfer updated successfully', 'Store Transfer');
-            this.router.navigate(['../store-transfers'], { relativeTo: this.route });
+            this.resetFormState();
+            this.router.navigate(['/admin/store-transfers']);
           },
-          error: (err) => {
-            console.error('Error updating transfer:', err);
+          error: () => {
             this.notification.error('Error updating transfer', 'Store Transfer');
           }
         });
       } else {
-        this.transferService.CreateTransfer(transferData).subscribe({
-          next: (response) => {
+        this.transferService.createTransfer(transferData).subscribe({
+          next: () => {
             this.notification.success('Transfer created successfully', 'Store Transfer');
-            this.router.navigate(['../store-transfers'], { relativeTo: this.route });
+            this.resetFormState();
           },
-          error: (err) => {
-            console.error('Error creating transfer:', err);
+          error: () => {
             this.notification.error('Error creating transfer', 'Store Transfer');
           }
         });
@@ -159,7 +165,7 @@ export class StoreTransferFormComponent implements OnInit {
   }
 
   cancel(): void {
-    this.router.navigate(['../store-transfers'], { relativeTo: this.route });
+    this.resetFormState();
   }
 
   getProductName(productId: number): string {
@@ -170,5 +176,37 @@ export class StoreTransferFormComponent implements OnInit {
   getStoreName(storeId: number): string {
     const store = this.stores.find(s => s.id === storeId);
     return store ? store.nameAr : '';
+  }
+
+  get destinationStores(): Store[] {
+    const fromStoreId = this.transferForm?.get('fromStoreId')?.value;
+    return this.stores.filter(store => store.id !== fromStoreId);
+  }
+
+  private storesMustDifferValidator: ValidatorFn = (group: AbstractControl) => {
+    const fromStoreId = group.get('fromStoreId')?.value;
+    const toStoreId = group.get('toStoreId')?.value;
+    if (fromStoreId && toStoreId && fromStoreId === toStoreId) {
+      group.get('toStoreId')?.setErrors({ sameStore: true });
+      return { sameStore: true };
+    }
+    return null;
+  };
+
+  private resetFormState(): void {
+    this.isEditMode = false;
+    this.transferId = null;
+    this.items.clear();
+    this.transferForm.reset({
+      id: 0,
+      transferDate: new Date().toISOString().split('T')[0],
+      notes: '',
+      fromStoreId: null,
+      toStoreId: null,
+      statusId: 1,
+      items: []
+    });
+    this.transferForm.markAsPristine();
+    this.transferForm.markAsUntouched();
   }
 }

@@ -44,7 +44,6 @@ export class CompanyFormComponent implements OnInit {
             this.initForm(res);
           },
           error: (err) => {
-            console.error(err.error);
           }
         });
       }
@@ -283,7 +282,6 @@ export class CompanyFormComponent implements OnInit {
           this.router.navigate(['../company'], { relativeTo: this.route });
         },
         error: (err) => {
-          console.error(err.error);
           this.notification.error(err.error || 'Error while saving', 'Company');
         }
       });

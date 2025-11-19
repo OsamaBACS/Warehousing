@@ -46,7 +46,6 @@ export class Dashboard implements OnInit {
         this.loadAlerts()
       ]);
     } catch (error) {
-      console.error('Error loading dashboard data:', error);
     } finally {
       this.isLoading = false;
     }
@@ -57,7 +56,6 @@ export class Dashboard implements OnInit {
       this.overview = await this.dashboardService.getDashboardOverview().toPromise();
       this.createDashboardCards();
     } catch (error) {
-      console.error('Error loading overview:', error);
     } finally {
       this.isLoadingOverview = false;
     }
@@ -67,7 +65,6 @@ export class Dashboard implements OnInit {
     try {
       this.recentTransactions = await this.dashboardService.getRecentTransactions(5).toPromise() || [];
     } catch (error) {
-      console.error('Error loading recent transactions:', error);
     } finally {
       this.isLoadingTransactions = false;
     }
@@ -77,7 +74,6 @@ export class Dashboard implements OnInit {
     try {
       this.topProducts = await this.dashboardService.getTopProducts(5).toPromise() || [];
     } catch (error) {
-      console.error('Error loading top products:', error);
     } finally {
       this.isLoadingTopProducts = false;
     }
@@ -87,7 +83,6 @@ export class Dashboard implements OnInit {
     try {
       this.storePerformance = await this.dashboardService.getStorePerformance().toPromise() || [];
     } catch (error) {
-      console.error('Error loading store performance:', error);
     } finally {
       this.isLoadingStorePerformance = false;
     }
@@ -97,7 +92,6 @@ export class Dashboard implements OnInit {
     try {
       this.alerts = await this.dashboardService.getAlerts().toPromise() || [];
     } catch (error) {
-      console.error('Error loading alerts:', error);
     } finally {
       this.isLoadingAlerts = false;
     }

@@ -46,7 +46,6 @@ export class UsersFormComponent implements OnInit {
               this.initializingForm(res)
             },
             error: (err) => {
-              console.log(err.error);
             }
           });
       }
@@ -309,7 +308,6 @@ export class UsersFormComponent implements OnInit {
           }
         },
         error: (err) => {
-          console.log(err.error);
           this.toastr.error(err.error || 'حدث خطأ أثناء الحفظ', 'المستخدم')
         }
       });

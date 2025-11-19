@@ -39,7 +39,6 @@ export class InventoryManagementComponent implements OnInit {
   loadStores(): void {
     this.storeService.GetStores().subscribe({
       next: (stores) => this.stores = stores,
-      error: (err) => console.error('Error loading stores:', err)
     });
   }
 
@@ -49,7 +48,6 @@ export class InventoryManagementComponent implements OnInit {
         // Filter products based on user permissions
         this.products = products.filter(product => this.authService.hasProduct(product.id!));
       },
-      error: (err) => console.error('Error loading products:', err)
     });
   }
 
@@ -63,7 +61,6 @@ export class InventoryManagementComponent implements OnInit {
           this.loading = false;
         },
         error: (err) => {
-          console.error('Error loading store inventory:', err);
           this.loading = false;
         }
       });
@@ -74,7 +71,6 @@ export class InventoryManagementComponent implements OnInit {
           this.loading = false;
         },
         error: (err) => {
-          console.error('Error loading product inventory:', err);
           this.loading = false;
         }
       });
@@ -85,7 +81,6 @@ export class InventoryManagementComponent implements OnInit {
           this.loading = false;
         },
         error: (err) => {
-          console.error('Error loading all inventory:', err);
           this.loading = false;
         }
       });
@@ -118,11 +113,9 @@ export class InventoryManagementComponent implements OnInit {
     if (newQuantity !== inventory.quantity) {
       this.inventoryService.AdjustInventory(inventory.id, newQuantity, 'Manual adjustment').subscribe({
         next: (response) => {
-          console.log('Inventory adjusted successfully:', response);
           this.loadInventories(); // Reload data
         },
         error: (err) => {
-          console.error('Error adjusting inventory:', err);
         }
       });
     }
@@ -146,7 +139,6 @@ export class InventoryManagementComponent implements OnInit {
         this.loading = false;
       },
       error: (err) => {
-        console.error('Error loading low stock items:', err);
         this.loading = false;
       }
     });
@@ -154,6 +146,5 @@ export class InventoryManagementComponent implements OnInit {
 
   viewHistory(inventory: Inventory): void {
     // TODO: Implement inventory transaction history view
-    console.log('View history for inventory:', inventory);
   }
 }

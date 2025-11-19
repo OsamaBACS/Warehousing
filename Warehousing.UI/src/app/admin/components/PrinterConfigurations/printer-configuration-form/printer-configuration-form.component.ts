@@ -136,7 +136,6 @@ export class PrinterConfigurationFormComponent implements OnInit {
           try {
             margins = JSON.parse(config.margins);
           } catch (e) {
-            console.error('Error parsing margins:', e);
           }
         }
 
@@ -144,7 +143,6 @@ export class PrinterConfigurationFormComponent implements OnInit {
           try {
             fontSettings = JSON.parse(config.fontSettings);
           } catch (e) {
-            console.error('Error parsing font settings:', e);
           }
         }
 
@@ -152,7 +150,6 @@ export class PrinterConfigurationFormComponent implements OnInit {
           try {
             posSettings = JSON.parse(config.posSettings);
           } catch (e) {
-            console.error('Error parsing POS settings:', e);
           }
         }
 
@@ -193,7 +190,6 @@ export class PrinterConfigurationFormComponent implements OnInit {
         this.showPosSettings = config.printerType === 'POS' || config.printerType === 'Thermal';
       },
       error: (err) => {
-        console.error('Error loading printer configuration:', err);
         this.toastr.error('حدث خطأ أثناء تحميل إعدادات الطابعة', 'خطأ');
       }
     });
@@ -260,7 +256,6 @@ export class PrinterConfigurationFormComponent implements OnInit {
           this.router.navigate(['../printer-configurations'], { relativeTo: this.route });
         },
         error: (err) => {
-          console.error('Error saving printer configuration:', err);
           this.toastr.error(err.error || 'حدث خطأ أثناء حفظ إعدادات الطابعة', 'خطأ');
         }
       });

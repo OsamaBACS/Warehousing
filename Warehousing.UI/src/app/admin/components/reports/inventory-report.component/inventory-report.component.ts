@@ -167,12 +167,10 @@ export class InventoryReportComponent implements OnInit {
           if (this.printAllSection) {
             this.printService.printHtml(this.printAllSection.nativeElement.innerHTML);
           } else {
-            console.error("Print section not found");
           }
         }, 500); // Small delay to allow view to refresh
       },
       error: (err) => {
-        console.error("Failed to load all products", err);
         this.toastr.error("Failed to load all products", "Error");
         this.isPrintingAll = false;
       }
@@ -223,7 +221,6 @@ export class InventoryReportComponent implements OnInit {
         .GetStockMovementReport(this.storeId > 0 ? this.storeId : undefined, fromDate, toDate)
         .toPromise() || [];
     } catch (error) {
-      console.error('Error loading stock movement report:', error);
       this.toastr.error('خطأ في تحميل تقرير حركة المخزون', 'خطأ');
     } finally {
       this.isLoadingStockMovement = false;
@@ -237,7 +234,6 @@ export class InventoryReportComponent implements OnInit {
         .GetInventoryValuationReport(this.storeId > 0 ? this.storeId : undefined)
         .toPromise();
     } catch (error) {
-      console.error('Error loading inventory valuation report:', error);
       this.toastr.error('خطأ في تحميل تقرير تقييم المخزون', 'خطأ');
     } finally {
       this.isLoadingValuation = false;
@@ -251,7 +247,6 @@ export class InventoryReportComponent implements OnInit {
         .GetLowStockReport(this.threshold, this.storeId > 0 ? this.storeId : undefined)
         .toPromise();
     } catch (error) {
-      console.error('Error loading low stock report:', error);
       this.toastr.error('خطأ في تحميل تقرير المخزون المنخفض', 'خطأ');
     } finally {
       this.isLoadingLowStock = false;
@@ -265,7 +260,6 @@ export class InventoryReportComponent implements OnInit {
         .GetTransactionTrends(this.storeId > 0 ? this.storeId : undefined, undefined, this.months)
         .toPromise() || [];
     } catch (error) {
-      console.error('Error loading transaction trends:', error);
       this.toastr.error('خطأ في تحميل تقرير الاتجاهات', 'خطأ');
     } finally {
       this.isLoadingTrends = false;
@@ -283,7 +277,6 @@ export class InventoryReportComponent implements OnInit {
         .GetTopMovingProducts(this.storeId > 0 ? this.storeId : undefined, fromDate, toDate, this.topCount)
         .toPromise() || [];
     } catch (error) {
-      console.error('Error loading top moving products:', error);
       this.toastr.error('خطأ في تحميل تقرير أكثر المنتجات حركة', 'خطأ');
     } finally {
       this.isLoadingTopProducts = false;

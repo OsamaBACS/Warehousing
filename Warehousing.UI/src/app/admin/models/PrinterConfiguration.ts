@@ -119,7 +119,6 @@ export function parsePrinterConfiguration(jsonString: string | null | undefined)
       } : undefined
     };
   } catch (error) {
-    console.error('Error parsing printer configuration:', error);
     return defaultA4PrinterConfig;
   }
 }

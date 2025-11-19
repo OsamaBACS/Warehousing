@@ -20,6 +20,8 @@ import { ImageUploader } from '../../../../shared/components/image-uploader/imag
 import { AuthService } from '../../../../core/services/auth.service';
 import { Inventory } from '../../../models/Inventory';
 import { InventoryService } from '../../../services/inventory.service';
+import { ProductVariantService } from '../../../services/product-variant.service';
+import { ProductModifierService } from '../../../services/product-modifier.service';
 
 @Component({
   selector: 'app-product-form',
@@ -56,7 +58,9 @@ export class ProductFormComponent implements OnInit {
     private notification: NotificationService,
     private router: Router,
     private route: ActivatedRoute,
-    private authService: AuthService
+    private authService: AuthService,
+    private productVariantService: ProductVariantService,
+    private productModifierService: ProductModifierService
   ) {
     this.stores = this.route.snapshot.data['StoresResolver'];
     this.subCategories = this.route.snapshot.data['subCategoriesResolver'];
@@ -72,9 +76,10 @@ export class ProductFormComponent implements OnInit {
           next: (res) => {
             this.initializingForm(res);
             this.loadInventory(res.id);
+            this.loadVariantSummary(res.id);
+            this.loadModifierSummary(res.id);
           },
           error: (err) => {
-            console.log(err.error);
           }
         });
       }
@@ -84,7 +89,6 @@ export class ProductFormComponent implements OnInit {
         this.units = res;
       },
       error: (err) => {
-        console.log(err.error);
       }
     });
   }
@@ -245,6 +249,10 @@ export class ProductFormComponent implements OnInit {
   initialImageUrl: string | null = null;
   url = environment.resourcesUrl;
   stores: Store[] = [];
+  variantSummary: ProductVariant[] = [];
+  modifierSummary: ProductModifierGroup[] = [];
+  showVariantManager = false;
+  showModifierManager = false;
 
   initializingForm(product: Product | null) {
     this.productForm = this.fb.group({
@@ -318,7 +326,6 @@ export class ProductFormComponent implements OnInit {
       formData.append('unitId', this.unitId.value);
       this.productService.SaveProduct(formData).subscribe({
           next: (res) => {
-            console.log(res);
             if(res) {
               this.notification.success('Successfully saved', 'Product');
               this.router.navigate(['../products'], { relativeTo: this.route })
@@ -328,7 +335,6 @@ export class ProductFormComponent implements OnInit {
             }
           },
           error: (err) => {
-            console.log(err.error)
             this.notification.error(err.error, 'Product')
           }
         });
@@ -381,11 +387,8 @@ export class ProductFormComponent implements OnInit {
 
   // Handle variants and modifiers updates
   onVariantsUpdated(variants: ProductVariant[]): void {
-    console.log('Variants updated:', variants);
-    // Store the updated variants list
     this.productVariantsList = variants || [];
-    
-    // If product is loaded, reload inventory to refresh the dropdown
+    this.variantSummary = variants || [];
     const productId = this.productForm.get('id')?.value;
     if (productId && productId > 0) {
       this.loadInventory(productId);
@@ -393,7 +396,55 @@ export class ProductFormComponent implements OnInit {
   }
 
   onModifiersUpdated(modifiers: ProductModifierGroup[]): void {
-    console.log('Modifiers updated:', modifiers);
-    // You can add additional logic here if needed
+    this.modifierSummary = modifiers || [];
+  }
+
+  openVariantManager(): void {
+    this.showVariantManager = true;
+  }
+
+  closeVariantManager(): void {
+    this.showVariantManager = false;
+    const productId = this.productForm.get('id')?.value;
+    if (productId) {
+      this.loadVariantSummary(productId);
+    }
+  }
+
+  openModifierManager(): void {
+    this.showModifierManager = true;
+  }
+
+  closeModifierManager(): void {
+    this.showModifierManager = false;
+    const productId = this.productForm.get('id')?.value;
+    if (productId) {
+      this.loadModifierSummary(productId);
+    }
+  }
+
+  private loadVariantSummary(productId: number): void {
+    if (!productId) {
+      this.variantSummary = [];
+      return;
+    }
+    this.productVariantService.getVariantsByProduct(productId).subscribe({
+      next: variants => {
+        this.variantSummary = variants;
+        this.productVariantsList = variants;
+      }
+    });
+  }
+
+  private loadModifierSummary(productId: number): void {
+    if (!productId) {
+      this.modifierSummary = [];
+      return;
+    }
+    this.productModifierService.getModifierGroupsByProduct(productId).subscribe({
+      next: groups => {
+        this.modifierSummary = groups;
+      }
+    });
   }
 }

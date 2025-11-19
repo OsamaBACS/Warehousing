@@ -62,7 +62,6 @@ export class ProductVariantsComponent implements OnInit {
         this.stores = stores;
       },
       error: (error) => {
-        console.error('Error loading stores:', error);
       }
     });
   }
@@ -76,7 +75,6 @@ export class ProductVariantsComponent implements OnInit {
         this.loading = false;
       },
       error: (error) => {
-        console.error('Error loading variants:', error);
         this.loading = false;
       }
     });
@@ -119,7 +117,6 @@ export class ProductVariantsComponent implements OnInit {
         this.variantsUpdated.emit(this.variants);
       },
       error: (error) => {
-        console.error('Error creating variant:', error);
       }
     });
   }
@@ -144,7 +141,6 @@ export class ProductVariantsComponent implements OnInit {
         this.variantsUpdated.emit(this.variants);
       },
       error: (error) => {
-        console.error('Error updating variant:', error);
       }
     });
   }
@@ -195,7 +191,6 @@ export class ProductVariantsComponent implements OnInit {
           this.variantsUpdated.emit(this.variants);
         },
         error: (error) => {
-          console.error('Error deleting variant:', error);
         }
       });
     }
@@ -258,7 +253,6 @@ export class ProductVariantsComponent implements OnInit {
             });
           },
           error: (error: any) => {
-            console.error('Error loading variant stock:', error);
           }
         });
       });
@@ -273,12 +267,10 @@ export class ProductVariantsComponent implements OnInit {
       quantity: quantity
     }).subscribe({
       next: (response: any) => {
-        console.log('Stock updated successfully:', response);
         // Refresh the variant stock data
         this.loadVariantStockData();
       },
       error: (error: any) => {
-        console.error('Error updating variant stock:', error);
       }
     });
   }

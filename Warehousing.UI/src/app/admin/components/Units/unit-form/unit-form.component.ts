@@ -35,7 +35,6 @@ export class UnitFormComponent implements OnInit {
             this.initializingForm(res);
           },
           error: (err) => {
-            console.error(err.error);
           }
         });
       }

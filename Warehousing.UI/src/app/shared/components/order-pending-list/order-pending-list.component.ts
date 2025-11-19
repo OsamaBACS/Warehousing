@@ -111,7 +111,6 @@ export class OrderPendingListComponent implements OnInit {
       this.customers = customersRes || [];
       this.suppliers = suppliersRes || [];
     } catch (error) {
-      console.error('Error loading filter options:', error);
     }
   }
 

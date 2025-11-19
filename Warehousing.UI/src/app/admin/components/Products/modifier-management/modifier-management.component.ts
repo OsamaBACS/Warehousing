@@ -70,7 +70,6 @@ export class ModifierManagementComponent implements OnInit {
         this.loading = false;
       },
       error: (error) => {
-        console.error('Error loading modifiers:', error);
         this.loading = false;
       }
     });
@@ -85,7 +84,6 @@ export class ModifierManagementComponent implements OnInit {
         }
       },
       error: (error) => {
-        console.error('Error loading modifier options:', error);
       }
     });
   }
@@ -122,7 +120,6 @@ export class ModifierManagementComponent implements OnInit {
         this.resetModifierForm();
       },
       error: (error) => {
-        console.error('Error creating modifier:', error);
       }
     });
   }
@@ -140,7 +137,6 @@ export class ModifierManagementComponent implements OnInit {
         this.resetModifierForm();
       },
       error: (error) => {
-        console.error('Error updating modifier:', error);
       }
     });
   }
@@ -179,7 +175,6 @@ export class ModifierManagementComponent implements OnInit {
         this.resetOptionForm();
       },
       error: (error) => {
-        console.error('Error creating modifier option:', error);
       }
     });
   }
@@ -199,7 +194,6 @@ export class ModifierManagementComponent implements OnInit {
         this.resetOptionForm();
       },
       error: (error) => {
-        console.error('Error updating modifier option:', error);
       }
     });
   }
@@ -252,7 +246,6 @@ export class ModifierManagementComponent implements OnInit {
           this.modifiers = this.modifiers.filter(m => m.id !== modifier.id);
         },
         error: (error) => {
-          console.error('Error deleting modifier:', error);
         }
       });
     }
@@ -269,7 +262,6 @@ export class ModifierManagementComponent implements OnInit {
           }
         },
         error: (error) => {
-          console.error('Error deleting modifier option:', error);
         }
       });
     }
