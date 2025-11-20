@@ -15,6 +15,7 @@ export class CustomersFormComponent implements OnInit {
   customerForm!: FormGroup;
   isEditMode = false;
   customerId: number = 0;
+  isLoading = false;
 
   constructor(
     private fb: FormBuilder,
@@ -30,8 +31,8 @@ export class CustomersFormComponent implements OnInit {
       nameAr: ['', Validators.required],
       nameEn: ['', Validators.required],
       phone: ['', Validators.required],
-      email: ['', [Validators.required, Validators.email]],
-      address: ['']
+      email: ['', [Validators.email]],
+      address: ['', Validators.required]
     });
 
     this.route.queryParams.subscribe(params => {
@@ -44,27 +45,50 @@ export class CustomersFormComponent implements OnInit {
   }
 
   loadCustomer(id: number) {
+    this.isLoading = true;
     this.customerService.GetCustomerById(id).subscribe({
       next: (customer) => {
         this.customerForm.patchValue(customer);
+        this.isLoading = false;
       },
       error: () => {
         this.toastr.error('Failed to load customer');
+        this.isLoading = false;
       }
     });
   }
 
   onSubmit() {
-    if (this.customerForm.invalid) return;
+    if (this.customerForm.invalid) {
+      this.customerForm.markAllAsTouched();
+      return;
+    }
 
+    this.isLoading = true;
     this.customerService.SaveCustomer(this.customerForm.value).subscribe({
       next: () => {
         this.toastr.success('Customer saved successfully');
+        this.isLoading = false;
+        this.router.navigate(['../customers'], { relativeTo: this.route });
       },
       error: (err) => {
         this.toastr.error(err.error || 'Save failed');
+        this.isLoading = false;
       }
     });
+  }
+
+  getFieldError(fieldName: string): string {
+    const field = this.customerForm.get(fieldName);
+    if (field?.errors && field.touched) {
+      if (field.errors['required']) {
+        return 'This field is required';
+      }
+      if (field.errors['email']) {
+        return 'Please enter a valid email address';
+      }
+    }
+    return '';
   }
 
   cancel(): void {

@@ -170,6 +170,12 @@ export class SidebarConfigService {
               route: '/admin/inventory-report', 
               icon: 'bi bi-file-earmark-text', 
               permission: PermissionsEnum.VIEW_INVENTORY_REPORT 
+            },
+            { 
+              label: 'REPORTS.SALES_PURCHASE_REPORT', 
+              route: '/admin/order-report', 
+              icon: 'bi bi-graph-up', 
+              permission: PermissionsEnum.VIEW_INVENTORY_REPORT 
             }
           ]
         }

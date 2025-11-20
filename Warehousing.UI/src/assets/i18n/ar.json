@@ -1,4 +1,26 @@
 {
+  "CUSTOMER_FORM": {
+    "TITLE": "إضافة عميل جديد",
+    "EDIT_TITLE": "تعديل بيانات العميل",
+    "SUBTITLE": "املأ البيانات التالية لإضافة عميل جديد",
+    "NAME_AR": "اسم العميل بالعربية",
+    "NAME_EN": "اسم العميل بالإنجليزية",
+    "PHONE": "رقم الهاتف",
+    "EMAIL": "البريد الإلكتروني",
+    "ADDRESS": "العنوان",
+    "PLACEHOLDER": {
+      "NAME_AR": "أدخل اسم العميل بالعربية",
+      "NAME_EN": "أدخل اسم العميل بالإنجليزية",
+      "PHONE": "أدخل رقم الهاتف",
+      "EMAIL": "example@email.com",
+      "ADDRESS": "أدخل العنوان الكامل"
+    },
+    "BUTTONS": {
+      "CANCEL": "إلغاء",
+      "SAVE": "حفظ العميل",
+      "SAVING": "جاري الحفظ..."
+    }
+  },
   "ADMIN": {
     "TITLE": "الإدارة",
     "SYSTEM_ADMIN": "مدير النظام",
@@ -589,6 +611,42 @@
     "LOW_STOCK_COUNT": "قليل المخزون",
     "OUT_OF_STOCK_COUNT": "نافد المخزون",
     "INVENTORY_REPORT": "تقرير الجرد",
+    "SALES_PURCHASE_REPORT": "تقرير المبيعات والمشتريات",
+    "DESCRIPTION": "استعرض أداء المبيعات أو المشتريات في أي فترة زمنية",
+    "SALES_TAB": "المبيعات",
+    "PURCHASE_TAB": "المشتريات",
+    "DATE_RANGE": "نطاق التاريخ",
+    "FROM": "من",
+    "TO": "إلى",
+    "QUICK_RANGES": {
+      "TITLE": "نطاقات سريعة",
+      "TODAY": "اليوم",
+      "LAST_7_DAYS": "آخر 7 أيام",
+      "LAST_30_DAYS": "آخر 30 يوم"
+    },
+    "UPDATE": "تحديث التقرير",
+    "LOADING": "جاري تحميل التقرير...",
+    "ERROR_LOADING": "تعذر تحميل التقرير، الرجاء المحاولة مرة أخرى",
+    "NO_DATA_RANGE": "لا توجد بيانات في الفترة المحددة",
+    "ORDERS_SHORT": "طلبات",
+    "PERIOD_SUMMARY": "ملخص الفترة",
+    "ORDERS_TABLE": "تفاصيل الطلبات",
+    "ORDERS_TABLE_DESCRIPTION": "أحدث الطلبات ضمن الفترة المحددة",
+    "SHOWING": "يتم عرض",
+    "COLUMNS": {
+      "ORDER_ID": "رقم الطلب",
+      "DATE": "التاريخ",
+      "CUSTOMER_SUPPLIER": "العميل / المورد",
+      "STATUS": "الحالة",
+      "TOTAL": "الإجمالي",
+      "QUANTITY": "الكمية"
+    },
+    "SUMMARY": {
+      "TOTAL_ORDERS": "إجمالي الطلبات",
+      "TOTAL_AMOUNT": "إجمالي المبلغ",
+      "AVERAGE_ORDER": "متوسط قيمة الطلب",
+      "TOTAL_QUANTITY": "إجمالي الكمية"
+    },
     "COMPREHENSIVE_STOCK_REPORTS": "تقارير المخزون الشاملة",
     "STOCK_MOVEMENT_DESCRIPTION": "حركة المخزون، التقييم، المخزون المنخفض، الاتجاهات",
     "PRODUCT_TRANSACTIONS": "معاملات المنتج",

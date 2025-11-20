@@ -13,6 +13,7 @@ import { Dashboard } from "./components/dashboard/dashboard";
 import { ProductFormComponent } from "./components/Products/product-form/product-form.component";
 import { InventoryReportComponent } from "./components/reports/inventory-report.component/inventory-report.component";
 import { TransactionsComponent } from "./components/reports/transactions.component/transactions.component";
+import { OrderReportComponent } from "./components/reports/order-report/order-report.component";
 import { RolesFormComponent } from "./components/Roles/roles-form/roles-form.component";
 import { RolesComponent } from "./components/Roles/roles/roles.component";
 import { StoreFormComponent } from "./components/Stores/store-form/store-form.component";
@@ -208,6 +209,12 @@ const routes: Routes = [
         resolve: {
           StoresResolver: StoresResolver
         }
+      },
+      {
+        path: 'order-report',
+        component: OrderReportComponent,
+        canActivate: [PermissionGuard],
+        data: { permission: [PermissionsEnum.VIEW_INVENTORY_REPORT] }
       },
       { 
         path: 'transaction/:id', 
