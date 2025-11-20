@@ -1,58 +1,149 @@
-<div class="dialog-container p-3 p-md-4">
-  <h5 class="mb-4 text-center">{{ isEditMode ? 'Edit Customer' : 'Add Customer' }}</h5>
-
-  <form [formGroup]="customerForm" (ngSubmit)="onSubmit()">
-    <div class="row g-3">
-
-      <!-- Name (EN) -->
-      <div class="col-12 col-sm-6 col-md-4">
-        <div class="floating-label-input">
-          <input class="form-control" formControlName="nameEn" placeholder=" " />
-          <label>Name (EN)</label>
+<div class="min-h-screen bg-gradient-to-br from-gray-50 via-cyan-50 to-blue-100 py-8" dir="rtl">
+  <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+    <!-- Header -->
+    <div class="mb-8">
+      <div class="flex items-center justify-between mb-6">
+        <div class="flex items-center">
+          <div class="w-14 h-14 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-2xl flex items-center justify-center mr-4 shadow-lg">
+            <i class="bi bi-person-plus text-white text-2xl"></i>
+          </div>
+          <div>
+            <h1 class="text-3xl font-bold text-gray-900">
+              {{ (isEditMode ? 'CUSTOMER_FORM.EDIT_TITLE' : 'CUSTOMER_FORM.TITLE') | translate }}
+            </h1>
+            <p class="text-gray-600 mt-1">{{ 'CUSTOMER_FORM.SUBTITLE' | translate }}</p>
+          </div>
         </div>
-      </div>
-
-      <!-- Name (AR) -->
-      <div class="col-12 col-sm-6 col-md-4">
-        <div class="floating-label-input">
-          <input class="form-control" formControlName="nameAr" placeholder=" " />
-          <label>Name (AR)</label>
-        </div>
-      </div>
-
-      <!-- Phone -->
-      <div class="col-12 col-sm-6 col-md-4">
-        <div class="floating-label-input">
-          <input class="form-control" formControlName="phone" placeholder=" " />
-          <label>Phone</label>
-        </div>
-      </div>
-
-      <!-- Email -->
-      <div class="col-12 col-sm-6 col-md-4">
-        <div class="floating-label-input">
-          <input type="email" class="form-control" formControlName="email" placeholder=" " />
-          <label>Email</label>
-        </div>
-      </div>
-
-      <!-- Address -->
-      <div class="col-12 col-md-8">
-        <div class="floating-label-textarea">
-          <textarea class="form-control" rows="3" formControlName="address" placeholder=" "></textarea>
-          <label>Address</label>
-        </div>
+        <button 
+          class="w-10 h-10 bg-white hover:bg-gray-100 rounded-full flex items-center justify-center transition-colors shadow-md"
+          (click)="cancel()"
+          [disabled]="isLoading">
+          <i class="bi bi-x-lg text-gray-600"></i>
+        </button>
       </div>
     </div>
 
-    <!-- Actions -->
-    <div class="col-12 mt-4 d-flex justify-content-end gap-2 flex-wrap">
-      <button type="button" class="btn btn-secondary flex-fill" (click)="cancel()">
-        Cancel
-      </button>
-      <button type="submit" class="btn btn-primary flex-fill" [disabled]="customerForm.invalid">
-        {{ isEditMode ? 'Update' : 'Save' }}
-      </button>
+    <!-- Form Card -->
+    <div class="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
+      <form [formGroup]="customerForm" (ngSubmit)="onSubmit()" class="p-6 sm:p-8">
+        <div class="space-y-6">
+          <!-- Name Fields Row -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Name Arabic -->
+            <div class="space-y-2">
+              <label class="block text-sm font-semibold text-gray-700">
+                <i class="bi bi-person mr-2 text-cyan-600"></i>
+                {{ 'CUSTOMER_FORM.NAME_AR' | translate }} <span class="text-red-500">*</span>
+              </label>
+              <input 
+                type="text" 
+                formControlName="nameAr"
+                class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all duration-200 bg-gray-50 focus:bg-white"
+                [class.border-red-500]="customerForm.get('nameAr')?.invalid && customerForm.get('nameAr')?.touched"
+                [placeholder]="'CUSTOMER_FORM.PLACEHOLDER.NAME_AR' | translate">
+              <div class="text-red-500 text-sm mt-1 flex items-center" *ngIf="getFieldError('nameAr')">
+                <i class="bi bi-exclamation-circle mr-1"></i>
+                {{ getFieldError('nameAr') }}
+              </div>
+            </div>
+
+            <!-- Name English -->
+            <div class="space-y-2">
+              <label class="block text-sm font-semibold text-gray-700">
+                <i class="bi bi-person mr-2 text-cyan-600"></i>
+                {{ 'CUSTOMER_FORM.NAME_EN' | translate }} <span class="text-red-500">*</span>
+              </label>
+              <input 
+                type="text" 
+                formControlName="nameEn"
+                class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all duration-200 bg-gray-50 focus:bg-white"
+                [class.border-red-500]="customerForm.get('nameEn')?.invalid && customerForm.get('nameEn')?.touched"
+                [placeholder]="'CUSTOMER_FORM.PLACEHOLDER.NAME_EN' | translate">
+              <div class="text-red-500 text-sm mt-1 flex items-center" *ngIf="getFieldError('nameEn')">
+                <i class="bi bi-exclamation-circle mr-1"></i>
+                {{ getFieldError('nameEn') }}
+              </div>
+            </div>
+          </div>
+
+          <!-- Contact Fields Row -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Phone -->
+            <div class="space-y-2">
+              <label class="block text-sm font-semibold text-gray-700">
+                <i class="bi bi-telephone mr-2 text-cyan-600"></i>
+                {{ 'CUSTOMER_FORM.PHONE' | translate }} <span class="text-red-500">*</span>
+              </label>
+              <input 
+                type="tel" 
+                formControlName="phone"
+                class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all duration-200 bg-gray-50 focus:bg-white"
+                [class.border-red-500]="customerForm.get('phone')?.invalid && customerForm.get('phone')?.touched"
+                [placeholder]="'CUSTOMER_FORM.PLACEHOLDER.PHONE' | translate">
+              <div class="text-red-500 text-sm mt-1 flex items-center" *ngIf="getFieldError('phone')">
+                <i class="bi bi-exclamation-circle mr-1"></i>
+                {{ getFieldError('phone') }}
+              </div>
+            </div>
+
+            <!-- Email -->
+            <div class="space-y-2">
+              <label class="block text-sm font-semibold text-gray-700">
+                <i class="bi bi-envelope mr-2 text-cyan-600"></i>
+                {{ 'CUSTOMER_FORM.EMAIL' | translate }}
+              </label>
+              <input 
+                type="email" 
+                formControlName="email"
+                class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all duration-200 bg-gray-50 focus:bg-white"
+                [class.border-red-500]="customerForm.get('email')?.invalid && customerForm.get('email')?.touched"
+                [placeholder]="'CUSTOMER_FORM.PLACEHOLDER.EMAIL' | translate">
+              <div class="text-red-500 text-sm mt-1 flex items-center" *ngIf="getFieldError('email')">
+                <i class="bi bi-exclamation-circle mr-1"></i>
+                {{ getFieldError('email') }}
+              </div>
+            </div>
+          </div>
+
+          <!-- Address -->
+          <div class="space-y-2">
+            <label class="block text-sm font-semibold text-gray-700">
+              <i class="bi bi-geo-alt mr-2 text-cyan-600"></i>
+              {{ 'CUSTOMER_FORM.ADDRESS' | translate }} <span class="text-red-500">*</span>
+            </label>
+            <textarea 
+              formControlName="address"
+              rows="4"
+              class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all duration-200 resize-none bg-gray-50 focus:bg-white"
+              [class.border-red-500]="customerForm.get('address')?.invalid && customerForm.get('address')?.touched"
+              [placeholder]="'CUSTOMER_FORM.PLACEHOLDER.ADDRESS' | translate"></textarea>
+            <div class="text-red-500 text-sm mt-1 flex items-center" *ngIf="getFieldError('address')">
+              <i class="bi bi-exclamation-circle mr-1"></i>
+              {{ getFieldError('address') }}
+            </div>
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="flex flex-col sm:flex-row justify-end gap-4 mt-8 pt-6 border-t border-gray-200">
+          <button 
+            type="button" 
+            (click)="cancel()"
+            [disabled]="isLoading"
+            class="w-full sm:w-auto px-8 py-3 bg-gray-100 text-gray-700 rounded-xl font-semibold hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-offset-2 transition-all duration-200 border border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed">
+            <i class="bi bi-x-lg mr-2"></i>
+            {{ 'CUSTOMER_FORM.BUTTONS.CANCEL' | translate }}
+          </button>
+          <button 
+            type="submit" 
+            [disabled]="customerForm.invalid || isLoading"
+            class="w-full sm:w-auto px-8 py-3 bg-gradient-to-r from-cyan-600 to-blue-600 text-white rounded-xl font-semibold hover:from-cyan-700 hover:to-blue-700 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg transform hover:scale-105">
+            <i class="bi bi-check-lg mr-2" *ngIf="!isLoading"></i>
+            <i class="bi bi-arrow-clockwise animate-spin mr-2" *ngIf="isLoading"></i>
+            {{ isLoading ? ('CUSTOMER_FORM.BUTTONS.SAVING' | translate) : ('CUSTOMER_FORM.BUTTONS.SAVE' | translate) }}
+          </button>
+        </div>
+      </form>
     </div>
-  </form>
+  </div>
 </div>

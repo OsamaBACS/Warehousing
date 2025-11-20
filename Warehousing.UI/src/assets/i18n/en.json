@@ -1,4 +1,26 @@
 {
+  "CUSTOMER_FORM": {
+    "TITLE": "Add New Customer",
+    "EDIT_TITLE": "Edit Customer",
+    "SUBTITLE": "Fill the following details to add a new customer",
+    "NAME_AR": "Customer Name (Arabic)",
+    "NAME_EN": "Customer Name (English)",
+    "PHONE": "Phone Number",
+    "EMAIL": "Email",
+    "ADDRESS": "Address",
+    "PLACEHOLDER": {
+      "NAME_AR": "Enter customer name in Arabic",
+      "NAME_EN": "Enter customer name in English",
+      "PHONE": "Enter phone number",
+      "EMAIL": "example@email.com",
+      "ADDRESS": "Enter full address"
+    },
+    "BUTTONS": {
+      "CANCEL": "Cancel",
+      "SAVE": "Save Customer",
+      "SAVING": "Saving..."
+    }
+  },
   "ADMIN": {
     "TITLE": "Admin Panel",
     "SYSTEM_ADMIN": "System Admin",
@@ -585,6 +607,42 @@
     "LOW_STOCK_COUNT": "Low Stock",
     "OUT_OF_STOCK_COUNT": "Out of Stock",
     "INVENTORY_REPORT": "Inventory Report",
+    "SALES_PURCHASE_REPORT": "Sales & Purchases Report",
+    "DESCRIPTION": "Track what you sold or bought over any period",
+    "SALES_TAB": "Sales",
+    "PURCHASE_TAB": "Purchases",
+    "DATE_RANGE": "Date Range",
+    "FROM": "From",
+    "TO": "To",
+    "QUICK_RANGES": {
+      "TITLE": "Quick ranges",
+      "TODAY": "Today",
+      "LAST_7_DAYS": "Last 7 days",
+      "LAST_30_DAYS": "Last 30 days"
+    },
+    "UPDATE": "Refresh report",
+    "LOADING": "Loading report...",
+    "ERROR_LOADING": "Unable to load report, please try again",
+    "NO_DATA_RANGE": "No data for the selected period",
+    "ORDERS_SHORT": "orders",
+    "PERIOD_SUMMARY": "Period summary",
+    "ORDERS_TABLE": "Order details",
+    "ORDERS_TABLE_DESCRIPTION": "Latest orders within the selected period",
+    "SHOWING": "Showing",
+    "COLUMNS": {
+      "ORDER_ID": "Order #",
+      "DATE": "Date",
+      "CUSTOMER_SUPPLIER": "Customer / Supplier",
+      "STATUS": "Status",
+      "TOTAL": "Total",
+      "QUANTITY": "Quantity"
+    },
+    "SUMMARY": {
+      "TOTAL_ORDERS": "Total Orders",
+      "TOTAL_AMOUNT": "Total Amount",
+      "AVERAGE_ORDER": "Average Order Value",
+      "TOTAL_QUANTITY": "Total Quantity"
+    },
     "COMPREHENSIVE_STOCK_REPORTS": "Comprehensive Stock Reports",
     "STOCK_MOVEMENT_DESCRIPTION": "Stock movement, evaluation, low stock, trends",
     "PRODUCT_TRANSACTIONS": "Product Transactions",

@@ -1,0 +1,254 @@
+<div class="min-h-screen bg-gradient-to-br from-gray-50 via-cyan-50 to-blue-100 py-8" dir="rtl">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+
+    <!-- Header -->
+    <div class="bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden">
+      <div class="bg-gradient-to-r from-cyan-600 to-blue-600 px-6 py-6 text-white flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <p class="text-sm text-cyan-100 font-medium tracking-wide">{{ 'REPORTS.TITLE' | translate }}</p>
+          <h1 class="text-3xl font-bold">{{ 'REPORTS.SALES_PURCHASE_REPORT' | translate }}</h1>
+          <p class="text-sm text-cyan-100 mt-1">{{ 'REPORTS.DESCRIPTION' | translate }}</p>
+        </div>
+      </div>
+
+      <!-- Filters -->
+      <form class="p-6 sm:p-8 space-y-6" [formGroup]="filtersForm">
+        
+        <!-- Order Type Tabs -->
+        <div class="flex flex-col sm:flex-row gap-3">
+          <ng-container *ngFor="let type of orderTypes">
+            <button
+              type="button"
+              class="flex-1 px-4 py-3 rounded-2xl font-semibold transition-all duration-200 focus:outline-none"
+              [ngClass]="{
+                'bg-gradient-to-r from-cyan-600 to-blue-600 text-white shadow-lg': selectedOrderTypeId === type.id,
+                'bg-gray-100 text-gray-700 hover:bg-gray-200': selectedOrderTypeId !== type.id
+              }"
+              (click)="onOrderTypeChange(type.id)">
+              {{ type.key | translate }}
+            </button>
+          </ng-container>
+        </div>
+
+        <!-- Date Range -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div class="bg-gray-50 rounded-2xl p-4 border border-gray-100">
+            <h3 class="text-sm font-semibold text-gray-600 mb-3 flex items-center gap-2">
+              <i class="bi bi-calendar-range text-cyan-600"></i>
+              {{ 'REPORTS.DATE_RANGE' | translate }}
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div class="space-y-1">
+                <label class="text-xs font-medium text-gray-500">{{ 'REPORTS.FROM' | translate }}</label>
+                <input type="date" formControlName="dateFrom"
+                  class="w-full px-3 py-2 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 text-sm bg-white">
+              </div>
+              <div class="space-y-1">
+                <label class="text-xs font-medium text-gray-500">{{ 'REPORTS.TO' | translate }}</label>
+                <input type="date" formControlName="dateTo"
+                  class="w-full px-3 py-2 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 text-sm bg-white">
+              </div>
+            </div>
+          </div>
+
+          <!-- Quick Ranges -->
+          <div class="bg-white rounded-2xl border border-gray-100 p-4">
+            <h3 class="text-sm font-semibold text-gray-600 mb-3 flex items-center gap-2">
+              <i class="bi bi-lightning-charge text-amber-500"></i>
+              {{ 'REPORTS.QUICK_RANGES.TITLE' | translate }}
+            </h3>
+            <div class="flex flex-wrap gap-3">
+              <button
+                type="button"
+                *ngFor="let range of quickRanges"
+                class="px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-200"
+                [ngClass]="{
+                  'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg': activeQuickRange === range.key,
+                  'bg-gray-100 text-gray-700 hover:bg-gray-200': activeQuickRange !== range.key
+                }"
+                (click)="applyQuickRange(range)">
+                {{ range.label | translate }}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex justify-end">
+          <button
+            type="button"
+            class="inline-flex items-center px-6 py-3 rounded-2xl bg-gradient-to-r from-cyan-600 to-blue-600 text-white font-semibold shadow-lg hover:from-cyan-700 hover:to-blue-700 transition-all duration-200 disabled:opacity-50"
+            [disabled]="loading"
+            (click)="loadReport()">
+            <i class="bi bi-arrow-repeat mr-2" [ngClass]="{ 'animate-spin': loading }"></i>
+            {{ 'REPORTS.UPDATE' | translate }}
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Loading / Error States -->
+    <div *ngIf="loading" class="bg-white rounded-3xl shadow-lg p-8 flex flex-col items-center text-gray-600 gap-3">
+      <div class="w-12 h-12 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin"></div>
+      <p>{{ 'REPORTS.LOADING' | translate }}</p>
+    </div>
+
+    <div *ngIf="!loading && errorMessage" class="bg-red-50 border border-red-200 rounded-2xl p-6 text-red-700">
+      {{ errorMessage | translate }}
+    </div>
+
+    <!-- Content -->
+    <ng-container *ngIf="!loading && summary as summaryData">
+      <!-- Summary Cards -->
+      <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+        <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
+          <div class="flex items-center gap-4">
+            <div class="w-12 h-12 rounded-2xl bg-cyan-100 text-cyan-600 flex items-center justify-center text-xl">
+              <i class="bi bi-receipt"></i>
+            </div>
+            <div>
+              <p class="text-sm text-gray-500">{{ 'REPORTS.SUMMARY.TOTAL_ORDERS' | translate }}</p>
+              <h3 class="text-2xl font-bold text-gray-900">{{ summaryData.totalOrders | number }}</h3>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
+          <div class="flex items-center gap-4">
+            <div class="w-12 h-12 rounded-2xl bg-indigo-100 text-indigo-600 flex items-center justify-center text-xl">
+              <i class="bi bi-cash-stack"></i>
+            </div>
+            <div>
+              <p class="text-sm text-gray-500">{{ 'REPORTS.SUMMARY.TOTAL_AMOUNT' | translate }}</p>
+              <h3 class="text-2xl font-bold text-gray-900">{{ summaryData.totalAmount | number:'1.2-2' }} {{ 'COMMON.CURRENCY' | translate }}</h3>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
+          <div class="flex items-center gap-4">
+            <div class="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-600 flex items-center justify-center text-xl">
+              <i class="bi bi-diagram-3"></i>
+            </div>
+            <div>
+              <p class="text-sm text-gray-500">{{ 'REPORTS.SUMMARY.AVERAGE_ORDER' | translate }}</p>
+              <h3 class="text-2xl font-bold text-gray-900">{{ summaryData.averageOrderValue | number:'1.2-2' }} {{ 'COMMON.CURRENCY' | translate }}</h3>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
+          <div class="flex items-center gap-4">
+            <div class="w-12 h-12 rounded-2xl bg-amber-100 text-amber-600 flex items-center justify-center text-xl">
+              <i class="bi bi-box-seam"></i>
+            </div>
+            <div>
+              <p class="text-sm text-gray-500">{{ 'REPORTS.SUMMARY.TOTAL_QUANTITY' | translate }}</p>
+              <h3 class="text-2xl font-bold text-gray-900">{{ summaryData.totalQuantity | number:'1.0-2' }}</h3>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Daily Breakdown -->
+      <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+        <div class="bg-white rounded-3xl shadow-lg border border-gray-100 p-6 xl:col-span-2">
+          <div class="flex items-center justify-between mb-6">
+            <h3 class="text-lg font-semibold text-gray-900">{{ 'REPORTS.DAILY_BREAKDOWN' | translate }}</h3>
+          </div>
+          <div *ngIf="reportData?.dailyBreakdown?.length; else noDaily" class="space-y-4">
+            <div *ngFor="let day of reportData?.dailyBreakdown" class="p-4 rounded-2xl border border-gray-100 bg-gray-50 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div>
+                <p class="text-sm text-gray-500">{{ day.date | date }}</p>
+                <p class="text-base font-semibold text-gray-900">{{ day.orderCount }} {{ 'REPORTS.ORDERS_SHORT' | translate }}</p>
+              </div>
+              <div class="text-lg font-bold text-cyan-600">{{ day.totalAmount | number:'1.2-2' }} {{ 'COMMON.CURRENCY' | translate }}</div>
+            </div>
+          </div>
+          <ng-template #noDaily>
+            <div class="text-center py-10 text-gray-500">
+              {{ 'REPORTS.NO_DATA' | translate }}
+            </div>
+          </ng-template>
+        </div>
+
+        <!-- Period Summary -->
+        <div class="bg-white rounded-3xl shadow-lg border border-gray-100 p-6">
+          <h3 class="text-lg font-semibold text-gray-900 mb-4">{{ 'REPORTS.PERIOD_SUMMARY' | translate }}</h3>
+          <ul class="space-y-4 text-sm text-gray-600">
+            <li class="flex items-center justify-between">
+              <span>{{ 'REPORTS.FROM' | translate }}</span>
+              <span class="font-semibold">{{ summaryData.dateFrom | date }}</span>
+            </li>
+            <li class="flex items-center justify-between">
+              <span>{{ 'REPORTS.TO' | translate }}</span>
+              <span class="font-semibold">{{ summaryData.dateTo | date }}</span>
+            </li>
+            <li class="flex items-center justify-between">
+              <span>{{ 'REPORTS.SUMMARY.TOTAL_ORDERS' | translate }}</span>
+              <span class="font-semibold">{{ summaryData.totalOrders | number }}</span>
+            </li>
+            <li class="flex items-center justify-between">
+              <span>{{ 'REPORTS.SUMMARY.TOTAL_AMOUNT' | translate }}</span>
+              <span class="font-semibold">{{ summaryData.totalAmount | number:'1.2-2' }} {{ 'COMMON.CURRENCY' | translate }}</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Orders Table -->
+      <div class="bg-white rounded-3xl shadow-lg border border-gray-100">
+        <div class="px-6 py-5 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div>
+            <h3 class="text-lg font-semibold text-gray-900">{{ 'REPORTS.ORDERS_TABLE' | translate }}</h3>
+            <p class="text-sm text-gray-500">{{ 'REPORTS.ORDERS_TABLE_DESCRIPTION' | translate }}</p>
+          </div>
+          <div class="text-sm text-gray-500">
+            {{ 'REPORTS.SHOWING' | translate }} {{ details.length }} / {{ summaryData.totalOrders }}
+          </div>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+              <tr>
+                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">{{ 'REPORTS.COLUMNS.ORDER_ID' | translate }}</th>
+                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">{{ 'REPORTS.COLUMNS.DATE' | translate }}</th>
+                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">{{ 'REPORTS.COLUMNS.CUSTOMER_SUPPLIER' | translate }}</th>
+                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">{{ 'REPORTS.COLUMNS.STATUS' | translate }}</th>
+                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">{{ 'REPORTS.COLUMNS.TOTAL' | translate }}</th>
+                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">{{ 'REPORTS.COLUMNS.QUANTITY' | translate }}</th>
+              </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-100">
+              <tr *ngFor="let order of details; trackBy: trackByOrderId" class="hover:bg-gray-50">
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">#{{ order.orderId }}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                  <div>{{ order.orderDate | date:'mediumDate' }}</div>
+                  <div class="text-xs text-gray-400">{{ order.orderTypeNameAr }}</div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                  <div *ngIf="order.customerName">{{ order.customerName }}</div>
+                  <div *ngIf="order.supplierName">{{ order.supplierName }}</div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm">
+                  <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-cyan-100 text-cyan-800">
+                    {{ order.statusNameAr || ('STATUS.PENDING' | translate) }}
+                  </span>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">
+                  {{ order.totalAmount | number:'1.2-2' }} {{ 'COMMON.CURRENCY' | translate }}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{{ order.totalQuantity | number:'1.0-2' }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div *ngIf="!details.length" class="text-center py-10 text-gray-500">
+          {{ 'REPORTS.NO_DATA' | translate }}
+        </div>
+      </div>
+    </ng-container>
+  </div>
+</div>
+
