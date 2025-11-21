@@ -82,14 +82,21 @@ builder.Services.AddAuthorization();
 
 var app = builder.Build();
 
-// Apply migrations and seed data on startup
+// Apply migrations on startup (only applies pending migrations)
 using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<WarehousingContext>();
     await context.Database.MigrateAsync();
 
-    var seedingService = scope.ServiceProvider.GetRequiredService<SeedingService>();
-    await seedingService.SeedDataAsync();
+    // Only seed data in Development environment OR if explicitly enabled via configuration
+    var shouldSeed = app.Environment.IsDevelopment() || 
+                     builder.Configuration.GetValue<bool>("SeedData:Enabled", false);
+    
+    if (shouldSeed)
+    {
+        var seedingService = scope.ServiceProvider.GetRequiredService<SeedingService>();
+        await seedingService.SeedDataAsync();
+    }
 }
 
 // Configure HTTP pipeline

@@ -257,20 +257,17 @@ namespace Warehousing.Data.Services
                 return;
             }
 
-            // Remove old seeded data (from initial migration) so we can insert the new dataset
-            var existingSubCategories = await _context.SubCategories.ToListAsync();
-            if (existingSubCategories.Any())
+            // Only seed if database is empty - never delete existing categories!
+            // This prevents data loss on every startup
+            var hasAnyCategories = await _context.Categories.AnyAsync();
+            var hasAnySubCategories = await _context.SubCategories.AnyAsync();
+            
+            // If there's any existing data, don't seed (user might have modified it)
+            if (hasAnyCategories || hasAnySubCategories)
             {
-                _context.SubCategories.RemoveRange(existingSubCategories);
+                Console.WriteLine("Categories or SubCategories already exist. Skipping seed to prevent data loss.");
+                return;
             }
-
-            var existingCategories = await _context.Categories.ToListAsync();
-            if (existingCategories.Any())
-            {
-                _context.Categories.RemoveRange(existingCategories);
-            }
-
-            await _context.SaveChangesAsync();
 
             // Define new categories dataset (LegacyId used only for mapping subcategories; DB Id is identity)
             var categories = new[]

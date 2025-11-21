@@ -150,9 +150,13 @@ export class StoreTransferFormComponent implements OnInit {
         });
       } else {
         this.transferService.createTransfer(transferData).subscribe({
-          next: () => {
+          next: (createdTransfer) => {
             this.notification.success('Transfer created successfully', 'Store Transfer');
-            this.resetFormState();
+            if (createdTransfer?.id) {
+              this.completeTransfer(createdTransfer.id);
+            } else {
+              this.notification.warning('Transfer saved but could not be completed automatically. Please complete it manually.', 'Store Transfer');
+            }
           },
           error: () => {
             this.notification.error('Error creating transfer', 'Store Transfer');
@@ -162,6 +166,18 @@ export class StoreTransferFormComponent implements OnInit {
     } else {
       this.notification.warning('Please fill in all required fields and add at least one item', 'Store Transfer');
     }
+  }
+
+  private completeTransfer(transferId: number): void {
+    this.transferService.completeTransfer(transferId).subscribe({
+      next: () => {
+        this.notification.success('Transfer completed and inventory updated successfully', 'Store Transfer');
+        this.resetFormState();
+      },
+      error: () => {
+        this.notification.error('Transfer saved but failed to complete. Please try again from the transfers list.', 'Store Transfer');
+      }
+    });
   }
 
   cancel(): void {
