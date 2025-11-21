@@ -144,10 +144,7 @@ namespace Warehousing.Api.Controllers
         {
             try
             {
-                var success = await _storeTransferRepo.CompleteTransferAsync(id);
-                if (!success)
-                    return BadRequest("Failed to complete transfer");
-
+                await _storeTransferRepo.CompleteTransferAsync(id);
                 await _unitOfWork.SaveAsync();
                 return Ok(new { message = "Transfer completed successfully" });
             }
@@ -162,10 +159,7 @@ namespace Warehousing.Api.Controllers
         {
             try
             {
-                var success = await _storeTransferRepo.CancelTransferAsync(id);
-                if (!success)
-                    return BadRequest("Failed to cancel transfer");
-
+                await _storeTransferRepo.CancelTransferAsync(id);
                 await _unitOfWork.SaveAsync();
                 return Ok(new { message = "Transfer cancelled successfully" });
             }

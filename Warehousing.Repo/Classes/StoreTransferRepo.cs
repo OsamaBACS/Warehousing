@@ -74,90 +74,97 @@ namespace Warehousing.Repo.Classes
             return _mapper.Map<StoreTransferDto>(transfer);
         }
 
-        public async Task<bool> CompleteTransferAsync(int transferId)
+        public async Task CompleteTransferAsync(int transferId)
         {
-            using var transaction = await _context.Database.BeginTransactionAsync();
-            try
+            var strategy = _context.Database.CreateExecutionStrategy();
+            await strategy.ExecuteAsync(async () =>
             {
-                var transfer = await _context.StoreTransfers
-                    .Include(t => t.Items)
-                    .FirstOrDefaultAsync(t => t.Id == transferId);
-
-                if (transfer == null)
-                    return false;
-
-                // Update status to completed
-                var completedStatus = await _context.Statuses
-                    .FirstOrDefaultAsync(s => s.Code == "COMPLETED");
-
-                if (completedStatus == null)
-                    return false;
-
-                transfer.StatusId = completedStatus.Id;
-
-                // Create inventory transactions for each item
-                foreach (var item in transfer.Items)
+                await using var transaction = await _context.Database.BeginTransactionAsync();
+                try
                 {
-                    // Deduction from source store
-                    await CreateInventoryTransaction(
-                        item.ProductId, 
-                        transfer.FromStoreId, 
-                        -item.Quantity, 
-                        item.UnitCost, 
-                        "TRANSFER_OUT",
-                        transferId);
+                    var transfer = await _context.StoreTransfers
+                        .Include(t => t.Items)
+                        .FirstOrDefaultAsync(t => t.Id == transferId);
 
-                    // Addition to destination store
-                    await CreateInventoryTransaction(
-                        item.ProductId, 
-                        transfer.ToStoreId, 
-                        item.Quantity, 
-                        item.UnitCost, 
-                        "TRANSFER_IN",
-                        transferId);
+                    if (transfer == null)
+                        throw new InvalidOperationException($"Store transfer with ID {transferId} was not found.");
 
-                    // Update inventory records
-                    await UpdateInventory(transfer.FromStoreId, item.ProductId, -item.Quantity);
-                    await UpdateInventory(transfer.ToStoreId, item.ProductId, item.Quantity);
+                    if (transfer.Items == null || transfer.Items.Count == 0)
+                        throw new InvalidOperationException("Cannot complete a store transfer that has no items.");
+
+                    // Update status to completed (ensure status exists)
+                    var completedStatus = await EnsureStatusAsync(
+                        "COMPLETED",
+                        "مكتمل",
+                        "Completed",
+                        "Store transfer completed");
+
+                    transfer.StatusId = completedStatus.Id;
+
+                    // Create inventory transactions for each item
+                    foreach (var item in transfer.Items)
+                    {
+                        // Deduction from source store
+                        await CreateInventoryTransaction(
+                            item.ProductId,
+                            transfer.FromStoreId,
+                            -item.Quantity,
+                            item.UnitCost,
+                            "TRANSFER_OUT",
+                            transferId);
+
+                        // Addition to destination store
+                        await CreateInventoryTransaction(
+                            item.ProductId,
+                            transfer.ToStoreId,
+                            item.Quantity,
+                            item.UnitCost,
+                            "TRANSFER_IN",
+                            transferId);
+
+                        // Update inventory records
+                        await UpdateInventory(transfer.FromStoreId, item.ProductId, -item.Quantity);
+                        await UpdateInventory(transfer.ToStoreId, item.ProductId, item.Quantity);
+                    }
+
+                    await _context.SaveChangesAsync();
+                    await transaction.CommitAsync();
                 }
-
-                await _context.SaveChangesAsync();
-                await transaction.CommitAsync();
-                return true;
-            }
-            catch
-            {
-                await transaction.RollbackAsync();
-                return false;
-            }
+                catch (Exception ex)
+                {
+                    await transaction.RollbackAsync();
+                    throw new InvalidOperationException($"Failed to complete transfer: {ex.Message}", ex);
+                }
+            });
         }
 
-        public async Task<bool> CancelTransferAsync(int transferId)
+        public async Task CancelTransferAsync(int transferId)
         {
             var transfer = await _context.StoreTransfers
                 .FirstOrDefaultAsync(t => t.Id == transferId);
 
             if (transfer == null)
-                return false;
+                throw new InvalidOperationException($"Store transfer with ID {transferId} was not found.");
 
-            var cancelledStatus = await _context.Statuses
-                .FirstOrDefaultAsync(s => s.Code == "CANCELLED");
-
-            if (cancelledStatus == null)
-                return false;
+            var cancelledStatus = await EnsureStatusAsync(
+                "CANCELLED",
+                "ملغي",
+                "Cancelled",
+                "Store transfer cancelled");
 
             transfer.StatusId = cancelledStatus.Id;
             await _context.SaveChangesAsync();
-            return true;
         }
 
         private async Task CreateInventoryTransaction(int productId, int storeId, decimal quantity, decimal unitCost, string transactionTypeCode, int transferId)
         {
-            var transactionType = await _context.TransactionTypes
-                .FirstOrDefaultAsync(tt => tt.Code == transactionTypeCode);
-
-            if (transactionType == null)
-                return;
+            var transactionType = await EnsureTransactionTypeAsync(
+                transactionTypeCode,
+                transactionTypeCode == "TRANSFER_IN" ? "تحويل وارد" : "تحويل صادر",
+                transactionTypeCode == "TRANSFER_IN" ? "Transfer In" : "Transfer Out",
+                transactionTypeCode == "TRANSFER_IN"
+                    ? "Stock transferred into this warehouse/location"
+                    : "Stock transferred out of this warehouse/location");
 
             // Get current inventory quantity
             var inventory = await _context.Inventories
@@ -203,6 +210,48 @@ namespace Warehousing.Repo.Classes
             {
                 inventory.Quantity += quantityChange;
             }
+        }
+
+        private async Task<Status> EnsureStatusAsync(string code, string nameAr, string nameEn, string description)
+        {
+            var status = await _context.Statuses.FirstOrDefaultAsync(s => s.Code == code);
+            if (status != null)
+            {
+                return status;
+            }
+
+            status = new Status
+            {
+                Code = code,
+                NameAr = nameAr,
+                NameEn = nameEn,
+                Description = description
+            };
+
+            _context.Statuses.Add(status);
+            await _context.SaveChangesAsync();
+            return status;
+        }
+
+        private async Task<TransactionType> EnsureTransactionTypeAsync(string code, string nameAr, string nameEn, string description)
+        {
+            var transactionType = await _context.TransactionTypes.FirstOrDefaultAsync(t => t.Code == code);
+            if (transactionType != null)
+            {
+                return transactionType;
+            }
+
+            transactionType = new TransactionType
+            {
+                Code = code,
+                NameAr = nameAr,
+                NameEn = nameEn,
+                Description = description
+            };
+
+            _context.TransactionTypes.Add(transactionType);
+            await _context.SaveChangesAsync();
+            return transactionType;
         }
     }
 }

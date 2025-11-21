@@ -9,7 +9,7 @@ namespace Warehousing.Repo.Interfaces
         Task<IEnumerable<StoreTransferDto>> GetTransfersByStatusAsync(int statusId);
         Task<IEnumerable<StoreTransferDto>> GetTransfersByStoreAsync(int storeId, bool isFromStore = true);
         Task<StoreTransferDto> GetTransferWithItemsAsync(int transferId);
-        Task<bool> CompleteTransferAsync(int transferId);
-        Task<bool> CancelTransferAsync(int transferId);
+        Task CompleteTransferAsync(int transferId);
+        Task CancelTransferAsync(int transferId);
     }
 }
