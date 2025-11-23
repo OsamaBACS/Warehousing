@@ -94,13 +94,19 @@ namespace Warehousing.Repo.Shared
                 .ForMember(dest => dest.StatusNameAr, opt => opt.MapFrom(src => src.Status.NameAr))
                 .ForMember(dest => dest.StatusNameEn, opt => opt.MapFrom(src => src.Status.NameEn))
                 .ForMember(dest => dest.StatusCode, opt => opt.MapFrom(src => src.Status.Code))
-                .ReverseMap();
+                .ReverseMap()
+                .ForMember(dest => dest.FromStore, opt => opt.Ignore())
+                .ForMember(dest => dest.ToStore, opt => opt.Ignore())
+                .ForMember(dest => dest.Status, opt => opt.Ignore())
+                .ForMember(dest => dest.Transactions, opt => opt.Ignore());
 
             CreateMap<StoreTransferItem, StoreTransferItemDto>()
                 .ForMember(dest => dest.ProductNameAr, opt => opt.MapFrom(src => src.Product.NameAr))
                 .ForMember(dest => dest.ProductNameEn, opt => opt.MapFrom(src => src.Product.NameEn))
                 .ForMember(dest => dest.ProductCode, opt => opt.MapFrom(src => src.Product.Code))
-                .ReverseMap();
+                .ReverseMap()
+                .ForMember(dest => dest.Transfer, opt => opt.Ignore())
+                .ForMember(dest => dest.Product, opt => opt.Ignore());
 
             CreateMap<ProductRecipe, ProductRecipeDto>()
                 .ForMember(dest => dest.ParentProductNameAr, opt => opt.MapFrom(src => src.ParentProduct.NameAr))

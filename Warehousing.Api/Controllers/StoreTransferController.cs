@@ -83,16 +83,46 @@ namespace Warehousing.Api.Controllers
         {
             try
             {
-                // Set default status to Draft if not provided
+                // Validate required fields
+                if (transferDto.FromStoreId <= 0)
+                    return BadRequest("FromStoreId is required and must be greater than 0");
+                
+                if (transferDto.ToStoreId <= 0)
+                    return BadRequest("ToStoreId is required and must be greater than 0");
+                
+                if (transferDto.FromStoreId == transferDto.ToStoreId)
+                    return BadRequest("FromStoreId and ToStoreId cannot be the same");
+                
+                if (transferDto.Items == null || transferDto.Items.Count == 0)
+                    return BadRequest("Transfer must have at least one item");
+
+                // Set default status to Pending if not provided
                 if (transferDto.StatusId == 0)
                 {
                     var draftStatus = await _unitOfWork.StatusRepo.GetByCodeAsync("PENDING");
                     if (draftStatus != null)
                         transferDto.StatusId = draftStatus.Id;
+                    else
+                        return BadRequest("Status 'PENDING' not found in database");
                 }
 
+                // Map DTO to entity - ensure Items are properly mapped
                 var entity = _mapper.Map<StoreTransfer>(transferDto);
+                
+                // Ensure items have correct TransferId (will be set after creation)
+                foreach (var item in entity.Items)
+                {
+                    item.TransferId = 0; // Will be set after entity is saved
+                }
+
                 var createdTransfer = await _storeTransferRepo.CreateAsync(entity);
+                
+                // Update TransferId for all items
+                foreach (var item in createdTransfer.Items)
+                {
+                    item.TransferId = createdTransfer.Id;
+                }
+                
                 await _unitOfWork.SaveAsync();
 
                 return CreatedAtAction(nameof(GetTransfer), new { id = createdTransfer.Id }, _mapper.Map<StoreTransferDto>(createdTransfer));
@@ -144,8 +174,8 @@ namespace Warehousing.Api.Controllers
         {
             try
             {
+                // CompleteTransferAsync already saves changes inside the transaction
                 await _storeTransferRepo.CompleteTransferAsync(id);
-                await _unitOfWork.SaveAsync();
                 return Ok(new { message = "Transfer completed successfully" });
             }
             catch (Exception ex)

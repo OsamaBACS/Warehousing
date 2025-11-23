@@ -104,6 +104,17 @@ namespace Warehousing.Repo.Classes
                     // Create inventory transactions for each item
                     foreach (var item in transfer.Items)
                     {
+                        // Validate sufficient inventory exists in source store
+                        var sourceInventory = await _context.Inventories
+                            .FirstOrDefaultAsync(i => i.ProductId == item.ProductId && i.StoreId == transfer.FromStoreId);
+
+                        if (sourceInventory == null || sourceInventory.Quantity < item.Quantity)
+                        {
+                            throw new InvalidOperationException(
+                                $"Insufficient inventory for Product ID {item.ProductId} in Store ID {transfer.FromStoreId}. " +
+                                $"Available: {sourceInventory?.Quantity ?? 0}, Required: {item.Quantity}");
+                        }
+
                         // Deduction from source store
                         await CreateInventoryTransaction(
                             item.ProductId,
@@ -122,9 +133,26 @@ namespace Warehousing.Repo.Classes
                             "TRANSFER_IN",
                             transferId);
 
-                        // Update inventory records
-                        await UpdateInventory(transfer.FromStoreId, item.ProductId, -item.Quantity);
-                        await UpdateInventory(transfer.ToStoreId, item.ProductId, item.Quantity);
+                        // Update inventory records (subtract from source, add to destination)
+                        sourceInventory.Quantity -= item.Quantity;
+                        
+                        var destinationInventory = await _context.Inventories
+                            .FirstOrDefaultAsync(i => i.ProductId == item.ProductId && i.StoreId == transfer.ToStoreId);
+
+                        if (destinationInventory == null)
+                        {
+                            destinationInventory = new Inventory
+                            {
+                                ProductId = item.ProductId,
+                                StoreId = transfer.ToStoreId,
+                                Quantity = item.Quantity
+                            };
+                            _context.Inventories.Add(destinationInventory);
+                        }
+                        else
+                        {
+                            destinationInventory.Quantity += item.Quantity;
+                        }
                     }
 
                     await _context.SaveChangesAsync();
@@ -190,27 +218,6 @@ namespace Warehousing.Repo.Classes
             _context.InventoryTransactions.Add(inventoryTransaction);
         }
 
-        private async Task UpdateInventory(int storeId, int productId, decimal quantityChange)
-        {
-            var inventory = await _context.Inventories
-                .FirstOrDefaultAsync(i => i.ProductId == productId && i.StoreId == storeId);
-
-            if (inventory == null)
-            {
-                // Create new inventory record
-                inventory = new Inventory
-                {
-                    ProductId = productId,
-                    StoreId = storeId,
-                    Quantity = quantityChange
-                };
-                _context.Inventories.Add(inventory);
-            }
-            else
-            {
-                inventory.Quantity += quantityChange;
-            }
-        }
 
         private async Task<Status> EnsureStatusAsync(string code, string nameAr, string nameEn, string description)
         {
