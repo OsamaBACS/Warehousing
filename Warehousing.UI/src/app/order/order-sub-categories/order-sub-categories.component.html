@@ -15,7 +15,7 @@
           <!-- SubCategory Image -->
           <div class="aspect-square bg-gradient-to-br from-green-50 to-emerald-100 flex items-center justify-center p-6 flex-shrink-0">
             <img *ngIf="subCategory.imagePath" 
-                 [src]="serverUrl + subCategory.imagePath" 
+                 [src]="imageUrlService.getImageUrl(subCategory.imagePath, serverUrl)" 
                  [alt]="subCategory.nameAr"
                  class="w-full h-full object-cover rounded-xl">
             <div *ngIf="!subCategory.imagePath" 

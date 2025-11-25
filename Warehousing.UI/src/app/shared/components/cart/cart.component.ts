@@ -29,6 +29,7 @@ import { CompaniesService } from '../../../admin/services/companies.service';
 import { Company } from '../../../admin/models/Company';
 import { UsersService } from '../../../admin/services/users.service';
 import { User } from '../../../admin/models/users';
+import { ImageUrlService } from '../../services/image-url.service';
 
 @Component({
   selector: 'app-cart',
@@ -55,6 +56,7 @@ export class CartComponent implements OnInit, OnDestroy {
     private supplierService: SupplierService,
     private companiesService: CompaniesService,
     private usersService: UsersService,
+    private imageUrlService: ImageUrlService,
   ) {
     this.products = this.route.snapshot.data['productsResolver'];
     this.suppliers = this.route.snapshot.data['suppliersResolver'];
@@ -886,10 +888,13 @@ export class CartComponent implements OnInit, OnDestroy {
   getCompanyLogoUrl(): string {
     const company = this.getCompanyInfo();
     const logoUrl = company?.logoUrl || '';
-    if (logoUrl && !logoUrl.startsWith('http')) {
-      return environment.resourcesUrl + logoUrl;
-    }
-    return logoUrl || '';
+    return this.imageUrlService.getImageUrl(logoUrl, this.resourceUrl) || '';
+  }
+
+  getProductImageUrl(productId?: number | null): string {
+    const product = productId != null ? this.getProductInfo(productId) : null;
+    const resolvedUrl = this.imageUrlService.getImageUrl(product?.imagePath || '', this.resourceUrl);
+    return resolvedUrl || 'https://via.placeholder.com/80';
   }
 
   getCompanyTerms(): string {

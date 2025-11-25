@@ -29,11 +29,15 @@ builder.Services.AddSwaggerGen(c =>
 });
 
 builder.Services.AddCors(options =>
-    options.AddPolicy("myCORS", builder =>
+    options.AddPolicy("myCORS", policy =>
     {
-        builder.AllowAnyOrigin()
-                .AllowAnyHeader()
-                .AllowAnyMethod();
+        policy.WithOrigins(
+                "http://localhost:4200",
+                "https://warehousingui-cpbyb7d8hadwgwcp.canadacentral-01.azurewebsites.net"
+            )
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .AllowCredentials();
     }));
 
 builder.Services.AddHttpContextAccessor();
@@ -108,19 +112,35 @@ if (!app.Environment.IsDevelopment())
     // app.UseHttpsRedirection();
 }
 
-app.UseDefaultFiles();
-app.UseStaticFiles();
+// Configure static files to serve from current directory (for Angular files in wwwroot)
+app.UseDefaultFiles(new DefaultFilesOptions
+{
+    FileProvider = new PhysicalFileProvider(Directory.GetCurrentDirectory())
+});
+
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(Directory.GetCurrentDirectory())
+});
+
+// Configure Resources directory for file serving
+var resourcesPath = Path.Combine(Directory.GetCurrentDirectory(), "Resources");
+if (!Directory.Exists(resourcesPath))
+{
+    Directory.CreateDirectory(resourcesPath);
+}
 
 app.UseFileServer(new FileServerOptions
 {
-    FileProvider = new PhysicalFileProvider(Path.Combine(Directory.GetCurrentDirectory(), @"Resources")),
+    FileProvider = new PhysicalFileProvider(resourcesPath),
     RequestPath = new PathString("/Resources"),
     EnableDirectoryBrowsing = true
 });
 
-app.UseRouting();
-
+// CORS must be before UseRouting and UseAuthentication
 app.UseCors("myCORS");
+
+app.UseRouting();
 
 app.UseAuthentication();
 app.UseMiddleware<ValidateUserClaimsMiddleware>();
@@ -141,7 +161,7 @@ app.Use(async (context, next) =>
     }
 });
 
-// Only set port for local development
+// Only set port in development (Azure App Service manages ports automatically)
 if (app.Environment.IsDevelopment())
 {
     app.Urls.Add("http://localhost:5036");

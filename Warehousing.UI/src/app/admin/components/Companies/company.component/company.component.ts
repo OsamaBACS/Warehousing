@@ -5,6 +5,7 @@ import { Observable, tap } from 'rxjs';
 import { CompaniesService } from '../../../services/companies.service';
 import { LanguageService } from '../../../../core/services/language.service';
 import { CompanyPagination } from '../../../models/Company';
+import { ImageUrlService } from '../../../../shared/services/image-url.service';
 
 @Component({
   selector: 'app-company.component',
@@ -19,7 +20,8 @@ export class CompanyComponent implements OnInit {
     private companiesService: CompaniesService,
     private router: Router,
     private route: ActivatedRoute,
-    public lang: LanguageService
+    public lang: LanguageService,
+    public imageUrlService: ImageUrlService
   ) {}
 
   companies$!: Observable<CompanyPagination>;

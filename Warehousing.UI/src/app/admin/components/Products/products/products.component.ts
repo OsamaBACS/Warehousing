@@ -14,6 +14,7 @@ import { Product, ProductPagination } from '../../../models/product';
 import { PermissionsEnum } from '../../../constants/enums/permissions.enum';
 import { Store } from '../../../models/store';
 import { AdminBreadcrumbService } from '../../../services/admin-breadcrumb.service';
+import { ImageUrlService } from '../../../../shared/services/image-url.service';
 
 @Component({
   selector: 'app-products',
@@ -33,7 +34,8 @@ export class ProductsComponent implements OnInit {
     public lang: LanguageService,
     private toastr: ToastrService,
     private authService: AuthService,
-    private adminBreadcrumbService: AdminBreadcrumbService
+    private adminBreadcrumbService: AdminBreadcrumbService,
+    public imageUrlService: ImageUrlService
   ) {
     this.stores = this.route.snapshot.data['StoresResolver'];
     this.productForm = this.fb.group({
@@ -73,7 +75,7 @@ export class ProductsComponent implements OnInit {
   units!: Unit[];
   products$!: Observable<ProductPagination>;
   pageIndex: number = 1;
-  pageSize: number = 8;
+  pageSize: number = 10;
   totalPages = 1;
   totalPagesArray: number[] = [];
   productForm!: FormGroup;

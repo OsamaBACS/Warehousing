@@ -27,7 +27,7 @@
           <!-- Company Logo -->
           <div class="aspect-square bg-gradient-to-br from-violet-50 to-purple-100 flex items-center justify-center p-6 flex-shrink-0">
             <app-image-uploader 
-              [initialImageUrl]="serverUrl + company.logoUrl"
+              [initialImageUrl]="imageUrlService.getImageUrl(company.logoUrl, serverUrl)"
               [readonly]="true">
             </app-image-uploader>
           </div>

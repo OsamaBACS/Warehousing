@@ -5,6 +5,7 @@ import { LanguageService } from '../../../../core/services/language.service';
 import { AuthService } from '../../../../core/services/auth.service';
 import { Observable, map } from 'rxjs';
 import { Category } from '../../../models/category';
+import { ImageUrlService } from '../../../../shared/services/image-url.service';
 
 @Component({
   selector: 'app-category',
@@ -19,7 +20,8 @@ export class CategoryComponent implements OnInit {
     private router: Router,
     private route: ActivatedRoute,
     public lang: LanguageService,
-    public authService: AuthService
+    public authService: AuthService,
+    public imageUrlService: ImageUrlService
   ){}
 
   ngOnInit(): void {

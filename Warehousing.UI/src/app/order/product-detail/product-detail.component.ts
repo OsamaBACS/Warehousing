@@ -15,6 +15,7 @@ import { ProductModifierGroup } from '../models/ProductModifier';
 import { environment } from '../../../environments/environment';
 import { MatDialog } from '@angular/material/dialog';
 import { SplitGeneralQuantityDialogComponent } from '../split-general-quantity-dialog/split-general-quantity-dialog.component';
+import { ImageUrlService } from '../../shared/services/image-url.service';
 
 @Component({
   selector: 'app-product-detail',
@@ -61,6 +62,7 @@ export class ProductDetailComponent implements OnInit {
     private orderBreadcrumbService: OrderBreadcrumbService,
     public authService: AuthService,
     private fb: FormBuilder,
+    public imageUrlService: ImageUrlService,
     private dialog: MatDialog
   ) {
     this.productForm = this.fb.group({

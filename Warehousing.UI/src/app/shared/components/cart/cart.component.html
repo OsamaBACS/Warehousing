@@ -71,7 +71,7 @@
               <div class="flex-shrink-0">
                 <div class="w-20 h-20 bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl flex items-center justify-center overflow-hidden">
                   <img
-                    [src]="resourceUrl + getProductInfo(item.get('productId')?.value)?.imagePath || 'https://via.placeholder.com/80'"
+                    [src]="getProductImageUrl(item.get('productId')?.value)"
                     alt="{{ 'CART_DETAILS.PRODUCT_IMAGE' | translate }}" 
                     class="w-full h-full object-cover" />
                 </div>

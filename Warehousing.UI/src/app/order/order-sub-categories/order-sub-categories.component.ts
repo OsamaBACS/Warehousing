@@ -8,6 +8,7 @@ import { Observable, map } from 'rxjs';
 import { SubCategory } from '../../admin/models/SubCategory';
 import { Category } from '../../admin/models/category';
 import { environment } from '../../../environments/environment';
+import { ImageUrlService } from '../../shared/services/image-url.service';
 
 @Component({
   selector: 'app-order-sub-categories',
@@ -23,7 +24,8 @@ export class OrderSubCategoriesComponent implements OnInit {
     private router: Router,
     private route: ActivatedRoute,
     private breadcrumbService: BreadcrumbService,
-    public authService: AuthService
+    public authService: AuthService,
+    public imageUrlService: ImageUrlService
   ) {
     this.categories = this.route.snapshot.data['categoriesResolver'];
   }

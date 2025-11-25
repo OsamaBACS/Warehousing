@@ -23,6 +23,20 @@ namespace Warehousing.Api.Controllers
             _fileStorageService = fileStorageService;
         }
 
+        private string GetImageUrl(string? imagePath)
+        {
+            if (string.IsNullOrEmpty(imagePath))
+                return string.Empty;
+
+            if (_fileStorageService != null)
+            {
+                return _fileStorageService.GetFileUrl(imagePath);
+            }
+
+            // Fallback: return relative path
+            return $"/{imagePath.Replace("\\", "/")}";
+        }
+
         [HttpGet]
         [Route("GetSubCategories")]
         public async Task<IActionResult> GetSubCategories()
@@ -34,6 +48,13 @@ namespace Warehousing.Api.Controllers
                     .Include(s => s.Category) // Only include Category for CategoryName mapping
                     .ProjectTo<SubCategorySimpleDto>(_mapper.ConfigurationProvider)
                     .ToListAsync();
+                
+                // Convert image paths to URLs
+                foreach (var subCategory in list)
+                {
+                    subCategory.ImagePath = GetImageUrl(subCategory.ImagePath);
+                }
+                
                 return Ok(list);
             }
             catch (Exception ex)
@@ -53,6 +74,13 @@ namespace Warehousing.Api.Controllers
                     .Include(s => s.Category) // Only include Category for CategoryName mapping
                     .ProjectTo<SubCategorySimpleDto>(_mapper.ConfigurationProvider)
                     .ToListAsync();
+                
+                // Convert image paths to URLs
+                foreach (var subCategory in list)
+                {
+                    subCategory.ImagePath = GetImageUrl(subCategory.ImagePath);
+                }
+                
                 return Ok(list);
             }
             catch (Exception ex)
@@ -77,6 +105,9 @@ namespace Warehousing.Api.Controllers
                     return NotFound("Sub Category Not Found!");
                 }
                 
+                // Convert image path to URL
+                subCategory.ImagePath = GetImageUrl(subCategory.ImagePath);
+                
                 return Ok(subCategory);
             }
             catch (Exception ex)
@@ -96,6 +127,12 @@ namespace Warehousing.Api.Controllers
                     .Include(s => s.Category) // Only include Category for CategoryName mapping
                     .ProjectTo<SubCategorySimpleDto>(_mapper.ConfigurationProvider)
                     .ToListAsync();
+                
+                // Convert image paths to URLs
+                foreach (var subCategory in subCategories)
+                {
+                    subCategory.ImagePath = GetImageUrl(subCategory.ImagePath);
+                }
                 
                 if (subCategories == null || !subCategories.Any())
                 {
@@ -183,7 +220,9 @@ namespace Warehousing.Api.Controllers
                         
                         _mapper.Map(dto, SubCategoryToUpdate);
                         var result = await _unitOfWork.SubCategoryRepo.UpdateAsync(SubCategoryToUpdate);
-                        return Ok(_mapper.Map<SubCategoryDto>(result));
+                        var resultDto = _mapper.Map<SubCategoryDto>(result);
+                        resultDto.ImagePath = GetImageUrl(resultDto.ImagePath);
+                        return Ok(resultDto);
                     }
                     else
                     {
@@ -196,7 +235,9 @@ namespace Warehousing.Api.Controllers
                     var result = await _unitOfWork.SubCategoryRepo.CreateAsync(subCategory);
                     if (result != null)
                     {
-                        return Ok(_mapper.Map<SubCategoryDto>(result));
+                        var resultDto = _mapper.Map<SubCategoryDto>(result);
+                        resultDto.ImagePath = GetImageUrl(resultDto.ImagePath);
+                        return Ok(resultDto);
                     }
                     else
                     {
@@ -244,6 +285,12 @@ namespace Warehousing.Api.Controllers
                     .ProjectTo<SubCategoryDto>(_mapper.ConfigurationProvider)
                     .ToListAsync();
 
+                // Convert image paths to URLs
+                foreach (var subCategory in subCategories)
+                {
+                    subCategory.ImagePath = GetImageUrl(subCategory.ImagePath);
+                }
+
                 return Ok(subCategories);
             }
             catch (Exception ex)
@@ -264,6 +311,12 @@ namespace Warehousing.Api.Controllers
                     .ProjectTo<SubCategoryDto>(_mapper.ConfigurationProvider)
                     .ToListAsync();
 
+                // Convert image paths to URLs
+                foreach (var subCategory in subCategories)
+                {
+                    subCategory.ImagePath = GetImageUrl(subCategory.ImagePath);
+                }
+
                 return Ok(subCategories);
             }
             catch (Exception ex)
@@ -281,6 +334,12 @@ namespace Warehousing.Api.Controllers
                     .GetByConditionIncluding(s => s.CategoryId == categoryId && s.IsActive, s => s.Products)
                     .ProjectTo<SubCategoryDto>(_mapper.ConfigurationProvider)
                     .ToListAsync();
+
+                // Convert image paths to URLs
+                foreach (var subCategory in subCategories)
+                {
+                    subCategory.ImagePath = GetImageUrl(subCategory.ImagePath);
+                }
 
                 return Ok(subCategories);
             }

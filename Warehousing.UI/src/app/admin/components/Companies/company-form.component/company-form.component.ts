@@ -6,6 +6,7 @@ import { CompaniesService } from '../../../services/companies.service';
 import { NotificationService } from '../../../../core/services/notification.service';
 import { Company } from '../../../models/Company';
 import { PrinterConfiguration, parsePrinterConfiguration, serializePrinterConfiguration, defaultA4PrinterConfig, defaultPosPrinterConfig } from '../../../models/PrinterConfiguration';
+import { ImageUrlService } from '../../../../shared/services/image-url.service';
 
 @Component({
   selector: 'app-company-form.component',
@@ -28,7 +29,8 @@ export class CompanyFormComponent implements OnInit {
     private companiesService: CompaniesService,
     private notification: NotificationService,
     private router: Router,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private imageUrlService: ImageUrlService
   ) {}
 
   ngOnInit(): void {
@@ -83,7 +85,8 @@ export class CompanyFormComponent implements OnInit {
     this.initPrinterConfigForm();
 
     if (company && company.logoUrl) {
-      this.initialImageUrl = this.url + company.logoUrl;
+      // Use ImageUrlService to handle both full URLs and relative paths
+      this.initialImageUrl = this.imageUrlService.getImageUrl(company.logoUrl, this.url);
       this.detectFiles(this.initialImageUrl);
     }
   }

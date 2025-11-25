@@ -97,7 +97,7 @@
           <!-- Category Image -->
           <div class="aspect-square bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-6 flex-shrink-0">
             <img *ngIf="category.imagePath" 
-                 [src]="serverUrl + category.imagePath" 
+                 [src]="imageUrlService.getImageUrl(category.imagePath, serverUrl)" 
                  [alt]="category.nameAr"
                  class="w-full h-full object-cover rounded-xl">
             <div *ngIf="!category.imagePath" 

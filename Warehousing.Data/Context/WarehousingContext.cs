@@ -170,11 +170,6 @@ namespace Warehousing.Data.Context
                 .OnDelete(DeleteBehavior.SetNull);
 
             // Configure decimal precision and scale for all decimal properties
-            ConfigureDecimalPrecision(modelBuilder);
-        }
-
-        private void ConfigureDecimalPrecision(ModelBuilder modelBuilder)
-        {
             // Company
             modelBuilder.Entity<Company>()
                 .Property(c => c.Capital)
@@ -187,17 +182,14 @@ namespace Warehousing.Data.Context
 
             // InventoryTransaction
             modelBuilder.Entity<InventoryTransaction>()
-                .Property(it => it.QuantityBefore)
-                .HasPrecision(18, 3);
-            
-            modelBuilder.Entity<InventoryTransaction>()
                 .Property(it => it.QuantityAfter)
                 .HasPrecision(18, 3);
-            
+            modelBuilder.Entity<InventoryTransaction>()
+                .Property(it => it.QuantityBefore)
+                .HasPrecision(18, 3);
             modelBuilder.Entity<InventoryTransaction>()
                 .Property(it => it.QuantityChanged)
                 .HasPrecision(18, 3);
-            
             modelBuilder.Entity<InventoryTransaction>()
                 .Property(it => it.UnitCost)
                 .HasPrecision(18, 2);
@@ -209,59 +201,51 @@ namespace Warehousing.Data.Context
 
             // OrderItem
             modelBuilder.Entity<OrderItem>()
+                .Property(oi => oi.Discount)
+                .HasPrecision(18, 2);
+            modelBuilder.Entity<OrderItem>()
                 .Property(oi => oi.Quantity)
                 .HasPrecision(18, 3);
-            
             modelBuilder.Entity<OrderItem>()
                 .Property(oi => oi.UnitCost)
                 .HasPrecision(18, 2);
-            
             modelBuilder.Entity<OrderItem>()
                 .Property(oi => oi.UnitPrice)
-                .HasPrecision(18, 2);
-            
-            modelBuilder.Entity<OrderItem>()
-                .Property(oi => oi.Discount)
                 .HasPrecision(18, 2);
 
             // OrderItemModifier
             modelBuilder.Entity<OrderItemModifier>()
-                .Property(oim => oim.PriceAdjustment)
-                .HasPrecision(18, 2);
-            
-            modelBuilder.Entity<OrderItemModifier>()
                 .Property(oim => oim.CostAdjustment)
+                .HasPrecision(18, 2);
+            modelBuilder.Entity<OrderItemModifier>()
+                .Property(oim => oim.PriceAdjustment)
                 .HasPrecision(18, 2);
 
             // Product
             modelBuilder.Entity<Product>()
                 .Property(p => p.CostPrice)
                 .HasPrecision(18, 2);
-            
-            modelBuilder.Entity<Product>()
-                .Property(p => p.SellingPrice)
-                .HasPrecision(18, 2);
-            
             modelBuilder.Entity<Product>()
                 .Property(p => p.ReorderLevel)
                 .HasPrecision(18, 3);
+            modelBuilder.Entity<Product>()
+                .Property(p => p.SellingPrice)
+                .HasPrecision(18, 2);
 
             // ProductModifier
             modelBuilder.Entity<ProductModifier>()
-                .Property(pm => pm.PriceAdjustment)
-                .HasPrecision(18, 2);
-            
-            modelBuilder.Entity<ProductModifier>()
                 .Property(pm => pm.CostAdjustment)
+                .HasPrecision(18, 2);
+            modelBuilder.Entity<ProductModifier>()
+                .Property(pm => pm.PriceAdjustment)
                 .HasPrecision(18, 2);
 
             // ProductModifierOption
             modelBuilder.Entity<ProductModifierOption>()
-                .Property(pmo => pmo.PriceAdjustment)
-                .HasPrecision(18, 2);
-            
-            modelBuilder.Entity<ProductModifierOption>()
                 .Property(pmo => pmo.CostAdjustment)
+                .HasPrecision(18, 2);
+            modelBuilder.Entity<ProductModifierOption>()
+                .Property(pmo => pmo.PriceAdjustment)
                 .HasPrecision(18, 2);
 
             // ProductRecipe
@@ -271,13 +255,11 @@ namespace Warehousing.Data.Context
 
             // ProductVariant
             modelBuilder.Entity<ProductVariant>()
-                .Property(pv => pv.PriceAdjustment)
-                .HasPrecision(18, 2);
-            
-            modelBuilder.Entity<ProductVariant>()
                 .Property(pv => pv.CostAdjustment)
                 .HasPrecision(18, 2);
-            
+            modelBuilder.Entity<ProductVariant>()
+                .Property(pv => pv.PriceAdjustment)
+                .HasPrecision(18, 2);
             modelBuilder.Entity<ProductVariant>()
                 .Property(pv => pv.ReorderLevel)
                 .HasPrecision(18, 3);
@@ -286,7 +268,6 @@ namespace Warehousing.Data.Context
             modelBuilder.Entity<StoreTransferItem>()
                 .Property(sti => sti.Quantity)
                 .HasPrecision(18, 3);
-            
             modelBuilder.Entity<StoreTransferItem>()
                 .Property(sti => sti.UnitCost)
                 .HasPrecision(18, 2);
