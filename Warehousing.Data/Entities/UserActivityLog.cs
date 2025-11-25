@@ -50,4 +50,3 @@ namespace Warehousing.Data.Entities
 
 
 
-
