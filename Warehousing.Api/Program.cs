@@ -141,6 +141,10 @@ app.Use(async (context, next) =>
     }
 });
 
-// Force port 5036 for consistency
-app.Urls.Add("http://localhost:5036");
+// Only set port for local development
+if (app.Environment.IsDevelopment())
+{
+    app.Urls.Add("http://localhost:5036");
+}
+
 app.Run();

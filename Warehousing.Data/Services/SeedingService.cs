@@ -264,15 +264,11 @@ namespace Warehousing.Data.Services
 
         private async Task SeedStatusesAsync()
         {
+            // Get existing statuses
             var existingStatuses = await _context.Statuses.ToListAsync();
-            if (existingStatuses.Any())
-            {
-                Console.WriteLine($"Statuses already exist ({existingStatuses.Count} records). Skipping seeding.");
-                return; // Statuses already exist
-            }
+            var existingCodes = existingStatuses.Select(s => s.Code).ToHashSet();
 
-            Console.WriteLine("Seeding Statuses...");
-
+            // Define all required statuses
             var statuses = new List<Status>
             {
                 new Status { Code = "PENDING", NameEn = "Pending", NameAr = "قيد الانتظار", Description = "Order is created but not processed yet" },
@@ -288,9 +284,19 @@ namespace Warehousing.Data.Services
                 new Status { Code = "DRAFT", NameEn = "Save as draft", NameAr = "حفظ كمسودة", Description = "Order is saved but not submitted" }
             };
 
-            _context.Statuses.AddRange(statuses);
-            await _context.SaveChangesAsync();
-            Console.WriteLine($"Statuses seeded successfully ({statuses.Count} records).");
+            // Only add statuses that don't already exist
+            var statusesToAdd = statuses.Where(s => !existingCodes.Contains(s.Code)).ToList();
+            
+            if (statusesToAdd.Any())
+            {
+                _context.Statuses.AddRange(statusesToAdd);
+                await _context.SaveChangesAsync();
+                Console.WriteLine($"Seeded {statusesToAdd.Count} new statuses.");
+            }
+            else
+            {
+                Console.WriteLine($"All statuses already exist in database ({existingStatuses.Count} records).");
+            }
         }
 
         private async Task SeedOrderTypesAsync()

@@ -7,6 +7,7 @@ using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Warehousing.Repo.Interfaces;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Warehousing.Api.Controllers
 {
@@ -205,9 +206,15 @@ namespace Warehousing.Api.Controllers
                     isAdmin = false;
                 }
 
+                // Check if required statuses exist
                 var pending = await _unitOfWork.StatusRepo.GetByCondition(s => s.Code.Equals("PENDING")).FirstOrDefaultAsync();
                 var draft = await _unitOfWork.StatusRepo.GetByCondition(s => s.Code.Equals("DRAFT")).FirstOrDefaultAsync();
-                if (pending == null || draft == null) return NotFound("Please add statuses first");
+                
+                if (pending == null || draft == null)
+                {
+                    _logger.LogError("PENDING or DRAFT statuses are missing. Please ensure statuses are properly seeded.");
+                    return StatusCode(500, "Required statuses (PENDING or DRAFT) are missing. Please contact administrator.");
+                }
 
                 var order = _unitOfWork.OrderRepo
                     .GetAll()
