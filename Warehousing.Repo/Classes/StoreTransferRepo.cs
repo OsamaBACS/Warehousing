@@ -219,47 +219,6 @@ namespace Warehousing.Repo.Classes
         }
 
 
-        private async Task<Status> EnsureStatusAsync(string code, string nameAr, string nameEn, string description)
-        {
-            var status = await _context.Statuses.FirstOrDefaultAsync(s => s.Code == code);
-            if (status != null)
-            {
-                return status;
-            }
-
-            status = new Status
-            {
-                Code = code,
-                NameAr = nameAr,
-                NameEn = nameEn,
-                Description = description
-            };
-
-            _context.Statuses.Add(status);
-            await _context.SaveChangesAsync();
-            return status;
-        }
-
-        private async Task<TransactionType> EnsureTransactionTypeAsync(string code, string nameAr, string nameEn, string description)
-        {
-            var transactionType = await _context.TransactionTypes.FirstOrDefaultAsync(t => t.Code == code);
-            if (transactionType != null)
-            {
-                return transactionType;
-            }
-
-            transactionType = new TransactionType
-            {
-                Code = code,
-                NameAr = nameAr,
-                NameEn = nameEn,
-                Description = description
-            };
-
-            _context.TransactionTypes.Add(transactionType);
-            await _context.SaveChangesAsync();
-            return transactionType;
-        }
 
         private async Task<Status> EnsureStatusAsync(string code, string nameAr, string nameEn, string description)
         {

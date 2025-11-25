@@ -215,23 +215,6 @@ namespace Warehousing.Data.Services
             }
         }
 
-        private async Task SeedRolesAsync()
-        {
-            Console.WriteLine("Seeding Roles...");
-            var roles = new List<Role>
-            {
-                new Role { Code = "ADMIN", NameEn = "Admin", NameAr = "مدير", IsActive = true },
-                new Role { Code = "WAREHOUSE_MANAGER", NameEn = "Warehouse Manager", NameAr = "مسؤول المستودع", IsActive = true },
-                new Role { Code = "SALES_MANAGER", NameEn = "Sales Manager", NameAr = "مدير المبيعات", IsActive = true },
-                new Role { Code = "PURCHASE_MANAGER", NameEn = "Purchase Manager", NameAr = "مدير المشتريات", IsActive = true },
-                new Role { Code = "USER", NameEn = "User", NameAr = "مستخدم", IsActive = true }
-            };
-
-            _context.Roles.AddRange(roles);
-            await _context.SaveChangesAsync();
-            Console.WriteLine($"Roles seeded successfully ({roles.Count} records).");
-        }
-
         private async Task SeedUsersAsync()
         {
             var existingUser = await _context.Users.FirstOrDefaultAsync(u => u.Username == "admin");
@@ -657,10 +640,10 @@ namespace Warehousing.Data.Services
 
         private async Task SeedStoresAsync()
         {
-            var existingStores = await _context.Stores.AnyAsync();
-            if (existingStores)
+            var storeCount = await _context.Stores.CountAsync();
+            if (storeCount > 0)
             {
-                Console.WriteLine($"Stores already exist ({existingStores.Count} records). Skipping seeding.");
+                Console.WriteLine($"Stores already exist ({storeCount} records). Skipping seeding.");
                 return; // Stores already exist
             }
 
@@ -759,7 +742,7 @@ namespace Warehousing.Data.Services
             {
                 _context.RolePermissions.AddRange(rolePermissionsToAdd);
                 await _context.SaveChangesAsync();
-                Console.WriteLine($"Assigned {rolePermissions.Count} permissions to ADMIN role.");
+                Console.WriteLine($"Assigned {rolePermissionsToAdd.Count} permissions to ADMIN role.");
             }
         }
 
@@ -809,20 +792,15 @@ namespace Warehousing.Data.Services
 
             if (!hasAdminRole)
             {
-                // Check if user role already exists
-                var existingUserRole = await _context.UserRoles
-                    .FirstOrDefaultAsync(ur => ur.UserId == adminUser.Id && ur.RoleId == adminRole.Id);
-                
-                if (existingUserRole == null)
+                var userRole = new UserRole
                 {
                     UserId = adminUser.Id,
                     RoleId = adminRole.Id
                 };
 
-                    _context.UserRoles.Add(userRole);
-                    await _context.SaveChangesAsync();
-                    Console.WriteLine("Assigned ADMIN role to admin user.");
-                }
+                _context.UserRoles.Add(userRole);
+                await _context.SaveChangesAsync();
+                Console.WriteLine("Assigned ADMIN role to admin user.");
             }
         }
 
@@ -955,21 +933,10 @@ namespace Warehousing.Data.Services
             }
             catch (Exception ex)
             {
-                Name = "Default Working Hours",
-                Description = "Standard working hours (Sunday to Thursday, 8:00 AM to 5:00 PM)",
-                StartTime = new TimeSpan(8, 0, 0), // 8:00 AM
-                EndTime = new TimeSpan(17, 0, 0), // 5:00 PM
-                StartDay = DayOfWeek.Sunday,
-                EndDay = DayOfWeek.Thursday,
-                AllowWeekends = false,
-                AllowHolidays = false,
-                IsActive = true,
-                CreatedAt = new DateTime(2024, 1, 1),
-                CreatedBy = "system"
-            };
-
-            _context.WorkingHours.Add(workingHours);
-            await _context.SaveChangesAsync();
+                Console.WriteLine($"Error seeding WorkingHours: {ex.Message}");
+                Console.WriteLine($"Stack trace: {ex.StackTrace}");
+                throw;
+            }
         }
 
         private async Task SeedPrinterConfigurationsAsync()
