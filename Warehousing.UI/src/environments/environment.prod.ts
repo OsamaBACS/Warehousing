@@ -1,6 +1,9 @@
 export const environment = {
     production: true,
-    baseUrl: 'https://warehouse-gfgce9dheeecfgek.canadacentral-01.azurewebsites.net/api',
-    resourcesUrl: 'https://warehouse-gfgce9dheeecfgek.canadacentral-01.azurewebsites.net/',
-    blobBaseUrl: 'https://warehousingstorage.blob.core.windows.net/images/',
+    baseUrl: 'http://www.warehousing.somee.com/api',
+    serverUrl: 'http://www.warehousing.somee.com',
+    resourcesUrl: 'http://www.warehousing.somee.com/',
+    baseUrl1: '',
+    resourcesUrl1: '',
+    blobBaseUrl: '',
 };

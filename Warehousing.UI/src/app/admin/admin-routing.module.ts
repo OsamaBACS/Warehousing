@@ -55,8 +55,6 @@ import { PrinterConfigurationFormComponent } from "./components/PrinterConfigura
 const routes: Routes = [
   {
     path: '',
-    component: AdminComponent,
-    canActivate: [AuthGuard],
     children: [
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
       { 

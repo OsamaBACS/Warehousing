@@ -70,21 +70,21 @@
               <!-- For Sale Orders: Show normal product without variants -->
               <div *ngIf="orderTypeId === 2" class="space-y-4">
                 <div *ngFor="let store of allStores" class="bg-gray-50 rounded-xl p-4 border border-gray-200">
-                  <div class="flex justify-between items-center">
+                  <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
                     <!-- Store Info -->
-                    <div class="flex items-center">
-                      <i class="bi bi-building text-blue-600 mr-3 text-lg"></i>
-                      <div>
-                        <div class="font-semibold text-gray-900">{{ store.name }}</div>
+                    <div class="flex items-center min-w-0 flex-1">
+                      <i class="bi bi-building text-blue-600 mr-3 text-lg flex-shrink-0"></i>
+                      <div class="min-w-0">
+                        <div class="font-semibold text-gray-900 truncate">{{ store.name }}</div>
                         <div class="text-gray-500 text-sm">{{ store.code }}</div>
                       </div>
                     </div>
                     
                     <!-- Quantity Controls -->
-                    <div class="flex items-center">
-                      <span class="mr-3 text-gray-600 text-sm">{{ 'ORDER.QUANTITY' | translate }}:</span>
-                      <div class="flex items-center bg-white rounded-lg border border-gray-300">
-                        <button class="px-3 py-2 text-red-600 hover:bg-red-50 rounded-r-lg transition-colors" 
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 w-full sm:w-auto">
+                      <span class="text-gray-600 text-sm whitespace-nowrap">{{ 'ORDER.QUANTITY' | translate }}:</span>
+                      <div class="flex items-center bg-white rounded-lg border border-gray-300 w-full sm:w-auto min-w-0">
+                        <button class="px-2 sm:px-3 py-2 text-red-600 hover:bg-red-50 rounded-r-lg transition-colors flex-shrink-0" 
                                 (click)="decreaseQuantity(this.product!.id, store.id)"
                                 [disabled]="getCartQuantityForProductStore(this.product!.id, store.id) === 0">
                           <i class="bi bi-dash"></i>
@@ -92,13 +92,13 @@
                         
                         <!-- Manual quantity input -->
                         <input type="number" 
-                               class="w-16 px-2 py-2 text-center border-0 focus:outline-none focus:ring-0" 
+                               class="w-full sm:w-16 px-2 py-2 text-center border-0 focus:outline-none focus:ring-0 min-w-0" 
                                [value]="getCartQuantityForProductStore(this.product!.id, store.id)"
                                (change)="setProductQuantity(this.product!.id, store.id, $event)"
                                [max]="getStoreQuantity(store.id)"
                                min="0">
                         
-                        <button class="px-3 py-2 text-green-600 hover:bg-green-50 rounded-l-lg transition-colors" 
+                        <button class="px-2 sm:px-3 py-2 text-green-600 hover:bg-green-50 rounded-l-lg transition-colors flex-shrink-0" 
                                 (click)="increaseQuantity(this.product!.id, store.id)"
                                 [disabled]="getStoreQuantity(store.id) <= getCartQuantityForProductStore(this.product!.id, store.id)">
                           <i class="bi bi-plus"></i>
@@ -135,21 +135,21 @@
                   <!-- For Purchase Orders: Show all stores (admin chooses where to add) -->
                   <!-- For Sale Orders: Only show stores with stock > 0 (sales person sees what's available) -->
                   <div *ngFor="let store of getStoresForVariant(variant.id!)" class="bg-white rounded-lg p-4 border border-gray-200">
-                    <div class="flex justify-between items-center">
+                    <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
                       <!-- Store Info -->
-                      <div class="flex items-center">
-                        <i class="bi bi-building text-blue-600 mr-3 text-lg"></i>
-                        <div>
-                          <div class="font-semibold text-gray-900">{{ store.name }}</div>
+                      <div class="flex items-center min-w-0 flex-1">
+                        <i class="bi bi-building text-blue-600 mr-3 text-lg flex-shrink-0"></i>
+                        <div class="min-w-0">
+                          <div class="font-semibold text-gray-900 truncate">{{ store.name }}</div>
                           <div class="text-gray-500 text-sm">{{ store.code }}</div>
                         </div>
                       </div>
                       
                       <!-- Quantity Controls -->
-                      <div class="flex items-center">
-                        <span class="mr-3 text-gray-600 text-sm">{{ 'ORDER.QUANTITY' | translate }}:</span>
-                        <div class="flex items-center bg-white rounded-lg border border-gray-300">
-                          <button class="px-3 py-2 text-red-600 hover:bg-red-50 rounded-r-lg transition-colors" 
+                      <div class="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 w-full sm:w-auto">
+                        <span class="text-gray-600 text-sm whitespace-nowrap">{{ 'ORDER.QUANTITY' | translate }}:</span>
+                        <div class="flex items-center bg-white rounded-lg border border-gray-300 w-full sm:w-auto min-w-0">
+                          <button class="px-2 sm:px-3 py-2 text-red-600 hover:bg-red-50 rounded-r-lg transition-colors flex-shrink-0" 
                                   (click)="decreaseVariantQuantity(variant.id!, store.id)"
                                   [disabled]="getCartQuantityForVariantStore(variant.id!, store.id) === 0">
                             <i class="bi bi-dash"></i>
@@ -157,13 +157,13 @@
                           
                           <!-- Manual quantity input -->
                           <input type="number" 
-                                 class="w-16 px-2 py-2 text-center border-0 focus:outline-none focus:ring-0" 
+                                 class="w-full sm:w-16 px-2 py-2 text-center border-0 focus:outline-none focus:ring-0 min-w-0" 
                                  [value]="getCartQuantityForVariantStore(variant.id!, store.id)"
                                  (change)="setVariantQuantity(variant.id!, store.id, $event)"
                                  [max]="orderTypeId === 1 ? 999999 : getVariantStockForStore(variant.id!, store.id)"
                                  min="0">
                           
-                          <button class="px-3 py-2 text-green-600 hover:bg-green-50 rounded-l-lg transition-colors" 
+                          <button class="px-2 sm:px-3 py-2 text-green-600 hover:bg-green-50 rounded-l-lg transition-colors flex-shrink-0" 
                                   (click)="increaseVariantQuantity(variant.id!, store.id)"
                                   [disabled]="orderTypeId === 2 && getVariantStockForStore(variant.id!, store.id) <= getCartQuantityForVariantStore(variant.id!, store.id)">
                             <i class="bi bi-plus"></i>

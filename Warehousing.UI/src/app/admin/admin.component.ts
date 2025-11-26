@@ -57,8 +57,8 @@ export class AdminComponent implements OnInit {
       attributeFilter: ['dir']
     });
 
-    // Load sidebar configuration
-    this.sidebarConfig = this.sidebarConfigService.getAdminConfig();
+    // Load sidebar configuration (unified)
+    this.sidebarConfig = this.sidebarConfigService.getUnifiedConfig();
   }
 
   toggleSidebar() {

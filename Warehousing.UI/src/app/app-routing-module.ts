@@ -11,43 +11,59 @@ import { AuthGuard } from './core/guards/auth-guard.guard';
 import { OrderPendingListComponent } from './shared/components/order-pending-list/order-pending-list.component';
 import { SubCategoriesResolver } from './admin/resolvers/sub-categories-resolver';
 import { UnitsResolver } from './admin/resolvers/units-resolver';
+import { MainLayoutComponent } from './shared/components/main-layout/main-layout.component';
 
 const routes: Routes = [
   {
     path: '',
-    redirectTo: 'order/2/categories',
+    redirectTo: 'app/order/2/categories',
     pathMatch: 'full',
-  },
-  {
-    path: 'admin',
-    loadChildren: () => import('./admin/admin.module').then((m) => m.AdminModule),
-  },
-  {
-    path: 'order',
-    loadChildren: () => import('./order/order.module').then((m) => m.OrderModule)
-  },
-  {
-    path: 'cart', component: CartComponent,
-    resolve: {
-      productsResolver: ProductsResolver,
-      suppliersResolver: SuppliersResolver,
-      StoresResolver: StoresResolver,
-      statusesResolver: StatusesResolver,
-      customersRsolver: customersResolver,
-      subCategoriesResolver: SubCategoriesResolver,
-      unitsResolver: UnitsResolver
-    },
-    canActivate: [AuthGuard]
-  },
-  {
-    path: 'pending-orders', component: OrderPendingListComponent,
-    canActivate: [AuthGuard]
   },
   {
     path: 'login',
     component: Login
   },
-  { path: '**', redirectTo: 'login' }
+  {
+    path: 'app',
+    component: MainLayoutComponent,
+    canActivate: [AuthGuard],
+    children: [
+      {
+        path: '',
+        redirectTo: 'order/2/categories',
+        pathMatch: 'full',
+      },
+      {
+        path: 'admin',
+        loadChildren: () => import('./admin/admin.module').then((m) => m.AdminModule),
+      },
+      {
+        path: 'order',
+        loadChildren: () => import('./order/order.module').then((m) => m.OrderModule)
+      },
+      {
+        path: 'cart',
+        component: CartComponent,
+        resolve: {
+          productsResolver: ProductsResolver,
+          suppliersResolver: SuppliersResolver,
+          StoresResolver: StoresResolver,
+          statusesResolver: StatusesResolver,
+          customersRsolver: customersResolver,
+          subCategoriesResolver: SubCategoriesResolver,
+          unitsResolver: UnitsResolver
+        }
+      },
+      {
+        path: 'pending-orders',
+        component: OrderPendingListComponent
+      }
+    ]
+  },
+  { 
+    path: '**', 
+    redirectTo: 'login' 
+  }
 ];
 
 @NgModule({

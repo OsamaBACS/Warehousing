@@ -82,7 +82,7 @@ export class TransactionsComponent implements OnInit {
   }
 
   goBack() {
-    this.router.navigate(['/admin/inventory-report']);
+    this.router.navigate(['/app/admin/inventory-report']);
   }
 
   printTransactions(): void {

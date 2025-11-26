@@ -233,7 +233,7 @@ export class OrderProductsComponent implements OnInit {
 
   // Navigation method
   viewProductDetail(product: Product): void {
-    this.router.navigate(['/order', this.orderTypeId, 'product', product.id]);
+    this.router.navigate(['/app/order', this.orderTypeId, 'product', product.id]);
   }
 
 }

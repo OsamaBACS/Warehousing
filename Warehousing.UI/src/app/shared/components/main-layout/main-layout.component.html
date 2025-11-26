@@ -1,0 +1,52 @@
+<div class="min-h-screen flex bg-gray-50" [dir]="isRTL ? 'rtl' : 'ltr'" [ngClass]="{ 'dark': isDarkMode }">
+  <!-- Shared Sidebar -->
+  <app-sidebar 
+    [config]="sidebarConfig"
+    [(sidebarOpen)]="sidebarOpen">
+  </app-sidebar>
+
+  <!-- Mobile Overlay -->
+  <div 
+    *ngIf="sidebarOpen"
+    (click)="closeSidebar()"
+    class="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden transition-opacity duration-300 backdrop-blur-sm">
+  </div>
+
+  <!-- Mobile Toggle Button - Fixed above sidebar -->
+  <button
+    (click)="toggleSidebar()"
+    class="fixed top-4 z-50 lg:hidden p-3 rounded-xl bg-white shadow-lg hover:shadow-xl transition-all duration-300 border-2 border-gray-200 hover:border-blue-400 text-gray-700 hover:text-blue-600"
+    [ngClass]="{
+      'right-[17rem]': isRTL && sidebarOpen,
+      'right-4': isRTL && !sidebarOpen,
+      'left-[17rem]': !isRTL && sidebarOpen,
+      'left-4': !isRTL && !sidebarOpen
+    }">
+    <i [class]="sidebarOpen ? 'bi bi-x-lg text-xl' : 'bi bi-list text-xl'"></i>
+  </button>
+
+  <!-- Main Content -->
+  <div class="flex-1 flex flex-col min-w-0"
+       [ngClass]="{
+         'lg:mr-64': isRTL,
+         'lg:ml-64': !isRTL
+       }">
+    <!-- Top Bar - Simple breadcrumb only, no icons -->
+    <header class="sticky top-0 z-30 bg-white border-b border-gray-200 shadow-sm backdrop-blur-sm bg-opacity-95">
+      <div class="flex items-center justify-between h-14 px-4 sm:px-6 lg:px-8"
+           [ngClass]="{ 'flex-row-reverse': isRTL }">
+        <!-- Breadcrumb -->
+        <div class="flex-1"
+             [ngClass]="{ 'mr-4': isRTL, 'ml-4': !isRTL }">
+          <app-breadcrumb></app-breadcrumb>
+        </div>
+      </div>
+    </header>
+
+    <!-- Page Content -->
+    <main class="flex-1 overflow-y-auto bg-gray-50 p-4 sm:p-6 lg:p-8">
+      <router-outlet></router-outlet>
+    </main>
+  </div>
+</div>
+

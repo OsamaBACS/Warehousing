@@ -33,7 +33,9 @@ builder.Services.AddCors(options =>
     {
         policy.WithOrigins(
                 "http://localhost:4200",
-                "https://warehousingui-cpbyb7d8hadwgwcp.canadacentral-01.azurewebsites.net"
+                "https://warehousingui-cpbyb7d8hadwgwcp.canadacentral-01.azurewebsites.net",
+                "http://www.warehousing.somee.com",
+                "https://www.warehousing.somee.com"
             )
             .AllowAnyHeader()
             .AllowAnyMethod()
@@ -88,9 +90,13 @@ using (var scope = app.Services.CreateScope())
     var context = scope.ServiceProvider.GetRequiredService<WarehousingContext>();
     await context.Database.MigrateAsync();
 
-    // Always run seeding (operations are idempotent)
-    var seedingService = scope.ServiceProvider.GetRequiredService<SeedingService>();
-    await seedingService.SeedDataAsync();
+    // Run seeding only if enabled in configuration (default: true for production, false for development)
+    var seedDataEnabled = builder.Configuration.GetValue<bool>("SeedData:Enabled", !app.Environment.IsDevelopment());
+    if (seedDataEnabled)
+    {
+        var seedingService = scope.ServiceProvider.GetRequiredService<SeedingService>();
+        await seedingService.SeedDataAsync();
+    }
 }
 
 // Configure HTTP pipeline
@@ -106,15 +112,22 @@ if (!app.Environment.IsDevelopment())
     // app.UseHttpsRedirection();
 }
 
-// Configure static files to serve from current directory (for Angular files in wwwroot)
+// Configure static files to serve Angular files from wwwroot/browser
+var wwwrootPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "browser");
+if (!Directory.Exists(wwwrootPath))
+{
+    wwwrootPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
+}
+
 app.UseDefaultFiles(new DefaultFilesOptions
 {
-    FileProvider = new PhysicalFileProvider(Directory.GetCurrentDirectory())
+    FileProvider = new PhysicalFileProvider(wwwrootPath),
+    DefaultFileNames = new List<string> { "index.html" }
 });
 
 app.UseStaticFiles(new StaticFileOptions
 {
-    FileProvider = new PhysicalFileProvider(Directory.GetCurrentDirectory())
+    FileProvider = new PhysicalFileProvider(wwwrootPath)
 });
 
 // Configure Resources directory for file serving
@@ -142,7 +155,10 @@ app.UseAuthorization();
 app.UseMiddleware<Warehousing.Api.Middlewares.WorkingHoursMiddleware>();
 
 app.MapControllers();
-app.MapFallbackToFile("index.html");
+app.MapFallbackToFile("index.html", new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(wwwrootPath)
+});
 
 app.UseExceptionHandler("/error");
 app.Use(async (context, next) =>

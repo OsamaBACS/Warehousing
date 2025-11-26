@@ -303,7 +303,7 @@ export class ProductsComponent implements OnInit {
 
   // Navigate to inventory management for a specific product
   manageInventory(productId: number): void {
-    this.router.navigate(['/admin/inventory-management'], { 
+    this.router.navigate(['/app/admin/inventory-management'], { 
       queryParams: { productId: productId } 
     });
   }

@@ -14,7 +14,6 @@ const routes: Routes = [
   {
     path: ':orderTypeId',
     component: OrderComponent,
-    canActivate: [AuthGuard],
     children: [
       { path: 'categories', component: OrderCategoriesComponent },
       {

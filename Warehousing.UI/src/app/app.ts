@@ -108,9 +108,9 @@ export class App implements OnInit {
 
   goToHome() {
     if (this.authService.isAdmin) {
-      this.router.navigate(['/admin/dashboard']);
+      this.router.navigate(['/app/admin/dashboard']);
     } else {
-      this.router.navigate(['/order/2/categories']);
+      this.router.navigate(['/app/order/2/categories']);
     }
   }
 

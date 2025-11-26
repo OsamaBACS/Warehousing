@@ -444,7 +444,7 @@ export class ProductDetailComponent implements OnInit {
       alert('تم إضافة المنتج إلى السلة بنجاح');
       
       // Navigate back to products list
-      this.router.navigate(['/order', this.orderTypeId, 'categories', this.product.subCategory?.categoryId, 'sub-categories', this.product.subCategoryId, 'products']);
+      this.router.navigate(['/app/order', this.orderTypeId, 'categories', this.product.subCategory?.categoryId, 'sub-categories', this.product.subCategoryId, 'products']);
       
     } catch (error) {
       console.error('Error adding to cart:', error);
@@ -485,20 +485,20 @@ export class ProductDetailComponent implements OnInit {
     // Try to get category and subcategory from product data first
     if (this.product?.subCategory?.categoryId && this.product?.subCategoryId) {
       // Navigate back to order products using product data
-      this.router.navigate(['/order', this.orderTypeId, 'categories', this.product.subCategory.categoryId, 'sub-categories', this.product.subCategoryId, 'products']);
+      this.router.navigate(['/app/order', this.orderTypeId, 'categories', this.product.subCategory.categoryId, 'sub-categories', this.product.subCategoryId, 'products']);
     } else if (this.categoryId && this.subCategoryId) {
       // Fallback to route parameters
-      this.router.navigate(['/order', this.orderTypeId, 'categories', this.categoryId, 'sub-categories', this.subCategoryId, 'products']);
+      this.router.navigate(['/app/order', this.orderTypeId, 'categories', this.categoryId, 'sub-categories', this.subCategoryId, 'products']);
     } else {
       // Final fallback to categories
-      this.router.navigate(['/order', this.orderTypeId, 'categories']);
+      this.router.navigate(['/app/order', this.orderTypeId, 'categories']);
     }
   }
 
   goToProductForm(): void {
     if (this.product?.id) {
       // Navigate to admin product form to add variants
-      this.router.navigate(['/admin/product-form'], { queryParams: { productId: this.product.id } });
+      this.router.navigate(['/app/admin/product-form'], { queryParams: { productId: this.product.id } });
     } else {
       console.error('Product ID not available');
     }

@@ -142,7 +142,7 @@ export class StoreTransferFormComponent implements OnInit {
           next: () => {
             this.notification.success('Transfer updated successfully', 'Store Transfer');
             this.resetFormState();
-            this.router.navigate(['/admin/store-transfers']);
+            this.router.navigate(['/app/admin/store-transfers']);
           },
           error: () => {
             this.notification.error('Error updating transfer', 'Store Transfer');

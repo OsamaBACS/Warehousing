@@ -71,7 +71,7 @@ export class OrderCategoriesComponent implements OnInit, OnDestroy {
 
   onCardClick(categoryId: number) {
     this.router.navigate([
-      '/order',
+      '/app/order',
       this.orderTypeId,
       'categories',
       categoryId,
@@ -92,7 +92,7 @@ export class OrderCategoriesComponent implements OnInit, OnDestroy {
     }
 
     this.router.navigate(
-      ['/order', this.orderTypeId, 'product', product.id],
+      ['/app/order', this.orderTypeId, 'product', product.id],
       {
         queryParams: {
           categoryId: product.subCategory?.categoryId ?? undefined,

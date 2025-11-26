@@ -492,6 +492,7 @@
     "SUPPLIERS": "Suppliers",
     "COMPANIES": "Companies",
     "ORDERS": "Orders",
+    "SALE_ORDERS": "Sale",
     "PURCHASE": "Purchase",
     "REPORTS": "Reports",
     "INVENTORY": "Inventory",

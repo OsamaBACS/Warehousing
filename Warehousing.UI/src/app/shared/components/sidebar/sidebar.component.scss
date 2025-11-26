@@ -86,6 +86,26 @@ h3.text-xs {
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
+// Accordion styling
+.accordion-group {
+  transition: all 0.3s ease-in-out;
+  
+  .accordion-content {
+    overflow: hidden;
+    transition: max-height 0.3s ease-in-out, opacity 0.2s ease-in-out;
+  }
+  
+  button[aria-expanded="false"] + .accordion-content {
+    max-height: 0;
+    opacity: 0;
+  }
+  
+  button[aria-expanded="true"] + .accordion-content {
+    max-height: 1000px;
+    opacity: 1;
+  }
+}
+
 // Icon container hover effects
 .w-8.h-8.rounded-lg {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -102,6 +122,7 @@ h3.text-xs {
     max-width: 280px;
   }
 }
+
 
 
 

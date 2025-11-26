@@ -106,7 +106,7 @@ export class InitialStockComponent implements OnInit {
         next: (response) => {
           if (response.success) {
             this.toastr.success('تم إعداد الرصيد الابتدائي بنجاح', 'نجح');
-            this.router.navigate(['/admin/inventory-report']);
+            this.router.navigate(['/app/admin/inventory-report']);
           } else {
             this.toastr.error('فشل في إعداد الرصيد الابتدائي', 'خطأ');
           }

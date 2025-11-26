@@ -18,9 +18,9 @@ export class OrderBreadcrumbService {
   // Helper method to get the home route based on user role
   private getHomeRoute(orderTypeId?: number): string {
     if (this.authService.isAdmin) {
-      return '/admin/main';
+      return '/app/admin/dashboard';
     }
-    return orderTypeId ? `/order/${orderTypeId}/categories` : '/order/2/categories';
+    return orderTypeId ? `/app/order/${orderTypeId}/categories` : '/app/order/2/categories';
   }
 
   // Set breadcrumbs for order categories
@@ -28,7 +28,7 @@ export class OrderBreadcrumbService {
     const orderTypeName = this.getOrderTypeName(orderTypeId);
     this.breadcrumbService.setFrom([
       { label: this.translate.instant('BREADCRUMB.HOME'), route: this.getHomeRoute(orderTypeId) },
-      { label: orderTypeName, route: `/order/${orderTypeId}/categories` },
+      { label: orderTypeName, route: `/app/order/${orderTypeId}/categories` },
       { label: this.translate.instant('BREADCRUMB.CATEGORIES'), route: null }
     ]);
   }
@@ -38,9 +38,9 @@ export class OrderBreadcrumbService {
     const orderTypeName = this.getOrderTypeName(orderTypeId);
     this.breadcrumbService.setFrom([
       { label: 'الرئيسية', route: this.getHomeRoute(orderTypeId) },
-      { label: orderTypeName, route: `/order/${orderTypeId}/categories` },
-      { label: 'التصنيفات', route: `/order/${orderTypeId}/categories` },
-      { label: categoryName, route: `/order/${orderTypeId}/categories/${categoryId}/sub-categories` },
+      { label: orderTypeName, route: `/app/order/${orderTypeId}/categories` },
+      { label: 'التصنيفات', route: `/app/order/${orderTypeId}/categories` },
+      { label: categoryName, route: `/app/order/${orderTypeId}/categories/${categoryId}/sub-categories` },
       { label: 'التصنيفات الفرعية', route: null }
     ]);
   }
@@ -50,10 +50,10 @@ export class OrderBreadcrumbService {
     const orderTypeName = this.getOrderTypeName(orderTypeId);
     this.breadcrumbService.setFrom([
       { label: 'الرئيسية', route: this.getHomeRoute(orderTypeId) },
-      { label: orderTypeName, route: `/order/${orderTypeId}/categories` },
-      { label: 'التصنيفات', route: `/order/${orderTypeId}/categories` },
-      { label: categoryName, route: `/order/${orderTypeId}/categories/${categoryId}/sub-categories` },
-      { label: subCategoryName, route: `/order/${orderTypeId}/categories/${categoryId}/sub-categories/${subCategoryId}/products` },
+      { label: orderTypeName, route: `/app/order/${orderTypeId}/categories` },
+      { label: 'التصنيفات', route: `/app/order/${orderTypeId}/categories` },
+      { label: categoryName, route: `/app/order/${orderTypeId}/categories/${categoryId}/sub-categories` },
+      { label: subCategoryName, route: `/app/order/${orderTypeId}/categories/${categoryId}/sub-categories/${subCategoryId}/products` },
       { label: 'المنتجات', route: null }
     ]);
   }
@@ -63,10 +63,10 @@ export class OrderBreadcrumbService {
     const orderTypeName = this.getOrderTypeName(orderTypeId);
     this.breadcrumbService.setFrom([
       { label: 'الرئيسية', route: this.getHomeRoute(orderTypeId) },
-      { label: orderTypeName, route: `/order/${orderTypeId}/categories` },
-      { label: 'التصنيفات', route: `/order/${orderTypeId}/categories` },
-      { label: categoryName, route: `/order/${orderTypeId}/categories/${categoryId}/sub-categories` },
-      { label: subCategoryName, route: `/order/${orderTypeId}/categories/${categoryId}/sub-categories/${subCategoryId}/products` },
+      { label: orderTypeName, route: `/app/order/${orderTypeId}/categories` },
+      { label: 'التصنيفات', route: `/app/order/${orderTypeId}/categories` },
+      { label: categoryName, route: `/app/order/${orderTypeId}/categories/${categoryId}/sub-categories` },
+      { label: subCategoryName, route: `/app/order/${orderTypeId}/categories/${categoryId}/sub-categories/${subCategoryId}/products` },
       { label: productName, route: null }
     ]);
   }
@@ -76,7 +76,7 @@ export class OrderBreadcrumbService {
     const orderTypeName = this.getOrderTypeName(orderTypeId);
     this.breadcrumbService.setFrom([
       { label: 'الرئيسية', route: this.getHomeRoute(orderTypeId) },
-      { label: orderTypeName, route: `/order/${orderTypeId}/categories` },
+      { label: orderTypeName, route: `/app/order/${orderTypeId}/categories` },
       { label: 'السلة', route: null }
     ]);
   }
@@ -86,7 +86,7 @@ export class OrderBreadcrumbService {
     const orderTypeName = this.getOrderTypeName(orderTypeId);
     this.breadcrumbService.setFrom([
       { label: 'الرئيسية', route: this.getHomeRoute(orderTypeId) },
-      { label: orderTypeName, route: `/order/${orderTypeId}/categories` },
+      { label: orderTypeName, route: `/app/order/${orderTypeId}/categories` },
       { label: 'ملخص الطلب', route: null }
     ]);
   }

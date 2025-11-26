@@ -59,7 +59,7 @@ export class Login implements OnInit {
         this.isSubmitting = false;
         if(res.success && res.token) {
           const isAdmin = this.authService.isAdmin;
-          this.router.navigate([isAdmin ? '/admin/dashboard' : '/order/2/categories']);
+          this.router.navigate([isAdmin ? '/app/admin/dashboard' : '/app/order/2/categories']);
         } else {
           this.errorMessage = res.errorMessage || '';
         }

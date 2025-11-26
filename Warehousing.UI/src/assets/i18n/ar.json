@@ -491,6 +491,7 @@
     "SUPPLIERS": "الموردون",
     "COMPANIES": "الشركات",
     "ORDERS": "الطلبات",
+    "SALE_ORDERS": "البيع",
     "PURCHASE": "الشراء",
     "REPORTS": "التقارير",
     "INVENTORY": "المخزون",

@@ -48,6 +48,7 @@ export class SidebarComponent implements OnInit, OnDestroy, OnChanges {
   currentRoute = '';
   isRTL = true;
   private subscriptions: Subscription[] = [];
+  expandedGroups: Map<string, boolean> = new Map();
 
   get sidebarOpenValue(): boolean {
     return this._sidebarOpen;
@@ -73,11 +74,15 @@ export class SidebarComponent implements OnInit, OnDestroy, OnChanges {
       .pipe(filter((event): event is NavigationEnd => event instanceof NavigationEnd))
       .subscribe((event: NavigationEnd) => {
         this.currentRoute = event.urlAfterRedirects;
+        this.autoExpandActiveGroup();
       });
     this.subscriptions.push(routeSub);
     
     // Set initial route
     this.currentRoute = this.router.url;
+    
+    // Initialize expanded groups - expand first group by default, and groups with active routes
+    this.initializeExpandedGroups();
 
     // Set initial language direction
     this.isRTL = this.languageService.currentLang === 'ar';
@@ -165,6 +170,60 @@ export class SidebarComponent implements OnInit, OnDestroy, OnChanges {
     let count: number | null = null;
     this.cartService.cartCount$.subscribe(c => count = c).unsubscribe();
     return count;
+  }
+
+  getGroupKey(group: SidebarMenuGroup, index: number): string {
+    return group.title || `group-${index}`;
+  }
+
+  isGroupExpanded(group: SidebarMenuGroup, index: number): boolean {
+    // Groups without titles are always expanded (not collapsible)
+    if (!group.title) return true;
+    
+    const key = this.getGroupKey(group, index);
+    return this.expandedGroups.get(key) ?? true; // Default to expanded
+  }
+
+  toggleGroup(group: SidebarMenuGroup, index: number): void {
+    // Only toggle groups with titles
+    if (!group.title) return;
+    
+    const key = this.getGroupKey(group, index);
+    const currentState = this.expandedGroups.get(key) ?? true;
+    this.expandedGroups.set(key, !currentState);
+  }
+
+  initializeExpandedGroups(): void {
+    if (!this.config?.menuGroups) return;
+    
+    // Expand groups that contain the active route
+    this.config.menuGroups.forEach((group, index) => {
+      const key = this.getGroupKey(group, index);
+      const hasActiveRoute = group.items.some(item => 
+        item.route && this.isActiveRoute(item.route)
+      );
+      // Default to expanded if it has active route or is first group
+      this.expandedGroups.set(key, hasActiveRoute || index === 0);
+    });
+  }
+
+  autoExpandActiveGroup(): void {
+    if (!this.config?.menuGroups) return;
+    
+    // Find and expand the group containing the active route
+    this.config.menuGroups.forEach((group, index) => {
+      const key = this.getGroupKey(group, index);
+      const hasActiveRoute = group.items.some(item => 
+        item.route && this.isActiveRoute(item.route)
+      );
+      if (hasActiveRoute) {
+        this.expandedGroups.set(key, true);
+      }
+    });
+  }
+
+  hasGroupItems(group: SidebarMenuGroup): boolean {
+    return group.items.some(item => this.hasMenuItemPermission(item));
   }
 }
 

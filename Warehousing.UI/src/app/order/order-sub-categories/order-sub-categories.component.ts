@@ -40,10 +40,10 @@ export class OrderSubCategoriesComponent implements OnInit {
       this.categoryId = categoryIdParam !== null ? Number(categoryIdParam) : 1;
       const categoryName = this.getCategoryName(this.categoryId);
 
-      const homeRoute = this.authService.isAdmin ? '/admin/main' : `/order/${this.orderTypeId}/categories`;
+      const homeRoute = this.authService.isAdmin ? '/app/admin/dashboard' : `/app/order/${this.orderTypeId}/categories`;
       this.breadcrumbService.setFrom([
         { label: 'الرئيسية', route: homeRoute },
-        { label: 'التصنيفات', route: `/order/${this.orderTypeId}/categories` },
+        { label: 'التصنيفات', route: `/app/order/${this.orderTypeId}/categories` },
         { label: categoryName, route: null }
       ]);
 
@@ -74,7 +74,7 @@ export class OrderSubCategoriesComponent implements OnInit {
 
   onCardClick(subCategoryId: number) {
     this.router.navigate([
-      '/order',
+      '/app/order',
       this.orderTypeId,
       'categories',
       this.categoryId,      // you need to have this available
