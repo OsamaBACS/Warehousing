@@ -65,6 +65,12 @@ export class ProductModifiersComponent implements OnInit {
   }
 
   loadModifierGroups(): void {
+    // Only load modifier groups if productId is valid
+    if (!this.productId || this.productId <= 0) {
+      this.modifierGroups = [];
+      this.modifiersUpdated.emit([]);
+      return;
+    }
     this.loading = true;
     this.modifierService.getModifierGroupsByProduct(this.productId).subscribe({
       next: (groups) => {
@@ -73,6 +79,8 @@ export class ProductModifiersComponent implements OnInit {
         this.loading = false;
       },
       error: (error) => {
+        this.modifierGroups = [];
+        this.modifiersUpdated.emit([]);
         this.loading = false;
       }
     });
@@ -103,6 +111,10 @@ export class ProductModifiersComponent implements OnInit {
 
   onModifierSubmit(): void {
     if (this.modifierForm.valid) {
+      // Ensure productId is valid before submitting
+      if (!this.productId || this.productId <= 0) {
+        return; // Should not happen, but safety check
+      }
       const formValue = this.modifierForm.value;
       const groupData: ProductModifierGroupCreateRequest = {
         productId: this.productId,
@@ -118,9 +130,10 @@ export class ProductModifiersComponent implements OnInit {
           this.modifierGroups.push(group);
           this.showAddModifierForm = false; // Hide the form after successful creation
           this.resetModifierForm();
-          this.modifiersUpdated.emit(this.modifierGroups);
+          this.loadModifierGroups(); // Reload to ensure consistency
         },
         error: (error) => {
+          // Error handling can be improved here
         }
       });
     }

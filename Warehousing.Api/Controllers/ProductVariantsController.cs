@@ -64,9 +64,103 @@ namespace Warehousing.Api.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
-            await _unitOfWork.ProductVariantRepo.DeleteAsync(id);
-            await _unitOfWork.SaveAsync();
-            return Ok(new { success = true });
+            try
+            {
+                // Check if variant exists
+                var variant = await _unitOfWork.ProductVariantRepo.GetByIdAsync(id);
+                if (variant == null)
+                    return NotFound(new { message = "Product variant not found." });
+
+                // Check for related Inventory records
+                var hasInventory = await _unitOfWork.InventoryRepo
+                    .GetByCondition(i => i.VariantId == id)
+                    .AnyAsync();
+
+                // Check for related OrderItems
+                var hasOrderItems = await _unitOfWork.OrderItemRepo
+                    .GetByCondition(oi => oi.VariantId == id)
+                    .AnyAsync();
+
+                // Check for related InventoryTransactions
+                var hasTransactions = await _unitOfWork.InventoryTransactionRepo
+                    .GetByCondition(it => it.VariantId == id)
+                    .AnyAsync();
+
+                // Build error message if variant has related records
+                var errors = new List<string>();
+                if (hasInventory)
+                    errors.Add("inventory records");
+                if (hasOrderItems)
+                    errors.Add("order items");
+                if (hasTransactions)
+                    errors.Add("inventory transactions");
+
+                if (errors.Any())
+                {
+                    // Build a clearer, more actionable error message
+                    var errorMessage = "Cannot delete variant because it is referenced by: ";
+                    var reasons = new List<string>();
+                    
+                    if (hasInventory)
+                    {
+                        reasons.Add("inventory records (has stock)");
+                    }
+                    if (hasOrderItems)
+                    {
+                        reasons.Add("order items (used in orders)");
+                    }
+                    if (hasTransactions)
+                    {
+                        reasons.Add("inventory transactions (has transaction history)");
+                    }
+                    
+                    errorMessage += string.Join(", ", reasons) + ". ";
+                    
+                    // Provide specific guidance based on what's blocking
+                    if (hasInventory && !hasOrderItems)
+                    {
+                        errorMessage += "Please delete or transfer all inventory for this variant first, then try again.";
+                    }
+                    else if (hasOrderItems && !hasInventory)
+                    {
+                        errorMessage += "This variant has been used in orders and cannot be deleted. Consider marking it as inactive instead.";
+                    }
+                    else if (hasInventory && hasOrderItems)
+                    {
+                        errorMessage += "This variant has both inventory and order history. Please transfer/delete inventory first. Note: Order items cannot be removed, so this variant may need to remain for historical records.";
+                    }
+                    else if (hasTransactions)
+                    {
+                        errorMessage += "This variant has transaction history and cannot be deleted.";
+                    }
+                    
+                    return BadRequest(new { 
+                        message = errorMessage,
+                        hasInventory = hasInventory,
+                        hasOrderItems = hasOrderItems,
+                        hasTransactions = hasTransactions,
+                        canDelete = false
+                    });
+                }
+
+                // Safe to delete - no related records
+                await _unitOfWork.ProductVariantRepo.DeleteAsync(id);
+                await _unitOfWork.SaveAsync();
+                return Ok(new { success = true, message = "Product variant deleted successfully." });
+            }
+            catch (DbUpdateException ex)
+            {
+                // Handle foreign key constraint violations
+                if (ex.InnerException != null && ex.InnerException.Message.Contains("FOREIGN KEY"))
+                {
+                    return BadRequest(new { message = "Cannot delete variant because it is referenced by other records (inventory, orders, or transactions)." });
+                }
+                return StatusCode(500, new { message = "An error occurred while deleting the variant.", error = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "An error occurred while deleting the variant.", error = ex.Message });
+            }
         }
 
         [HttpGet("{id}/validate-stock")]

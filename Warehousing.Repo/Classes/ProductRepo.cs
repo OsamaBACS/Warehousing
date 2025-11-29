@@ -55,7 +55,10 @@ namespace Warehousing.Repo.Classes
                     }
                 }
 
-                var lastProductId = GetAll().Select(p => p.Id).Max();
+                // Get the last product ID, defaulting to 0 if no products exist
+                // Materialize the query first since DefaultIfEmpty can't be translated by EF Core
+                var allProductIds = await GetAll().Select(p => p.Id).ToListAsync();
+                var lastProductId = allProductIds.Count > 0 ? allProductIds.Max() : 0;
                 // Create product entity
                 product.Code = (lastProductId + 1).ToString();
                 product.NameEn = dto.NameEn != null ? dto.NameEn : dto.NameAr;

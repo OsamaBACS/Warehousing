@@ -13,7 +13,7 @@ import { Product } from '../../../models/product';
 import { Store } from '../../../models/store';
 import { SubCategory } from '../../../models/SubCategory';
 import { ProductVariant } from '../../../models/ProductVariant';
-import { ProductModifierGroup } from '../../../models/ProductModifier';
+import { ProductModifierGroup, ProductModifier } from '../../../models/ProductModifier';
 import { ProductVariantsComponent } from '../product-variants/product-variants';
 import { ProductModifiersComponent } from '../product-modifiers/product-modifiers';
 import { ImageUploader } from '../../../../shared/components/image-uploader/image-uploader';
@@ -69,6 +69,8 @@ export class ProductFormComponent implements OnInit {
 
   ngOnInit(): void {
     this.initializingForm(null);
+    this.loadAvailableModifiers(); // Load all available modifiers for selection
+    this.loadAvailableModifiersCount(); // Load count for info
     this.route.queryParams.subscribe(params => {
       const productId = +params['productId'];
       if (productId) {
@@ -78,6 +80,8 @@ export class ProductFormComponent implements OnInit {
             this.loadInventory(res.id);
             this.loadVariantSummary(res.id);
             this.loadModifierSummary(res.id);
+            // Sync selected modifiers after loading
+            setTimeout(() => this.syncSelectedModifiers(), 100);
           },
           error: (err) => {
           }
@@ -251,8 +255,12 @@ export class ProductFormComponent implements OnInit {
   stores: Store[] = [];
   variantSummary: ProductVariant[] = [];
   modifierSummary: ProductModifierGroup[] = [];
+  availableModifiers: ProductModifier[] = []; // All available modifiers from Modifier Management
+  selectedModifierIds: Set<number> = new Set(); // Currently selected modifiers for this product
+  modifierConfigs: { [modifierId: number]: { isRequired: boolean; maxSelections: number; isActive: boolean; displayOrder: number } } = {}; // Config for each selected modifier
+  availableModifiersCount: number = 0; // Track available modifiers count
   showVariantManager = false;
-  showModifierManager = false;
+  showModifierManager = false; // Keep for backward compatibility but won't be used
 
   initializingForm(product: Product | null) {
     this.productForm = this.fb.group({
@@ -328,7 +336,46 @@ export class ProductFormComponent implements OnInit {
           next: (res) => {
             if(res) {
               this.notification.success('Successfully saved', 'Product');
-              this.router.navigate(['../products'], { relativeTo: this.route })
+              // Extract the saved product ID from the response
+              const savedProductId = (res as any)?.id || (res as any)?.Id || (typeof res === 'number' ? res : null);
+              
+              if (savedProductId) {
+                // Update the form with the saved product ID
+                this.productForm.patchValue({ id: savedProductId });
+                
+                // Reload the full product data to get updated fields (like code)
+                this.productService.GetProductById(savedProductId).subscribe({
+                  next: (product) => {
+                    if (product) {
+                      this.initializingForm(product);
+                      // Update the URL query params to include productId
+                      this.router.navigate([], {
+                        relativeTo: this.route,
+                        queryParams: { productId: savedProductId },
+                        queryParamsHandling: 'merge'
+                      });
+                      // Load inventory, variants, and modifiers for the saved product
+                      this.loadInventory(savedProductId);
+                      this.loadVariantSummary(savedProductId);
+                      this.loadModifierSummary(savedProductId);
+                      // Save modifier selections after product is saved
+                      this.saveModifierSelections(savedProductId);
+                    }
+                  },
+                  error: (err) => {
+                    // Even if reload fails, update the ID so variants/modifiers can be managed
+                    this.productForm.patchValue({ id: savedProductId });
+                    this.loadInventory(savedProductId);
+                    this.loadVariantSummary(savedProductId);
+                    this.loadModifierSummary(savedProductId);
+                    // Still save modifier selections even if reload fails
+                    setTimeout(() => {
+                      this.saveModifierSelections(savedProductId);
+                    }, 500);
+                  }
+                });
+              }
+              // Don't navigate away - stay on the form so user can manage variants/modifiers
             }
             else {
               this.notification.error('Error while saving', 'Product')
@@ -400,6 +447,11 @@ export class ProductFormComponent implements OnInit {
   }
 
   openVariantManager(): void {
+    const productId = this.productForm.get('id')?.value;
+    if (!productId || productId <= 0) {
+      this.notification.error('يرجى حفظ المنتج أولاً لإدارة المتغيرات', 'Product');
+      return;
+    }
     this.showVariantManager = true;
   }
 
@@ -412,6 +464,11 @@ export class ProductFormComponent implements OnInit {
   }
 
   openModifierManager(): void {
+    const productId = this.productForm.get('id')?.value;
+    if (!productId || productId <= 0) {
+      this.notification.error('يرجى حفظ المنتج أولاً لإدارة المكونات', 'Product');
+      return;
+    }
     this.showModifierManager = true;
   }
 
@@ -439,11 +496,167 @@ export class ProductFormComponent implements OnInit {
   private loadModifierSummary(productId: number): void {
     if (!productId) {
       this.modifierSummary = [];
+      this.selectedModifierIds.clear();
       return;
     }
     this.productModifierService.getModifierGroupsByProduct(productId).subscribe({
       next: groups => {
         this.modifierSummary = groups;
+        this.syncSelectedModifiers(); // Sync selected modifiers with loaded groups
+      },
+      error: (err) => {
+        this.modifierSummary = [];
+        this.selectedModifierIds.clear();
+      }
+    });
+  }
+
+  private loadAvailableModifiersCount(): void {
+    // Load count of available modifiers to show in UI
+    this.productModifierService.getAllModifiers().subscribe({
+      next: modifiers => {
+        this.availableModifiersCount = modifiers.length;
+      },
+      error: (err) => {
+        this.availableModifiersCount = 0;
+      }
+    });
+  }
+
+  // Load all available modifiers (global templates from Modifier Management)
+  private loadAvailableModifiers(): void {
+    this.productModifierService.getAllModifiers().subscribe({
+      next: modifiers => {
+        this.availableModifiers = modifiers;
+        // Initialize configs for each modifier
+        modifiers.forEach(m => {
+          if (m.id) {
+            this.modifierConfigs[m.id] = {
+              isRequired: false,
+              maxSelections: 1,
+              isActive: true,
+              displayOrder: 0
+            };
+          }
+        });
+      },
+      error: (err) => {
+        this.availableModifiers = [];
+      }
+    });
+  }
+
+  // Sync selected modifiers with loaded modifier groups
+  private syncSelectedModifiers(): void {
+    this.selectedModifierIds.clear();
+    this.modifierSummary.forEach(group => {
+      if (group.modifierId) {
+        this.selectedModifierIds.add(group.modifierId);
+        // Update configs with saved settings
+        this.modifierConfigs[group.modifierId] = {
+          isRequired: group.isRequired,
+          maxSelections: group.maxSelections,
+          isActive: group.isActive,
+          displayOrder: group.displayOrder
+        };
+      }
+    });
+  }
+
+  // Toggle modifier selection
+  toggleModifierSelection(modifierId: number): void {
+    if (!modifierId) return;
+    
+    if (this.selectedModifierIds.has(modifierId)) {
+      // Deselect
+      this.selectedModifierIds.delete(modifierId);
+      delete this.modifierConfigs[modifierId];
+    } else {
+      // Select
+      this.selectedModifierIds.add(modifierId);
+      // Initialize with defaults if not exists
+      if (!this.modifierConfigs[modifierId]) {
+        const modifier = this.availableModifiers.find(m => m.id === modifierId);
+        this.modifierConfigs[modifierId] = {
+          isRequired: modifier?.isRequired || false,
+          maxSelections: modifier?.maxSelections || 1,
+          isActive: true,
+          displayOrder: 0
+        };
+      }
+    }
+  }
+
+  // Check if modifier is selected
+  isModifierSelected(modifierId: number | undefined): boolean {
+    return modifierId ? this.selectedModifierIds.has(modifierId) : false;
+  }
+
+  // Save modifier selections to ProductModifierGroups table
+  private saveModifierSelections(productId: number): void {
+    if (productId <= 0) return;
+
+    // Get current modifier groups from server
+    this.productModifierService.getModifierGroupsByProduct(productId).subscribe({
+      next: (currentGroups) => {
+        const currentModifierIds = new Set(currentGroups.map(g => g.modifierId));
+        
+        // Delete removed modifiers
+        currentGroups.forEach(group => {
+          if (group.modifierId && !this.selectedModifierIds.has(group.modifierId) && group.id) {
+            this.productModifierService.deleteModifierGroup(group.id).subscribe({
+              error: (err) => {
+                console.error('Error deleting modifier group:', err);
+              }
+            });
+          }
+        });
+
+        // Create or update selected modifiers
+        this.selectedModifierIds.forEach(modifierId => {
+          const config = this.modifierConfigs[modifierId];
+          if (!config) return;
+
+          const existingGroup = currentGroups.find(g => g.modifierId === modifierId);
+          
+          if (existingGroup && existingGroup.id) {
+            // Update existing group
+            this.productModifierService.updateModifierGroup(existingGroup.id, {
+              id: existingGroup.id,
+              productId: productId,
+              modifierId: modifierId,
+              isRequired: config.isRequired,
+              maxSelections: config.maxSelections,
+              displayOrder: config.displayOrder,
+              isActive: config.isActive
+            }).subscribe({
+              error: (err) => {
+                console.error('Error updating modifier group:', err);
+              }
+            });
+          } else {
+            // Create new group
+            this.productModifierService.createModifierGroup({
+              productId: productId,
+              modifierId: modifierId,
+              isRequired: config.isRequired,
+              maxSelections: config.maxSelections,
+              displayOrder: config.displayOrder,
+              isActive: config.isActive
+            }).subscribe({
+              next: () => {
+                // Reload modifier summary after creation
+                this.loadModifierSummary(productId);
+              },
+              error: (err) => {
+                console.error('Error creating modifier group:', err);
+              }
+            });
+          }
+        });
+      },
+      error: (err) => {
+        console.error('Error loading modifier groups:', err);
       }
     });
   }
