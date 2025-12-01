@@ -288,17 +288,174 @@
       </div>
       <!-- End Allocation Section -->
 
-      <!-- Variants and Modifiers Section -->
+      <!-- Modifiers and Variants Section -->
       <div class="bg-white rounded-2xl shadow-xl overflow-hidden">
         <div class="bg-gradient-to-r from-indigo-500 to-purple-600 px-6 py-4">
           <h2 class="text-xl font-bold text-white flex items-center">
             <i class="bi bi-gear mr-3"></i>
-            المتغيرات والمكونات
+            المكونات والمتغيرات
           </h2>
         </div>
         
         <div class="p-6 space-y-8">
-          <!-- Product Variants Summary -->
+          <!-- Product Modifiers Selection (First) -->
+          <div>
+            <div class="mb-4">
+              <h3 class="text-lg font-semibold text-gray-900 flex items-center mb-2">
+                <i class="bi bi-list-ul mr-2 text-purple-500"></i>
+                اختيار المكونات للمنتج
+              </h3>
+              <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                <div class="flex items-start gap-2 text-blue-700">
+                  <i class="bi bi-info-circle mt-0.5 flex-shrink-0"></i>
+                  <div class="text-right text-sm">
+                    <p class="font-semibold mb-1">كيفية العمل:</p>
+                    <ol class="list-decimal list-inside space-y-1 text-blue-600">
+                      <li>المكونات يتم إنشاؤها أولاً في صفحة <strong>"إدارة المكونات"</strong> (قوالب عامة) → تُحفظ في جدول <code class="bg-blue-100 px-1 rounded">ProductModifiers</code></li>
+                      <li>اختر المكونات المناسبة لهذا المنتج باستخدام المربعات أدناه</li>
+                      <li>بعد حفظ المنتج، سيتم حفظ التحديدات في جدول <code class="bg-blue-100 px-1 rounded">ProductModifierGroups</code> (يربط المنتج بالمكونات)</li>
+                    </ol>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Available Modifiers Checkboxes -->
+            <div class="border border-gray-200 rounded-xl p-6 bg-gray-50" *ngIf="availableModifiers.length > 0">
+              <h4 class="text-md font-semibold text-gray-700 mb-4">
+                المكونات المتاحة ({{ availableModifiers.length }})
+              </h4>
+              <div class="space-y-4">
+                <div *ngFor="let modifier of availableModifiers" 
+                     class="bg-white border rounded-lg p-4 hover:shadow-md transition-shadow"
+                     [class.border-purple-300]="isModifierSelected(modifier.id)"
+                     [class.border-gray-200]="!isModifierSelected(modifier.id)">
+                  <!-- Checkbox and Modifier Info -->
+                  <div class="flex items-start gap-3">
+                    <input type="checkbox" 
+                           [id]="'modifier-' + modifier.id"
+                           [checked]="isModifierSelected(modifier.id)"
+                           (change)="toggleModifierSelection(modifier.id!)"
+                           class="mt-1 h-5 w-5 text-purple-600 focus:ring-purple-500 border-gray-300 rounded cursor-pointer">
+                    <label [for]="'modifier-' + modifier.id" class="flex-1 cursor-pointer">
+                      <div class="flex items-start justify-between">
+                        <div>
+                          <h5 class="font-semibold text-gray-900">{{ modifier.name }}</h5>
+                          <p class="text-sm text-gray-600 mt-1" *ngIf="modifier.description">{{ modifier.description }}</p>
+                          <div class="flex items-center gap-3 mt-2 text-xs text-gray-500">
+                            <span *ngIf="modifier.options && modifier.options.length > 0">
+                              <i class="bi bi-list-check mr-1"></i>{{ modifier.options.length }} خيار
+                            </span>
+                            <span *ngIf="modifier.isMultiple">
+                              <i class="bi bi-check2-all mr-1"></i>متعدد الاختيارات
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </label>
+                  </div>
+
+                  <!-- Configuration Panel (shown when selected) -->
+                  <div *ngIf="isModifierSelected(modifier.id)" class="mt-4 pt-4 border-t border-gray-200 bg-purple-50 rounded-lg p-4">
+                    <h6 class="text-sm font-semibold text-purple-900 mb-3">إعدادات المكون لهذا المنتج:</h6>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                      <!-- Is Required -->
+                      <div>
+                        <label class="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+                          <input type="checkbox"
+                                 [checked]="modifierConfigs[modifier.id!]?.isRequired || false"
+                                 (change)="modifierConfigs[modifier.id!].isRequired = $any($event.target).checked"
+                                 class="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded">
+                          <span>مكون إجباري</span>
+                        </label>
+                      </div>
+                      <!-- Max Selections -->
+                      <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                          الحد الأقصى للاختيارات:
+                        </label>
+                        <input type="number" 
+                               min="1"
+                               [value]="modifierConfigs[modifier.id!]?.maxSelections || 1"
+                               (change)="modifierConfigs[modifier.id!].maxSelections = +$any($event.target).value"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500">
+                      </div>
+                      <!-- Display Order -->
+                      <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                          ترتيب العرض:
+                        </label>
+                        <input type="number" 
+                               min="0"
+                               [value]="modifierConfigs[modifier.id!]?.displayOrder || 0"
+                               (change)="modifierConfigs[modifier.id!].displayOrder = +$any($event.target).value"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500">
+                      </div>
+                    </div>
+                    
+                    <!-- Price and Cost Adjustments (Read-Only) -->
+                    <div class="mt-4 pt-4 border-t border-purple-200">
+                      <h6 class="text-sm font-semibold text-purple-900 mb-3">تأثير المكون على الأسعار (للاطلاع فقط):</h6>
+                      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <!-- Price Adjustment -->
+                        <div class="bg-white rounded-lg p-3 border border-purple-200">
+                          <div class="flex items-center justify-between">
+                            <span class="text-sm font-medium text-gray-700">تعديل السعر:</span>
+                            <span class="text-lg font-bold" [class.text-green-600]="modifier.priceAdjustment > 0" [class.text-red-600]="modifier.priceAdjustment < 0" [class.text-gray-600]="modifier.priceAdjustment === 0">
+                              <span *ngIf="modifier.priceAdjustment > 0">+</span>{{ modifier.priceAdjustment || 0 | number:'1.2-2' }} د.أ
+                            </span>
+                          </div>
+                          <div class="text-xs text-gray-500 mt-1">
+                            سعر المنتج الحالي: {{ productForm.get('sellingPrice')?.value || 0 | number:'1.2-2' }} د.أ
+                          </div>
+                          <div class="text-xs font-semibold text-blue-600 mt-1">
+                            السعر بعد التعديل: {{ ((productForm.get('sellingPrice')?.value || 0) + (modifier.priceAdjustment || 0)) | number:'1.2-2' }} د.أ
+                          </div>
+                        </div>
+                        <!-- Cost Adjustment -->
+                        <div class="bg-white rounded-lg p-3 border border-purple-200">
+                          <div class="flex items-center justify-between">
+                            <span class="text-sm font-medium text-gray-700">تعديل التكلفة:</span>
+                            <span class="text-lg font-bold" [class.text-green-600]="(modifier.costAdjustment || 0) > 0" [class.text-red-600]="(modifier.costAdjustment || 0) < 0" [class.text-gray-600]="(modifier.costAdjustment || 0) === 0">
+                              <span *ngIf="(modifier.costAdjustment || 0) > 0">+</span>{{ modifier.costAdjustment || 0 | number:'1.2-2' }} د.أ
+                            </span>
+                          </div>
+                          <div class="text-xs text-gray-500 mt-1">
+                            تكلفة المنتج الحالية: {{ productForm.get('costPrice')?.value || 0 | number:'1.2-2' }} د.أ
+                          </div>
+                          <div class="text-xs font-semibold text-blue-600 mt-1">
+                            التكلفة بعد التعديل: {{ ((productForm.get('costPrice')?.value || 0) + (modifier.costAdjustment || 0)) | number:'1.2-2' }} د.أ
+                          </div>
+                        </div>
+                      </div>
+                      <p class="text-xs text-gray-500 mt-3">
+                        <i class="bi bi-info-circle mr-1"></i>
+                        <strong>ملاحظة:</strong> هذه القيم هي تعديلات على المكون نفسه. عند إضافة المكون للطلب، سيتم تطبيق تعديلات الخيارات المختارة من قبل العميل.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- No Modifiers Available -->
+            <div *ngIf="availableModifiers.length === 0" class="border border-gray-200 rounded-xl p-8 text-center bg-gray-50">
+              <i class="bi bi-inbox text-gray-400 text-4xl mb-3"></i>
+              <p class="text-gray-600 mb-2">لا توجد مكونات متاحة حالياً</p>
+              <p class="text-sm text-gray-500">يرجى إنشاء مكونات أولاً من صفحة <strong>"إدارة المكونات"</strong></p>
+            </div>
+
+            <!-- Selected Modifiers Summary -->
+            <div class="mt-6 border border-green-200 rounded-xl p-4 bg-green-50" *ngIf="selectedModifierIds.size > 0">
+              <div class="flex items-center gap-2 text-green-700">
+                <i class="bi bi-check-circle"></i>
+                <span class="font-semibold">تم اختيار {{ selectedModifierIds.size }} مكون</span>
+                <span class="text-sm text-green-600">(سيتم حفظها عند حفظ المنتج)</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Product Variants Summary (After Modifiers) -->
           <div>
             <div class="flex items-center justify-between mb-4">
               <div>
@@ -361,122 +518,6 @@
                   </tr>
                 </tbody>
               </table>
-            </div>
-          </div>
-
-          <!-- Product Modifiers Selection -->
-          <div>
-            <div class="mb-4">
-              <h3 class="text-lg font-semibold text-gray-900 flex items-center mb-2">
-                <i class="bi bi-list-ul mr-2 text-purple-500"></i>
-                اختيار المكونات للمنتج
-              </h3>
-              <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
-                <div class="flex items-start gap-2 text-blue-700">
-                  <i class="bi bi-info-circle mt-0.5 flex-shrink-0"></i>
-                  <div class="text-right text-sm">
-                    <p class="font-semibold mb-1">كيفية العمل:</p>
-                    <ol class="list-decimal list-inside space-y-1 text-blue-600">
-                      <li>المكونات يتم إنشاؤها أولاً في صفحة <strong>"إدارة المكونات"</strong> (قوالب عامة) → تُحفظ في جدول <code class="bg-blue-100 px-1 rounded">ProductModifiers</code></li>
-                      <li>اختر المكونات المناسبة لهذا المنتج باستخدام المربعات أدناه</li>
-                      <li>بعد حفظ المنتج، سيتم حفظ التحديدات في جدول <code class="bg-blue-100 px-1 rounded">ProductModifierGroups</code> (يربط المنتج بالمكونات)</li>
-                    </ol>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Available Modifiers Checkboxes -->
-            <div class="border border-gray-200 rounded-xl p-6 bg-gray-50" *ngIf="availableModifiers.length > 0">
-              <h4 class="text-md font-semibold text-gray-700 mb-4">
-                المكونات المتاحة ({{ availableModifiers.length }})
-              </h4>
-              <div class="space-y-4">
-                <div *ngFor="let modifier of availableModifiers" 
-                     class="bg-white border rounded-lg p-4 hover:shadow-md transition-shadow"
-                     [class.border-purple-300]="isModifierSelected(modifier.id)"
-                     [class.border-gray-200]="!isModifierSelected(modifier.id)">
-                  <!-- Checkbox and Modifier Info -->
-                  <div class="flex items-start gap-3">
-                    <input type="checkbox" 
-                           [id]="'modifier-' + modifier.id"
-                           [checked]="isModifierSelected(modifier.id)"
-                           (change)="toggleModifierSelection(modifier.id!)"
-                           class="mt-1 h-5 w-5 text-purple-600 focus:ring-purple-500 border-gray-300 rounded cursor-pointer">
-                    <label [for]="'modifier-' + modifier.id" class="flex-1 cursor-pointer">
-                      <div class="flex items-start justify-between">
-                        <div>
-                          <h5 class="font-semibold text-gray-900">{{ modifier.name }}</h5>
-                          <p class="text-sm text-gray-600 mt-1" *ngIf="modifier.description">{{ modifier.description }}</p>
-                          <div class="flex items-center gap-3 mt-2 text-xs text-gray-500">
-                            <span *ngIf="modifier.options && modifier.options.length > 0">
-                              <i class="bi bi-list-check mr-1"></i>{{ modifier.options.length }} خيار
-                            </span>
-                            <span *ngIf="modifier.isMultiple">
-                              <i class="bi bi-check2-all mr-1"></i>متعدد الاختيارات
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    </label>
-                  </div>
-
-                  <!-- Configuration Panel (shown when selected) -->
-                  <div *ngIf="isModifierSelected(modifier.id)" class="mt-4 pt-4 border-t border-gray-200 bg-purple-50 rounded-lg p-4">
-                    <h6 class="text-sm font-semibold text-purple-900 mb-3">إعدادات المكون لهذا المنتج:</h6>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <!-- Is Required -->
-                      <div>
-                        <label class="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
-                          <input type="checkbox"
-                                 [checked]="modifierConfigs[modifier.id!]?.isRequired || false"
-                                 (change)="modifierConfigs[modifier.id!].isRequired = $any($event.target).checked"
-                                 class="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded">
-                          <span>مكون إجباري</span>
-                        </label>
-                      </div>
-                      <!-- Max Selections -->
-                      <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">
-                          الحد الأقصى للاختيارات:
-                        </label>
-                        <input type="number" 
-                               min="1"
-                               [value]="modifierConfigs[modifier.id!]?.maxSelections || 1"
-                               (change)="modifierConfigs[modifier.id!].maxSelections = +$any($event.target).value"
-                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500">
-                      </div>
-                      <!-- Display Order -->
-                      <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">
-                          ترتيب العرض:
-                        </label>
-                        <input type="number" 
-                               min="0"
-                               [value]="modifierConfigs[modifier.id!]?.displayOrder || 0"
-                               (change)="modifierConfigs[modifier.id!].displayOrder = +$any($event.target).value"
-                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500">
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- No Modifiers Available -->
-            <div *ngIf="availableModifiers.length === 0" class="border border-gray-200 rounded-xl p-8 text-center bg-gray-50">
-              <i class="bi bi-inbox text-gray-400 text-4xl mb-3"></i>
-              <p class="text-gray-600 mb-2">لا توجد مكونات متاحة حالياً</p>
-              <p class="text-sm text-gray-500">يرجى إنشاء مكونات أولاً من صفحة <strong>"إدارة المكونات"</strong></p>
-            </div>
-
-            <!-- Selected Modifiers Summary -->
-            <div class="mt-6 border border-green-200 rounded-xl p-4 bg-green-50" *ngIf="selectedModifierIds.size > 0">
-              <div class="flex items-center gap-2 text-green-700">
-                <i class="bi bi-check-circle"></i>
-                <span class="font-semibold">تم اختيار {{ selectedModifierIds.size }} مكون</span>
-                <span class="text-sm text-green-600">(سيتم حفظها عند حفظ المنتج)</span>
-              </div>
             </div>
           </div>
         </div>

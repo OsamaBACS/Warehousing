@@ -405,7 +405,7 @@
     "NO_STOCK": "لا يوجد مخزون",
     "AVAILABLE_STOCK": "المخزون المتاح",
     "VARIANT": "المتغير",
-    "MODIFIER": "المعدل",
+    "MODIFIER": "المكون",
     "STORE": "المستودع",
     "MAIN_STOCK": "المخزون الرئيسي",
     "VARIANTS": "المتغيرات",
@@ -416,7 +416,7 @@
     "TOTAL_QUANTITY_IN_CART": "إجمالي الكمية في السلة",
     "ADJUST_QUANTITIES_ABOVE": "يمكنك تعديل الكميات مباشرة من أعلاه",
     "BASE_PRICE": "السعر الأساسي",
-    "PRODUCT_MODIFIERS": "معدلات المنتج",
+    "PRODUCT_MODIFIERS": "مكونات المنتج",
     "REQUIRED": "مطلوب"
   },
   "CART": {
@@ -501,7 +501,7 @@
     "CATEGORIES": "الفئات",
     "SUBCATEGORIES": "الفئات الفرعية",
     "VARIANT_MANAGEMENT": "إدارة المتغيرات",
-    "MODIFIER_MANAGEMENT": "إدارة المعدلات",
+    "MODIFIER_MANAGEMENT": "إدارة المكونات",
     "INITIAL_STOCK": "الرصيد الابتدائي",
     "INITIAL_STOCK_SETUP": "إعداد المخزون الابتدائي",
     "ACTIVITY_LOGS": "سجل الأنشطة",
@@ -673,8 +673,8 @@
     "SAVING": "جاري الحفظ..."
   },
   "PRODUCT_MANAGEMENT": {
-    "VARIANT_MODIFIER_MANAGEMENT": "إدارة المتغيرات والتعديلات",
-    "PRODUCT_MODIFIERS": "تعديلات المنتج"
+    "VARIANT_MODIFIER_MANAGEMENT": "إدارة المتغيرات والمكونات",
+    "PRODUCT_MODIFIERS": "مكونات المنتج"
   },
   "ORDER_MANAGEMENT": {
     "MY_PENDING_ORDERS": "طلباتي المعلقة",
