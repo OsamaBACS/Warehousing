@@ -238,7 +238,7 @@ Product (Base)
 | **Options** | Has options (Small/Medium/Large) | No options, just variants |
 | **Inventory** | No inventory (options don't have stock) | Has inventory (per variant per store) |
 | **Pricing** | Options have price adjustments | Variant has price adjustments |
-| **Example** | "Size" modifier with "Small/Medium/Large" options | "Blue T-Shirt" vs "Red T-Shirt" |
+| **Example** | "Toppings" modifier with "Cheese/Pepperoni" options (no separate inventory) | "Blue T-Shirt" (10 stock) vs "Red T-Shirt" (5 stock) - separate inventory per color |
 
 ### 5.2 Modifier Base Price Adjustments
 
@@ -252,16 +252,30 @@ Product (Base)
 
 ### 5.3 When to Use Variants vs Modifiers
 
-**Use Variants when:**
-- You have different physical products (different SKUs)
-- Each version needs separate inventory tracking
-- Examples: Different colors, different sizes as separate products, different materials
+**The Key Question**: Do you need to track inventory separately for each option?
 
-**Use Modifiers when:**
-- You have add-ons or customization options
-- Options don't need separate inventory tracking
-- Customer can select multiple options
-- Examples: Size options (Small/Medium/Large), toppings, extra services
+#### **Use Variants when:**
+- You need **separate inventory tracking** for each version
+- Each version has its own stock quantity per store
+- You need to know exactly how many "Blue T-Shirts" vs "Red T-Shirts" you have
+- Examples:
+  - **Color as Variant**: "Blue T-Shirt" (10 in stock) vs "Red T-Shirt" (5 in stock) - tracked separately
+  - **Size as Variant**: "Large Pizza" (different SKU) vs "Small Pizza" (different SKU)
+  - Different materials, different configurations that need separate stock tracking
+
+#### **Use Modifiers when:**
+- You **don't need separate inventory tracking**
+- All options share the same stock pool
+- Customer selects the option, but inventory is managed at the product level
+- Examples:
+  - **Color as Modifier**: You have 15 T-Shirts total, customer picks color at checkout, but all colors share inventory
+  - **Size as Modifier**: Pizza size options (Small/Medium/Large) - inventory is tracked at pizza level, not per size
+  - Toppings (Cheese, Pepperoni) - added to base product, no separate inventory
+  - Extra services (Extra Cheese, Extra Sauce) - no inventory tracking needed
+
+**Important**: The same attribute (like "Color" or "Size") can be either a variant OR a modifier, depending on your business needs:
+- Need separate stock tracking? → **Use Variants**
+- Share inventory across options? → **Use Modifiers**
 
 ---
 
